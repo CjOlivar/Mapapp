@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Driver Navigation System</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    
+    <!-- Leaflet Routing Machine CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+    
+    <!-- Leaflet Control Geocoder CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    
+    <!-- Leaflet Draw CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
+    
+    <!-- Leaflet MiniMap CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-minimap/dist/Control.MiniMap.css" />
+    
+    <!-- Leaflet MarkerCluster CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+    
+    <style>
+        /* Global Styles */
+        html, body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Map Styles */
+        #map {
+            height: 100%;
+            width: 100%;
+            z-index: 1;
+        }
+        
+        /* Panel Styles */
+        #delivery-panel {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 300px;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            max-height: 80%;
+            overflow-y: auto;
+        }
+        
+        #stats-panel {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+        
+        .delivery-item {
+            padding: 8px;
+            margin-bottom: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .delivery-item:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .delivery-complete {
+            background-color: #e8f5e9;
+            text-decoration: line-through;
+        }
+        
+        .delivery-active {
+            background-color: #e3f2fd;
+            border: 2px solid #2196F3;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px 0;
+        }
+        
+        .btn:hover {
+            background-color: #45a049;
+        }
+        
+        .btn-secondary {
+            background-color: #f44336;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #d32f2f;
+        }
+        
+        h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        
+        .marker-delivery {
+            background-color: #F44336;
+            border-radius: 50%;
+            width: 12px;
+            height: 12px;
+            border: 2px solid white;
+        }
+        
+        .marker-completed {
+            background-color: #4CAF50;
+        }
+        
+        .marker-active {
+            background-color: #2196F3;
+            width: 16px;
+            height: 16px;
+        }
+        
+        /* Custom marker icons */
+        .custom-marker {
+            text-align: center;
+        }
+        
+        .custom-marker i {
+            font-size: 24px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .status-pending {
+            background-color: #F44336;
+        }
+        
+        .status-active {
+            background-color: #2196F3;
+        }
+        
+        .status-completed {
+            background-color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Map -->
+    <div id="map"></div>
+    
+    <!-- Delivery Panel -->
+    <div id="delivery-panel">
+        <h2>Today's Deliveries</h2>
+        <div>
+            <button id="optimize-route" class="btn">Optimize Route</button>
+            <button id="toggle-traffic" class="btn">Show Traffic</button>
+        </div>
+        <div id="delivery-list"></div>
+    </div>
+    
+    <!-- Stats Panel -->
+    <div id="stats-panel">
+        <div>Deliveries: <span id="delivery-count">0</span>/<span id="total-deliveries">0</span></div>
+        <div>Distance: <span id="total-distance">0</span> km</div>
+        <div>ETA: <span id="eta">--:--</span></div>
+    </div>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    
+    <!-- Leaflet Routing Machine JS -->
+    <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+    
+    <!-- Leaflet Control Geocoder JS -->
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    
+    <!-- Leaflet Draw JS -->
+    <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
+    
+    <!-- Leaflet MiniMap JS -->
+    <script src="https://unpkg.com/leaflet-minimap/dist/Control.MiniMap.js"></script>
+    
+    <!-- Leaflet MarkerCluster JS -->
+    <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+    
+    <script>
+        // Initialize the map
+        const map = L.map('map').setView([14.2184, 121.0583], 12); // Centered on Calamba, Laguna initially
+
+        // Add base tile layer (Street Map)
+        const streetMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+        
+        // Add alternate map layers
+        const satelliteMap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Imagery © Esri',
+            maxZoom: 19
+        });
+        
+        // Create a layer control and add it to the map
+        const baseMaps = {
+            "Street": streetMap,
+            "Satellite": satelliteMap
+        };
+        
+        L.control.layers(baseMaps).addTo(map);
+
+        // Sample warehouse/depot location
+        const depotLocation = [14.2184, 121.0583]; // Calamba City Hall as depot
+        
+        // Sample delivery locations
+        const deliveries = [
+            { id: 1, name: "Customer A", address: "123 Main St, Calamba", coords: [14.2061, 121.0660], packageInfo: "1x Large Package", status: "pending", eta: "10:30 AM", priority: "High" },
+            { id: 2, name: "Customer B", address: "456 Oak Ave, Calamba", coords: [14.2136, 121.1651], packageInfo: "2x Small Packages", status: "pending", eta: "11:15 AM", priority: "Medium" },
+            { id: 3, name: "Customer C", address: "789 Pine St, Calamba", coords: [14.2054, 121.0946], packageInfo: "1x Medium Package", status: "pending", eta: "12:00 PM", priority: "Low" },
+            { id: 4, name: "Customer D", address: "101 Elm Blvd, Calamba", coords: [14.1954, 121.0846], packageInfo: "3x Small Packages", status: "pending", eta: "1:30 PM", priority: "Medium" },
+            { id: 5, name: "Customer E", address: "202 Cedar Ln, Calamba", coords: [14.2254, 121.1146], packageInfo: "1x Fragile Package", status: "pending", eta: "2:15 PM", priority: "High" },
+        ];
+        
+        // Update total deliveries count
+        document.getElementById('total-deliveries').textContent = deliveries.length;
+        
+        // Initialize Marker Cluster Group for deliveries
+        const deliveryMarkers = L.markerClusterGroup();
+        const markerMap = new Map(); // To keep track of markers by delivery ID
+
+        // Create custom icons
+        function createCustomIcon(status) {
+            let colorClass = 'marker-delivery';
+            if (status === 'completed') {
+                colorClass += ' marker-completed';
+            } else if (status === 'active') {
+                colorClass += ' marker-active';
+            }
+            
+            return L.divIcon({
+                className: 'custom-marker',
+                html: `<div class="${colorClass}"></div>`,
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            });
+        }
+        
+        // Add depot marker
+        const depotIcon = L.divIcon({
+            className: 'custom-marker',
+            html: '<div style="background-color: #FFC107; border-radius: 50%; width: 16px; height: 16px; border: 2px solid white;"></div>',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+        });
+        
+        const depotMarker = L.marker(depotLocation, { icon: depotIcon })
+            .bindPopup("<b>Depot/Warehouse</b><br>Starting point for deliveries")
+            .addTo(map);
+
+        // Add delivery markers
+        deliveries.forEach(delivery => {
+            const marker = L.marker(delivery.coords, { 
+                icon: createCustomIcon(delivery.status),
+                deliveryId: delivery.id
+            });
+            
+            marker.bindPopup(`
+                <b>${delivery.name}</b><br>
+                Address: ${delivery.address}<br>
+                Package: ${delivery.packageInfo}<br>
+                Priority: ${delivery.priority}<br>
+                ETA: ${delivery.eta}
+            `);
+            
+            deliveryMarkers.addLayer(marker);
+            markerMap.set(delivery.id, marker);
+        });
+
+        // Add the delivery markers to the map
+        map.addLayer(deliveryMarkers);
+
+        // Initialize routing control
+        let routingControl = null;
+        
+        function createRoute(waypoints) {
+            // Remove existing route if any
+            if (routingControl) {
+                map.removeControl(routingControl);
+            }
+            
+            // Create new route
+            routingControl = L.Routing.control({
+                waypoints: waypoints,
+                routeWhileDragging: true,
+                showAlternatives: true,
+                altLineOptions: {
+                    styles: [
+                        {color: 'black', opacity: 0.15, weight: 9},
+                        {color: 'white', opacity: 0.8, weight: 6},
+                        {color: 'blue', opacity: 0.5, weight: 2}
+                    ]
+                },
+                lineOptions: {
+                    styles: [
+                        {color: 'black', opacity: 0.15, weight: 9},
+                        {color: 'white', opacity: 0.8, weight: 6},
+                        {color: '#2196F3', opacity: 1, weight: 4}
+                    ]
+                },
+                createMarker: function() { return null; } // Don't create markers for waypoints
+            }).addTo(map);
+            
+            // Update distance and ETA when route is calculated
+            routingControl.on('routesfound', function(e) {
+                const routes = e.routes;
+                const summary = routes[0].summary;
+                
+                // Update distance
+                document.getElementById('total-distance').textContent = (summary.totalDistance / 1000).toFixed(2);
+                
+                // Update ETA (simple calculation based on current time)
+                const now = new Date();
+                const arrivalTime = new Date(now.getTime() + summary.totalTime * 1000);
+                const hours = arrivalTime.getHours().toString().padStart(2, '0');
+                const minutes = arrivalTime.getMinutes().toString().padStart(2, '0');
+                document.getElementById('eta').textContent = `${hours}:${minutes}`;
+            });
+        }
+
+        // Create delivery list in the panel
+        function renderDeliveryList() {
+            const listContainer = document.getElementById('delivery-list');
+            listContainer.innerHTML = '';
+            
+            deliveries.forEach(delivery => {
+                const item = document.createElement('div');
+                item.className = `delivery-item ${delivery.status === 'active' ? 'delivery-active' : ''} ${delivery.status === 'completed' ? 'delivery-complete' : ''}`;
+                item.dataset.id = delivery.id;
+                
+                const statusClass = `status-${delivery.status}`;
+                
+                item.innerHTML = `
+                    <div><span class="status-indicator ${statusClass}"></span><strong>${delivery.name}</strong></div>
+                    <div>${delivery.address}</div>
+                    <div><small>${delivery.packageInfo} | Priority: ${delivery.priority}</small></div>
+                    <div><small>ETA: ${delivery.eta}</small></div>
+                `;
+                
+                if (delivery.status !== 'completed') {
+                    const buttonContainer = document.createElement('div');
+                    buttonContainer.style.marginTop = '5px';
+                    
+                    const navigateBtn = document.createElement('button');
+                    navigateBtn.className = 'btn';
+                    navigateBtn.style.padding = '4px 8px';
+                    navigateBtn.style.marginRight = '5px';
+                    navigateBtn.textContent = 'Navigate';
+                    navigateBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        setActiveDelivery(delivery.id);
+                    });
+                    
+                    const completeBtn = document.createElement('button');
+                    completeBtn.className = 'btn';
+                    completeBtn.style.padding = '4px 8px';
+                    completeBtn.textContent = 'Complete';
+                    completeBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        completeDelivery(delivery.id);
+                    });
+                    
+                    buttonContainer.appendChild(navigateBtn);
+                    buttonContainer.appendChild(completeBtn);
+                    item.appendChild(buttonContainer);
+                }
+                
+                // Add click event to zoom to the delivery location
+                item.addEventListener('click', function() {
+                    const marker = markerMap.get(parseInt(this.dataset.id));
+                    map.setView(marker.getLatLng(), 15);
+                    marker.openPopup();
+                });
+                
+                listContainer.appendChild(item);
+            });
+            
+            // Update completed delivery count
+            const completedCount = deliveries.filter(d => d.status === 'completed').length;
+            document.getElementById('delivery-count').textContent = completedCount;
+        }
+
+        // Set a delivery as active and create route
+        function setActiveDelivery(id) {
+            // Reset all deliveries to pending first if they're not completed
+            deliveries.forEach(d => {
+                if (d.status !== 'completed') d.status = 'pending';
+            });
+            
+            // Set the selected delivery as active
+            const delivery = deliveries.find(d => d.id === id);
+            if (delivery && delivery.status !== 'completed') {
+                delivery.status = 'active';
+                
+                // Update markers
+                deliveries.forEach(d => {
+                    const marker = markerMap.get(d.id);
+                    marker.setIcon(createCustomIcon(d.status));
+                });
+                
+                // Create route from depot to this delivery
+                createRoute([
+                    L.latLng(depotLocation[0], depotLocation[1]),
+                    L.latLng(delivery.coords[0], delivery.coords[1])
+                ]);
+                
+                // Rerender delivery list
+                renderDeliveryList();
+            }
+        }
+
+        // Mark a delivery as completed
+        function completeDelivery(id) {
+            const delivery = deliveries.find(d => d.id === id);
+            if (delivery) {
+                delivery.status = 'completed';
+                
+                // Update marker
+                const marker = markerMap.get(id);
+                marker.setIcon(createCustomIcon('completed'));
+                
+                // Rerender delivery list
+                renderDeliveryList();
+                
+                // If this was the active delivery, remove the route
+                if (routingControl && delivery.status === 'active') {
+                    map.removeControl(routingControl);
+                    routingControl = null;
+                }
+            }
+        }
+
+        // Optimize route (creates a simple route visiting all pending deliveries)
+        document.getElementById('optimize-route').addEventListener('click', function() {
+            const pendingDeliveries = deliveries.filter(d => d.status !== 'completed');
+            
+            if (pendingDeliveries.length > 0) {
+                // Create waypoints starting with depot
+                const waypoints = [L.latLng(depotLocation[0], depotLocation[1])];
+                
+                // Add all pending deliveries
+                pendingDeliveries.forEach(delivery => {
+                    waypoints.push(L.latLng(delivery.coords[0], delivery.coords[1]));
+                });
+                
+                // Add depot as final destination
+                waypoints.push(L.latLng(depotLocation[0], depotLocation[1]));
+                
+                // Create the optimized route
+                createRoute(waypoints);
+            }
+        });
+
+        // Toggle traffic layer (simulated - would be replaced with a real traffic layer in production)
+        let trafficLayerActive = false;
+        const trafficLayer = L.layerGroup();
+        
+        // Sample traffic congestion areas (would be real-time data in production)
+        const trafficHotspots = [
+            { center: [14.2100, 121.0700], radius: 500, severity: 'high' },
+            { center: [14.2200, 121.1600], radius: 300, severity: 'medium' },
+            { center: [14.1950, 121.0900], radius: 400, severity: 'low' }
+        ];
+        
+        trafficHotspots.forEach(hotspot => {
+            let color;
+            let fillOpacity;
+            
+            switch (hotspot.severity) {
+                case 'high':
+                    color = '#ff0000';
+                    fillOpacity = 0.4;
+                    break;
+                case 'medium':
+                    color = '#ff9900';
+                    fillOpacity = 0.3;
+                    break;
+                case 'low':
+                    color = '#ffff00';
+                    fillOpacity = 0.2;
+                    break;
+            }
+            
+            const circle = L.circle(hotspot.center, {
+                color: color,
+                fillColor: color,
+                fillOpacity: fillOpacity,
+                radius: hotspot.radius
+            });
+            
+            circle.bindPopup(`Traffic Level: ${hotspot.severity.charAt(0).toUpperCase() + hotspot.severity.slice(1)}`);
+            trafficLayer.addLayer(circle);
+        });
+        
+        document.getElementById('toggle-traffic').addEventListener('click', function() {
+            trafficLayerActive = !trafficLayerActive;
+            
+            if (trafficLayerActive) {
+                map.addLayer(trafficLayer);
+                this.textContent = 'Hide Traffic';
+            } else {
+                map.removeLayer(trafficLayer);
+                this.textContent = 'Show Traffic';
+            }
+        });
+
+        // User Location Tracking
+        map.locate({ setView: false, watch: true, enableHighAccuracy: true });
+
+        let userLocationMarker;
+        let userLocationCircle;
+
+        map.on('locationfound', function(e) {
+            const radius = e.accuracy / 2;
+            
+            // Remove previous markers if they exist
+            if (userLocationMarker) {
+                map.removeLayer(userLocationMarker);
+            }
+            if (userLocationCircle) {
+                map.removeLayer(userLocationCircle);
+            }
+            
+            // Create user location marker
+            userLocationMarker = L.marker(e.latlng, {
+                icon: L.divIcon({
+                    className: 'custom-marker',
+                    html: '<div style="background-color: #4285F4; border-radius: 50%; width: 14px; height: 14px; border: 3px solid white;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10]
+                })
+            }).addTo(map);
+            
+            userLocationMarker.bindPopup("Your current location");
+            
+            // Create accuracy circle
+            userLocationCircle = L.circle(e.latlng, {
+                radius: radius,
+                color: '#4285F4',
+                fillColor: '#4285F4',
+                fillOpacity: 0.15
+            }).addTo(map);
+        });
+
+        map.on('locationerror', function(e) {
+            alert("Location access error: " + e.message);
+        });
+
+        // Add a Mini-map
+        const miniMap = new L.Control.MiniMap(
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'),
+            {
+                toggleDisplay: true,
+                minimized: false,
+                position: 'bottomright'
+            }
+        ).addTo(map);
+
+        // Add Scale Control
+        L.control.scale().addTo(map);
+        
+        // Initialize the delivery list
+        renderDeliveryList();
+    </script>
+</body>
+</html>

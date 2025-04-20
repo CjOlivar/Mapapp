@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback Inbox</title>
+    <link rel="stylesheet" href="inbox.css"/>
+</head>
+<body>
+    <div class="inbox-container">
+        <h1>Feedback Inbox</h1>
+        <form id="feedbackForm">
+            <input type="text" id="name" placeholder="Your Name" required>
+            <input type="email" id="email" placeholder="Your Email" required>
+            <div class="feedback-container">
+                <textarea id="message" placeholder="Your Feedback..." required></textarea>
+                <button type="button" id="voiceInputBtn">🎤</button>
+            </div>
+
+            <button type="submit">Submit Feedback</button>
+        </form>
+        <ul id="feedbackList" class="messages">
+            <!-- Feedback messages will appear here -->
+        </ul>
+        <div id="autoResponse">
+            Thank you for your feedback! We appreciate your time.
+        </div>
+    </div>
+
+    <script>
+        const feedbackForm = document.getElementById('feedbackForm');
+        const feedbackList = document.getElementById('feedbackList');
+        const autoResponse = document.getElementById('autoResponse');
+        const voiceInputBtn = document.getElementById('voiceInputBtn');
+        let recognition;
+
+        // Form submission
+        feedbackForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const message = document.getElementById('message').value;
+            const time = new Date().toLocaleTimeString();
+
+            const feedbackItem = document.createElement('li');
+            feedbackItem.classList.add('message');
+            feedbackItem.innerHTML = `
+                <span class="sender">${name} (${email})</span>
+                <span class="time">${time}</span>
+                <p>${message}</p>
+            `;
+
+            feedbackList.appendChild(feedbackItem);
+            feedbackItem.scrollIntoView({ behavior: 'smooth' });
+            autoResponse.style.display = 'block';
+
+            setTimeout(() => autoResponse.style.display = 'none', 4000);
+
+            feedbackForm.reset();
+        });
+
+        // Speech to text functionality
+        if ('webkitSpeechRecognition' in window) {
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            voiceInputBtn.addEventListener('click', () => {
+                recognition.start();
+            });
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('message').value = transcript;
+            };
+
+            recognition.onerror = function() {
+                alert('Speech recognition failed. Please try again.');
+            };
+        } else {
+            voiceInputBtn.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
+
+

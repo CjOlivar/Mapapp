@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CalambaGO! - Travel Planner</title>
+    <!-- FullCalendar CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet" />
+    <!-- FullCalendar JS -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+    <!-- Optional: Bootstrap for Modal (for better UI) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            height: 100vh; /* Full viewport height */
+            overflow: hidden; /* Prevent scrolling */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 1200px;
+            height: 100vh; /* Full viewport height */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            overflow: hidden; /* Prevent overflow */
+        }
+
+        /* Calendar Section */
+        #calendar-container {
+            flex: 1; /* Take remaining space */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Prevent internal scrolling */
+        }
+
+        #calendar {
+            flex: 1; /* Take available space */
+            width: 100%;
+            margin: 0;
+        }
+
+        #selectedDates {
+            margin-top: 10px;
+            text-align: center;
+            flex: 0 0 auto; /* Fixed height */
+        }
+
+        /* Event Styles */
+        .fc-event {
+            cursor: pointer;
+        }
+
+        /* Remove underline and set color to black for calendar day numbers */
+        .fc .fc-daygrid-day-number {
+            text-decoration: none !important;  /* Remove underline */
+            color: black !important;           /* Set color to black */
+            cursor: default !important;        /* Optional: Prevent pointer cursor */
+        }
+
+        /* Prevent hover underline and color change */
+        .fc .fc-daygrid-day-number:hover {
+            text-decoration: none !important;
+            color: black !important;           /* Keep black color on hover */
+            cursor: default !important;        /* Keep default cursor */
+        }
+
+        /* Remove any link hover effect globally within the calendar */
+        .fc a {
+            text-decoration: none !important;  /* Remove underline */
+            color: inherit !important;         /* Inherit color (black) */
+        }
+
+        .fc a:hover, .fc a:focus {
+            text-decoration: none !important;
+            color: inherit !important;         /* Prevent color change on hover/focus */
+            cursor: default !important;        /* Keep default cursor */
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 1200px) {
+            .main-content {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Calendar Section -->
+            <div id="calendar-container">
+                <div id="calendar"></div>
+                <div id="selectedDates"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Event Details -->
+    <div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 id="eventModalLabel" class="modal-title">Add Event</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="eventForm">
+                        <div class="mb-3">
+                            <label for="eventTitle" class="form-label">Event Title</label>
+                            <input type="text" class="form-control" id="eventTitle" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="eventColor" class="form-label">Event Category</label>
+                            <select class="form-select" id="eventColor">
+                                <option value="#007bff">Default (Blue)</option>
+                                <option value="#28a745">Business (Green)</option>
+                                <option value="#dc3545">Personal (Red)</option>
+                                <option value="#ffc107">Other (Yellow)</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Event</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const calendarEl = document.getElementById('calendar');
+            const selectedDateDisplay = document.getElementById('selectedDates');
+            let selectedEventInfo = null;
+
+            // Initialize Bootstrap Modal
+            const eventModal = new bootstrap.Modal(document.getElementById('eventModal'));
+            const eventForm = document.getElementById('eventForm');
+
+            // Initialize FullCalendar
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                selectable: true,
+                editable: true,  // Allows dragging and resizing
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                select: function(info) {
+                    selectedEventInfo = info;
+                    eventModal.show();
+                },
+                eventClick: function(info) {
+                    if (confirm('Do you want to delete this event?')) {
+                        info.event.remove();
+                        updateSelectedDates();
+                    }
+                },
+                events: loadEvents(),
+                eventColor: '#007bff', // Default color
+                height: '100%' // Fill the container height
+            });
+
+            calendar.render();
+
+            function loadEvents() {
+                // Load existing events from local storage or server
+                // For demonstration, returning an empty array
+                return [];
+            }
+
+            function updateSelectedDates() {
+                const events = calendar.getEvents();
+                if (events.length > 0) {
+                    const dates = events.map(event => event.start.toLocaleDateString()).join(', ');
+                    selectedDateDisplay.innerText = `Selected Dates: ${dates}`;
+                } else {
+                    selectedDateDisplay.innerText = 'No selected dates.';
+                }
+            }
+
+            eventForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const title = document.getElementById('eventTitle').value;
+                const color = document.getElementById('eventColor').value;
+
+                calendar.addEvent({
+                    title: title,
+                    start: selectedEventInfo.start,
+                    end: selectedEventInfo.end,
+                    color: color
+                });
+
+                updateSelectedDates();
+                eventModal.hide();
+            });
+        });
+    </script>
+</body>
+</html>
+

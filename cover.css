@@ -1,0 +1,516 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    overflow-x: hidden; /* Changed to only hide horizontal overflow */
+}
+
+.background {
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    min-height: 100vh; 
+    background-image: url("https://www.goodinfonet.com/uploads/news/goodinfonet_tallest_monument_in_calamba_city_1605753737_0.jpg"); 
+    background-repeat: no-repeat; 
+    background-size: cover;
+    background-position: center;
+    z-index: -1;
+    filter: blur(4px);
+}
+
+.main {
+    width: 100%;
+    background: linear-gradient(to top, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.5) 50%);
+    background-position: center;
+    background-size: cover;
+    min-height: 100vh;
+    position: relative;
+}
+
+.navbar {
+    width: 100%;
+    height: 75px;
+    background: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    position: relative;
+}
+
+.icon {
+    width: auto;
+    height: 70px;
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    color: #001d91;
+    font-size: 35px;
+    font-family: Arial;
+    padding-left: 20px;
+    padding-top: 10px;
+    margin-top: 5px;
+}
+
+.menu {
+    width: auto;
+    height: 70px;
+}
+
+.menu ul {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+.menu ul li {
+    list-style: none;
+    margin-left: 40px;
+    margin-top: 27px;
+    font-size: 16px;
+}
+
+.menu ul li a {
+    text-decoration: none;
+    color: #153570;
+    font-family: Arial;
+    font-weight: bold;
+    transition: 0.4s ease-in-out;
+}
+
+.menu ul li a:hover {
+    color: #000000;
+}
+
+.search {
+    width: 330px;
+    display: flex;
+    align-items: center;
+}
+
+.srch {
+    font-family: 'Times New Roman';
+    width: 200px;
+    height: 40px;
+    background: transparent;
+    border: 1px solid #104181;
+    margin-top: 13px;
+    color: #080808;
+    border-right: none;
+    font-size: 16px;
+    padding: 10px;
+    border-bottom-left-radius: 5px;
+    border-top-left-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn {
+    width: 100px;
+    height: 40px;
+    background: #cfcecd;
+    border: 2px solid #2e1a88;
+    margin-top: 13px;
+    color: #000;
+    font-size: 15px;
+    border-bottom-right-radius: 5px;
+    border-top-right-radius: 5px;
+    transition: 0.2s ease;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn:hover {
+    background-color: #2e1a88;
+    color: #fff;
+}
+
+.btn:focus {
+    outline: none;
+}
+
+.srch:focus {
+    outline: none;
+}
+
+.content {
+    width: 100%;
+    max-width: 1200px;
+    height: auto;
+    margin: auto;
+    color: #fff;
+    position: relative;
+    padding: 0 20px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.content .par {
+    padding-left: 20px;
+    padding-bottom: 25px;
+    font-family: Arial;
+    letter-spacing: 1.2px;
+    line-height: 30px;
+}
+
+.content h1 {
+    font-family: 'Times New Roman';
+    font-size: 50px;
+    padding-left: 20px;
+    margin-top: 9%;
+    letter-spacing: 2px;
+}
+
+.content .cn {
+    width: 150px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    height: 40px;
+    background: #10468b;
+    border: none;
+    margin-bottom: 10px;
+    margin-left: 20px;
+    font-size: 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: .4s ease;
+}
+
+.content .cn a {
+    text-decoration: none;
+    color: #fff;
+    transition: .3s ease;
+    font-weight: bold;
+    display: block;
+    text-align: center;
+    line-height: 40px;
+}
+
+.cn:hover {
+    background-color: #fff;
+}
+
+.cn:hover a {
+    color: #000;
+}
+
+.content span {
+    color: #91b5dd;
+    font-size: 80px;
+    font-family: 'Dancing Script', cursive;
+}
+
+.form {
+    width: 310px;
+    height: auto;
+    background: linear-gradient(to top, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0.8) 50%);
+    position: relative;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+    padding: 25px;
+    margin: 30px auto;
+}
+
+.form h2 {
+    width: 100%;
+    font-family: sans-serif;
+    text-align: center;
+    color: #101d8b;
+    font-size: 24px;
+    background-color: #fff;
+    border-radius: 10px;
+    margin: 2px auto 20px;
+    padding: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+
+.form input {
+    width: 100%;
+    height: 45px;
+    background: transparent;
+    border-bottom: 2px solid #1d4896;
+    border-top: none;
+    border-right: none;
+    border-left: none;
+    color: #fff;
+    font-size: 17px;
+    letter-spacing: 1px;
+    margin-top: 30px;
+    font-family: sans-serif;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    padding: 0 10px;
+}
+
+.form input:focus {
+    outline: none;
+}
+
+::placeholder {
+    color: #fff;
+    font-family: Arial;
+}
+
+.btnn {
+    width: 100%;
+    height: 45px;
+    background: #163079;
+    border: none;
+    margin-top: 30px;
+    font-size: 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    color: #fff;
+    transition: 0.4s ease;
+}
+
+.btnn:hover {
+    background: #fff;
+    color: #2a3c8b;
+}
+
+.btnn a {
+    text-decoration: none;
+    color: inherit;
+    font-weight: bold;
+    display: block;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    line-height: 45px;
+}
+
+.form .link {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 18px;
+    padding-top: 20px;
+    text-align: center;
+}
+
+.form .link a {
+    text-decoration: none;
+    color: #286e96;
+}
+
+.liw {
+    padding-top: 15px;
+    padding-bottom: 10px;
+    text-align: center;
+}
+
+.icons {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+}
+
+.icons a {
+    text-decoration: none;
+    color: #fff;
+}
+
+.icons ion-icon {
+    color: #fff;
+    font-size: 35px;
+    transition: 0.3s ease;
+}
+
+.icons ion-icon:hover {
+    color: #2f2180;
+}
+
+/* Menu hamburger icon */
+.menu-icon {
+    display: none;
+    cursor: pointer;
+    z-index: 1000;
+}
+
+.menu-icon ion-icon {
+    font-size: 30px;
+    color: #153570;
+}
+
+/* Responsive design */
+@media screen and (max-width: 1200px) {
+    .content {
+        max-width: 100%;
+    }
+    
+    .form {
+        width: 300px;
+    }
+    
+    .srch {
+        width: 150px;
+    }
+    
+    .content span {
+        font-size: 60px;
+    }
+}
+
+@media screen and (max-width: 992px) {
+    .navbar {
+        padding: 0 15px;
+    }
+    
+    .logo {
+        font-size: 28px;
+        padding-left: 10px;
+    }
+    
+    .menu ul li {
+        margin-left: 30px;
+    }
+    
+    .search {
+        width: 280px;
+    }
+    
+    .content {
+        flex-direction: column;
+    }
+    
+    .content h1 {
+        font-size: 40px;
+        margin-top: 50px;
+    }
+    
+    .form {
+        position: relative;
+        left: 0;
+        margin: 40px auto;
+        transform: none;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .menu-icon {
+        display: block;
+    }
+    
+    .menu {
+        position: absolute;
+        top: 75px;
+        left: -100%;
+        width: 100%;
+        height: auto;
+        background: white;
+        transition: 0.3s ease;
+        z-index: 999;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    }
+    
+    .menu.active {
+        left: 0;
+    }
+    
+    .menu ul {
+        flex-direction: column;
+        padding: 20px 0;
+        height: auto;
+    }
+    
+    .menu ul li {
+        margin: 15px 0;
+        text-align: center;
+    }
+    
+    .search {
+        display: none;
+    }
+    
+    .content h1 {
+        font-size: 35px;
+        text-align: center;
+        padding-left: 0;
+    }
+    
+    .content span {
+        font-size: 50px;
+    }
+    
+    .content .par {
+        font-size: 16px;
+        text-align: center;
+        padding-left: 0;
+    }
+    
+    .content .cn {
+        margin: 20px auto;
+        display: block;
+    }
+}
+
+@media screen and (max-width: 576px) {
+    .navbar {
+        height: 60px;
+    }
+    
+    .logo {
+        font-size: 20px;
+    }
+    
+    .logo span {
+        font-size: 30px !important;
+    }
+    
+    .content h1 {
+        font-size: 28px;
+    }
+    
+    .content span {
+        font-size: 40px;
+    }
+    
+    .par br {
+        display: none;
+    }
+    
+    .form {
+        width: 90%;
+        max-width: 300px;
+        padding: 20px 15px;
+    }
+    
+    .form h2 {
+        font-size: 20px;
+    }
+    
+    .form input, .btnn {
+        height: 40px;
+    }
+    
+    .btnn a {
+        line-height: 40px;
+    }
+    
+    .icons ion-icon {
+        font-size: 25px;
+    }
+}
+
+@media screen and (max-width: 350px) {
+    .logo {
+        font-size: 18px;
+    }
+    
+    .logo span {
+        font-size: 24px !important;
+    }
+    
+    .content h1 {
+        font-size: 24px;
+    }
+    
+    .content span {
+        font-size: 32px;
+    }
+}
