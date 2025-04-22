@@ -1,5 +1,3 @@
-
-
 let profileDropdownList = document.querySelector(".profile-dropdown-list");
 let btn = document.querySelector(".profile-dropdown-btn");
 
@@ -299,199 +297,116 @@ sliderContainerSwipe.addEventListener('touchend', () => {
     }
 });
 
-                // Function to toggle the visibility of the budget calculator
-                function toggleBudgetCalculator() {
-                    var calculator = document.getElementById('budgetCalculator');
-                    calculator.classList.toggle('active');
-                }
-        
-                // Function to calculate the travel budget
-                function calculateBudget() {
-                    const dailyFood = parseFloat(document.getElementById('dailyFood').value) || 0;
-                    const dailyAccommodation = parseFloat(document.getElementById('dailyAccommodation').value) || 0;
-                    const dailyTransport = parseFloat(document.getElementById('dailyTransport').value) || 0;
-                    const dailyActivities = parseFloat(document.getElementById('dailyActivities').value) || 0;
-                    const dailyMisc = parseFloat(document.getElementById('dailyMisc').value) || 0;
-                    const travelDays = parseInt(document.getElementById('travelDays').value);
-        
-                    // Input Validation
-                    if (isNaN(travelDays) || travelDays < 1) {
-                        document.getElementById('budgetResult').innerText = 'Please enter a valid number of travel days.';
-                        return;
-                    }
-        
-                    // Calculate totals
-                    const totalFood = dailyFood * travelDays;
-                    const totalAccommodation = dailyAccommodation * travelDays;
-                    const totalTransport = dailyTransport * travelDays;
-                    const totalActivities = dailyActivities * travelDays;
-                    const totalMisc = dailyMisc * travelDays;
-                    const grandTotal = totalFood + totalAccommodation + totalTransport + totalActivities + totalMisc;
-        
-                    // Display Results
-                    const resultHTML = `
-                        <strong>Travel Budget Summary:</strong><br>
-                        Food: $${totalFood.toFixed(2)}<br>
-                        Accommodation: $${totalAccommodation.toFixed(2)}<br>
-                        Transportation: $${totalTransport.toFixed(2)}<br>
-                        Activities: $${totalActivities.toFixed(2)}<br>
-                        Miscellaneous: $${totalMisc.toFixed(2)}<br>
-                        <hr>
-                        <strong>Total Budget: $${grandTotal.toFixed(2)}</strong>
-                    `;
-                    document.getElementById('budgetResult').innerHTML = resultHTML;
-                }
-        
-                // Close calculator when clicking outside of it
-                window.addEventListener('click', function(event) {
-                    var calculator = document.getElementById('budgetCalculator');
-                    var button = document.querySelector('.budget-btn');
-                    if (!calculator.contains(event.target) && !button.contains(event.target)) {
-                        calculator.classList.remove('active');
-                    }
-                });
-        
-                // Close calculator with Escape key
-                window.addEventListener('keydown', function(event) {
-                    var calculator = document.getElementById('budgetCalculator');
-                    if (event.key === 'Escape' && calculator.classList.contains('active')) {
-                        calculator.classList.remove('active');
-                    }
-                });
 
-                let currentIndex = 0;
+let currentIndex = 0;
 
-                function moveSlider(direction) {
-                    const cards = document.querySelectorAll('.card');
-                    const totalCards = cards.length;
-                    const slider = document.getElementById('slider');
-            
-                    // Update the current index based on direction
-                    currentIndex += direction;
-            
-                    // Ensure the current index is within bounds
-                    if (currentIndex < 0) currentIndex = 0;
-                    if (currentIndex >= totalCards) currentIndex = totalCards - 1;
-            
-                    // Move the slider
-                    const cardWidth = cards[0].clientWidth + 20; // Adjust for margin
-                    const offset = -currentIndex * cardWidth;
-                    slider.style.transform = `translateX(${offset}px)`;
-            
-                    // Update active bullet indicator
-                    updateActiveBullet(currentIndex);
-                }
-            
-                function selectCard(index) {
-                    const cards = document.querySelectorAll('.card');
-                    const totalCards = cards.length;
-                    const slider = document.getElementById('slider');
-            
-                    // Ensure the index is within bounds
-                    if (index < 0 || index >= totalCards) return;
-            
-                    // Update current index
-                    currentIndex = index;
-            
-                    // Move the slider
-                    const cardWidth = cards[0].clientWidth + 20; // Adjust for margin
-                    const offset = -currentIndex * cardWidth;
-                    slider.style.transform = `translateX(${offset}px)`;
-            
-                    // Update active bullet indicator
-                    updateActiveBullet(currentIndex);
-                }
-            
-                function updateActiveBullet(currentIndex) {
-                    const bulletIndicators = document.querySelectorAll('.bullet');
-                    bulletIndicators.forEach((bullet, index) => {
-                        bullet.classList.toggle('active', index === currentIndex);
-                    });
-                }
-                const journalButton = document.getElementById("journal-button");
-                const journalEntry = document.getElementById("journal-entry");
-                const journalTitle = document.getElementById("journal-title");
-                const journalText = document.getElementById("journal-text");
-                const savedEntries = document.getElementById("saved-entries");
-            
-                // Toggle the journal display
-                journalButton.addEventListener("click", () => {
-                    journalEntry.style.display = (journalEntry.style.display === "none" || !journalEntry.style.display) ? "block" : "none";
-                });
-            
-                // Close journal
-                document.getElementById("close-journal").addEventListener("click", () => {
-                    journalEntry.style.display = "none";
-                });
-            
-                // Save entry with title and timestamp to localStorage
-                document.getElementById("save-journal").addEventListener("click", () => {
-                    const journalTitleValue = journalTitle.value.trim();
-                    const journalTextValue = journalText.value.trim();
-            
-                    if (journalTitleValue && journalTextValue) {
-                        // Check if entry with the same title already exists
-                        const existingEntry = Object.keys(localStorage).find(key => key.includes(journalTitleValue));
-            
-                        if (existingEntry) {
-                            alert("An entry with this title already exists!");
-                            return;
-                        }
-            
-                        const date = new Date().toLocaleString();
-                        const entry = { title: journalTitleValue, text: journalTextValue, date };
-                        localStorage.setItem(`journalEntry-${date}`, JSON.stringify(entry));
-                        addSavedEntry(entry);
-            
-                        // Clear the inputs after saving
-                        journalTitle.value = "";
-                        journalText.value = "";
-                    } else {
-                        alert("Please fill in both the title and the journal text.");
-                    }
-                });
-            
-                // Function to add an entry to the saved entries section
-                function addSavedEntry(entry) {
-                    const entryDiv = document.createElement("div");
-                    entryDiv.className = "entry";
-            
-                    entryDiv.innerHTML = `
-                        <div class="entry-header">
-                            <span class="entry-title">${entry.title} (${entry.date})</span>
-                            <button class="delete-entry">Delete</button>
-                        </div>
-                        <div class="entry-details" style="display: none;">
-                            <textarea readonly>${entry.text}</textarea>
-                        </div>
-                    `;
-            
-                    entryDiv.addEventListener("click", () => {
-                        const details = entryDiv.querySelector(".entry-details");
-                        details.style.display = details.style.display === "none" ? "block" : "none";
-                    });
-            
-                    const deleteButton = entryDiv.querySelector(".delete-entry");
-                    deleteButton.addEventListener("click", (event) => {
-                        event.stopPropagation(); // Prevent click on entry div
-                        localStorage.removeItem(`journalEntry-${entry.date}`);
-                        entryDiv.remove();
-                    });
-            
-                    savedEntries.appendChild(entryDiv);
-                }
-            
-                // Load saved entries from localStorage on page load
-                window.onload = () => {
-                    for (let i = 0; i < localStorage.length; i++) {
-                        const key = localStorage.key(i);
-                        if (key.startsWith("journalEntry-")) {
-                            const entry = JSON.parse(localStorage.getItem(key));
-                            addSavedEntry(entry);
-                        }
-                    }
-                };        
+function moveSlider(direction) {
+    const cards = document.querySelectorAll('.card');
+    const totalCards = cards.length;
+    const slider = document.getElementById('slider');
 
-                document.querySelector('.mobile-nav-toggle').addEventListener('click', function() {
-                    document.querySelector('.navbar-right').classList.toggle('active');
-                  });
+    // Update the current index based on direction
+    currentIndex += direction;
+
+    // Ensure the current index is within bounds
+    if (currentIndex < 0) currentIndex = 0;
+    if (currentIndex >= totalCards) currentIndex = totalCards - 1;
+
+    // Move the slider
+    const cardWidth = cards[0].clientWidth + 20; // Adjust for margin
+    const offset = -currentIndex * cardWidth;
+    slider.style.transform = `translateX(${offset}px)`;
+
+    // Update active bullet indicator
+    updateActiveBullet(currentIndex);
+}
+
+function updateActiveBullet(currentIndex) {
+    const bulletIndicators = document.querySelectorAll('.bullet');
+    bulletIndicators.forEach((bullet, index) => {
+        bullet.classList.toggle('active', index === currentIndex);
+    });
+}
+const journalButton = document.getElementById("journal-button");
+const journalEntry = document.getElementById("journal-entry");
+const journalTitle = document.getElementById("journal-title");
+const journalText = document.getElementById("journal-text");
+const savedEntries = document.getElementById("saved-entries");
+
+// Toggle the journal display
+journalButton.addEventListener("click", () => {
+    journalEntry.style.display = (journalEntry.style.display === "none" || !journalEntry.style.display) ? "block" : "none";
+});
+
+// Close journal
+document.getElementById("close-journal").addEventListener("click", () => {
+    journalEntry.style.display = "none";
+});
+
+// Save entry with title and timestamp to localStorage
+document.getElementById("save-journal").addEventListener("click", () => {
+    const journalTitleValue = journalTitle.value.trim();
+    const journalTextValue = journalText.value.trim();
+
+    if (journalTitleValue && journalTextValue) {
+        // Check if entry with the same title already exists
+        const existingEntry = Object.keys(localStorage).find(key => key.includes(journalTitleValue));
+
+        if (existingEntry) {
+            alert("An entry with this title already exists!");
+            return;
+        }
+
+        const date = new Date().toLocaleString();
+        const entry = { title: journalTitleValue, text: journalTextValue, date };
+        localStorage.setItem(`journalEntry-${date}`, JSON.stringify(entry));
+        addSavedEntry(entry);
+
+        // Clear the inputs after saving
+        journalTitle.value = "";
+        journalText.value = "";
+    } else {
+        alert("Please fill in both the title and the journal text.");
+    }
+});
+
+// Function to add an entry to the saved entries section
+function addSavedEntry(entry) {
+    const entryDiv = document.createElement("div");
+    entryDiv.className = "entry";
+
+    entryDiv.innerHTML = `
+        <div class="entry-header">
+            <span class="entry-title">${entry.title} (${entry.date})</span>
+            <button class="delete-entry">Delete</button>
+        </div>
+        <div class="entry-details" style="display: none;">
+            <textarea readonly>${entry.text}</textarea>
+        </div>
+    `;
+
+    entryDiv.addEventListener("click", () => {
+        const details = entryDiv.querySelector(".entry-details");
+        details.style.display = details.style.display === "none" ? "block" : "none";
+    });
+
+    const deleteButton = entryDiv.querySelector(".delete-entry");
+    deleteButton.addEventListener("click", (event) => {
+        event.stopPropagation(); // Prevent click on entry div
+        localStorage.removeItem(`journalEntry-${entry.date}`);
+        entryDiv.remove();
+    });
+
+    savedEntries.appendChild(entryDiv);
+}
+
+// Load saved entries from localStorage on page load
+window.onload = () => {
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith("journalEntry-")) {
+            const entry = JSON.parse(localStorage.getItem(key));
+            addSavedEntry(entry);
+        }
+    }
+};
