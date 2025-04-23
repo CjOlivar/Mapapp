@@ -1,0 +1,13 @@
+{
+    "content": {
+        "packages": {},
+        "packages-dev": {},
+        "autoload": {
+            "psr-4": {
+                "": "src/"
+            }
+        },
+        "minimum-stability": "stable",
+        "prefer-stable": true
+    }
+}
