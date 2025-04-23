@@ -5,8 +5,7 @@ use src\Controllers\FeedbackController;
 
 header('Content-Type: application/json');
 
-$feedbackController = new FeedbackController($someDependency); // Replace $someDependency with the actual required argument
-
+$feedbackController = new FeedbackController($feedbackController); 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = json_decode(file_get_contents('php://input'), true);
     
