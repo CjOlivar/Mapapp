@@ -88,6 +88,8 @@
         </div>
      </div>
 
+    <!-- Add spacer to push content below navbar -->
+    <div style="height: 70px;"></div>
 
     <!-- Google Maps Embed -->
         <div class="map-container" id="home">
@@ -100,82 +102,8 @@
 
     <!-- Famous Places Section -->
     <section class="famous-places" id="famous-places">
-        <!-- Famous Place 1 -->
-        <div class="famous-place" data-name="Rizal Shrine">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Rizal_Shrine_Calamba_2023.jpg/800px-Rizal_Shrine_Calamba_2023.jpg" alt="Rizal Shrine"> 
-            <button class="favorite-btn" onclick="toggleFavorite(event, 'Rizal Shrine')">
-                <i class="fa-regular fa-heart"></i>
-            </button>
-            <div class="famous-place-content">
-                <h3 data-lang-en="Rizal Shrine" data-lang-tl="Rizal Shrine">Rizal Shrine</h3>
-                <p data-lang-en="Dedicated to the life and works of José Rizal, the national hero of the Philippines." data-lang-tl="Iniaalay sa buhay at mga gawa ni José Rizal, ang pambansang bayani ng Pilipinas.">Dedicated to the life and works of José Rizal, the national hero of the Philippines.</p>
-                <!-- Rating Stars -->
-                <div class="stars" data-place="Rizal Shrine">
-                    <i class="fa fa-star" data-value="1"></i>
-                    <i class="fa fa-star" data-value="2"></i>
-                    <i class="fa fa-star" data-value="3"></i>
-                    <i class="fa fa-star" data-value="4"></i>
-                    <i class="fa fa-star" data-value="5"></i>
-                </div>
-                <!-- Feedback Form -->
-                <div class="feedback-form">
-                    <textarea placeholder="" data-lang-en="Leave your feedback..." data-lang-tl="Mag-iwan ng iyong puna..."></textarea>
-                    <button onclick="submitFeedback('Rizal Shrine')" data-lang-en="Submit" data-lang-tl="Isumite">Submit</button>
-                </div>
-            </div>
-        </div>
-        <!-- Famous Place 2 -->
-        <div class="famous-place" data-name="SM City Calamba">
-            <img src="https://contents.smsupermalls.com/data/uploads/2021/09/SM_Calambat_thumb_ac0s1gfs4g5sfg.jpg" alt="SM City Calamba">
-            <button class="favorite-btn" onclick="toggleFavorite(event, 'SM City Calamba')">
-                <i class="fa-regular fa-heart"></i>
-            </button>
-            <div class="famous-place-content">
-                <h3 data-lang-en="SM City Calamba" data-lang-tl="SM City Calamba">SM City Calamba</h3>
-                <p data-lang-en="A bustling shopping mall with diverse retail shops, dining options, and entertainment venues." data-lang-tl="Isang masiglang mall na may iba't ibang tindahan, kainan, at lugar para sa libangan.">A beautiful church with rich historical and architectural significance.</p>
-                <!-- Rating Stars -->
-                <div class="stars" data-place="SM City Calamba">
-                    <i class="fa fa-star" data-value="1"></i>
-                    <i class="fa fa-star" data-value="2"></i>
-                    <i class="fa fa-star" data-value="3"></i>
-                    <i class="fa fa-star" data-value="4"></i>
-                    <i class="fa fa-star" data-value="5"></i>
-                </div>
-                <!-- Feedback Form -->
-                <div class="feedback-form">
-                    <textarea placeholder="" data-lang-en="Leave your feedback..." data-lang-tl="Mag-iwan ng iyong puna..."></textarea>
-                    <button onclick="submitFeedback('SM City Calamba')" data-lang-en="Submit" data-lang-tl="Isumite">Submit</button>
-                </div>
-            </div>
-        </div>
-        <!-- Famous Place 3 -->
-        <div class="famous-place" data-name="St. John the Baptist Parish Church">
-            <img src="https://www.benjielayug.com/wp-content/uploads/2017/05/Church-of-St.-John-the-Baptist-8.jpg" alt="St. John the Baptist Parish Church">
-            <button class="favorite-btn" onclick="toggleFavorite(event, 'St. John the Baptist Parish Church')">
-                <i class="fa-regular fa-heart"></i>
-            </button>
-            <div class="famous-place-content">
-                <h3 data-lang-en="St. John the Baptist Parish Church" data-lang-tl="St. John the Baptist Parish Church">St. John the Baptist Parish Church</h3>
-                <p data-lang-en="Known for its stunning design and cultural importance in Calamba." data-lang-tl="Kilala sa kamangha-manghang disenyo at kultural na kahalagahan sa Calamba.">Known for its stunning design and cultural importance in Calamba.</p>
-                <!-- Rating Stars -->
-                <div class="stars" data-place="St. John the Baptist Parish Church">
-                    <i class="fa fa-star" data-value="1"></i>
-                    <i class="fa fa-star" data-value="2"></i>
-                    <i class="fa fa-star" data-value="3"></i>
-                    <i class="fa fa-star" data-value="4"></i>
-                    <i class="fa fa-star" data-value="5"></i>
-                </div>
-                <!-- Feedback Form -->
-                <div class="feedback-form">
-                    <textarea placeholder="" data-lang-en="Leave your feedback..." data-lang-tl="Mag-iwan ng iyong puna..."></textarea>
-                    <button onclick="submitFeedback('St. John the Baptist Parish Church')" data-lang-en="Submit" data-lang-tl="Isumite">Submit</button>
-                </div>
-            </div>
-        </div>
-        <!-- Repeat similar blocks for other famous places -->
-        <!-- Add more famous places as needed -->
+        <!-- Will be filled by JS from backend -->
     </section>
-
 
    
     <!-- Optional: About Section -->
@@ -221,6 +149,105 @@
             <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script src="index.js"></script>
+<script>
+// filepath: c:\Users\CVDPS\OneDrive\Documents\GitHub\Mapapp\index.html
+// Journal API integration
+document.addEventListener('DOMContentLoaded', function() {
+    const journalButton = document.getElementById("journal-button");
+    const journalEntry = document.getElementById("journal-entry");
+    const journalTitle = document.getElementById("journal-title");
+    const journalText = document.getElementById("journal-text");
+    const savedEntries = document.getElementById("saved-entries");
+
+    // Load journals from API
+    async function loadJournals() {
+        savedEntries.innerHTML = '';
+        try {
+            const res = await fetch('api.php?endpoint=journals');
+            const data = await res.json();
+            data.forEach(entry => {
+                addSavedEntry(entry);
+            });
+        } catch (e) {
+            savedEntries.innerHTML = '<div>Could not load journal entries.</div>';
+        }
+    }
+
+    // Save journal to API
+    document.getElementById("save-journal").addEventListener("click", async () => {
+        const title = journalTitle.value.trim();
+        const text = journalText.value.trim();
+        if (!title || !text) {
+            alert("Please fill in both the title and the journal text.");
+            return;
+        }
+        try {
+            const res = await fetch('api.php?endpoint=journals', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, text })
+            });
+            const result = await res.json();
+            if (result.success) {
+                journalTitle.value = "";
+                journalText.value = "";
+                loadJournals();
+            } else {
+                alert(result.error || 'Failed to save journal.');
+            }
+        } catch (e) {
+            alert('Failed to save journal.');
+        }
+    });
+
+    // Delete journal from API
+    savedEntries.addEventListener('click', async function(e) {
+        if (e.target.classList.contains('delete-entry')) {
+            const entryDiv = e.target.closest('.entry');
+            const id = entryDiv.getAttribute('data-id');
+            if (id && confirm('Delete this entry?')) {
+                try {
+                    const res = await fetch('api.php?endpoint=journals&id=' + id, { method: 'DELETE' });
+                    const result = await res.json();
+                    if (result.success) {
+                        loadJournals();
+                    } else {
+                        alert(result.error || 'Failed to delete journal.');
+                    }
+                } catch (e) {
+                    alert('Failed to delete journal.');
+                }
+            }
+        }
+    });
+
+    // Add entry to DOM
+    function addSavedEntry(entry) {
+        const entryDiv = document.createElement("div");
+        entryDiv.className = "entry";
+        entryDiv.setAttribute('data-id', entry.id);
+        entryDiv.innerHTML = `
+            <div class="entry-header">
+                <span class="entry-title">${entry.title} (${entry.date})</span>
+                <button class="delete-entry">Delete</button>
+            </div>
+            <div class="entry-details" style="display: none;">
+                <textarea readonly>${entry.text}</textarea>
+            </div>
+        `;
+        entryDiv.addEventListener("click", function(e) {
+            if (!e.target.classList.contains('delete-entry')) {
+                const details = entryDiv.querySelector(".entry-details");
+                details.style.display = details.style.display === "none" ? "block" : "none";
+            }
+        });
+        savedEntries.appendChild(entryDiv);
+    }
+
+    // Initial load
+    loadJournals();
+});
+</script>
 </body>
 </html>
 

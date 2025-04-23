@@ -95,33 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* Feedback Functionality */
-function submitFeedback(placeName) {
-    const place = document.querySelector(`.famous-place[data-name="${placeName}"]`) || document.querySelector(`.card[data-name="${placeName}"]`);
-    const textarea = place.querySelector('textarea');
-    const feedback = textarea.value.trim();
-    if (feedback === "") {
-        alert(getTranslation('Please enter your feedback.'));
-        return;
-    }
-
-    // Save feedback to localStorage
-    let feedbacks = JSON.parse(localStorage.getItem('feedbacks')) || {};
-    if (!feedbacks[placeName]) {
-        feedbacks[placeName] = { ratings: [], comments: [] };
-    }
-    feedbacks[placeName].comments.push(feedback);
-    localStorage.setItem('feedbacks', JSON.stringify(feedbacks));
-
-    // Clear textarea
-    textarea.value = '';
-
-    alert(getTranslation('Thank you for your feedback!'));
-
-    // Update leaderboard
-    updateLeaderboard();
-}
-
-// Handle star ratings
 document.querySelectorAll('.stars').forEach(stars => {
     stars.addEventListener('click', function(event) {
         if (event.target.tagName === 'I') {

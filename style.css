@@ -27,6 +27,9 @@ body {
     background-color: #f0f0f0; 
     border: 5px solid #202A44; 
     border-radius: 15px; 
+    position: relative;
+    z-index: 1;
+    margin-top: 0; /* Remove if you use the spacer div in HTML */
 }
 
 .map-container iframe {
@@ -47,6 +50,9 @@ body {
     border-radius: 15px;
     padding-top: 3px;
     flex-direction: column;
+    position: relative;
+    z-index: 1;
+    margin-top: 0; /* Remove if you use the spacer div in HTML */
 } 
 
 .calendar iframe {
@@ -69,10 +75,10 @@ body {
         /* Navigation Bar */
         .navbar {
             width: 100%;
-            background-color: var(--navbar-bg);
+            background-color: var(--navbar-bg, #202A44); /* fallback color */
             position: fixed;
             top: 0;
-            z-index: 1000;
+            z-index: 2000; /* Increased z-index to ensure navbar is above all content */
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -88,7 +94,7 @@ body {
 
         .navbar a {
             display: block;
-            color: var(--navbar-text);
+            color: #fff !important;
             text-align: center;
             padding: 14px 20px;
             text-decoration: none;
@@ -104,6 +110,12 @@ body {
         /* Spacer to prevent content from being hidden under navbar */
         .navbar + .content {
             padding-top: 60px;
+        }
+
+        /* Add a spacer class for content below navbar if needed */
+        .navbar-spacer {
+            height: 70px;
+            width: 100%;
         }
 
         

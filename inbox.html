@@ -34,30 +34,53 @@
         const voiceInputBtn = document.getElementById('voiceInputBtn');
         let recognition;
 
-        // Form submission
-        feedbackForm.addEventListener('submit', function(event) {
+        // Fetch and display feedback messages from the API
+        async function loadFeedback() {
+            feedbackList.innerHTML = '';
+            try {
+                const res = await fetch('api.php?endpoint=feedback');
+                const data = await res.json();
+                data.forEach(item => {
+                    const feedbackItem = document.createElement('li');
+                    feedbackItem.classList.add('message');
+                    feedbackItem.innerHTML = `
+                        <span class="sender">${item.name} (${item.email})</span>
+                        <span class="time">${item.time}</span>
+                        <p>${item.message}</p>
+                    `;
+                    feedbackList.appendChild(feedbackItem);
+                });
+            } catch (e) {
+                feedbackList.innerHTML = '<li>Could not load feedback.</li>';
+            }
+        }
+
+        // Form submission: send feedback to API
+        feedbackForm.addEventListener('submit', async function(event) {
             event.preventDefault();
 
             const name = document.getElementById('name').value;
             const email = document.getElementById('email').value;
             const message = document.getElementById('message').value;
-            const time = new Date().toLocaleTimeString();
 
-            const feedbackItem = document.createElement('li');
-            feedbackItem.classList.add('message');
-            feedbackItem.innerHTML = `
-                <span class="sender">${name} (${email})</span>
-                <span class="time">${time}</span>
-                <p>${message}</p>
-            `;
-
-            feedbackList.appendChild(feedbackItem);
-            feedbackItem.scrollIntoView({ behavior: 'smooth' });
-            autoResponse.style.display = 'block';
-
-            setTimeout(() => autoResponse.style.display = 'none', 4000);
-
-            feedbackForm.reset();
+            try {
+                const res = await fetch('api.php?endpoint=feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, message })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    autoResponse.style.display = 'block';
+                    setTimeout(() => autoResponse.style.display = 'none', 4000);
+                    feedbackForm.reset();
+                    loadFeedback();
+                } else {
+                    alert(result.error || 'Failed to submit feedback.');
+                }
+            } catch (e) {
+                alert('Failed to submit feedback.');
+            }
         });
 
         // Speech to text functionality
@@ -82,6 +105,9 @@
         } else {
             voiceInputBtn.style.display = 'none';
         }
+
+        // Load feedback on page load
+        window.onload = loadFeedback;
     </script>
 </body>
 </html>

@@ -158,63 +158,87 @@
             const eventModal = new bootstrap.Modal(document.getElementById('eventModal'));
             const eventForm = document.getElementById('eventForm');
 
-            // Initialize FullCalendar
-            const calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
-                selectable: true,
-                editable: true,  // Allows dragging and resizing
-                headerToolbar: {
-                    left: 'prev,next today',
-                    center: 'title',
-                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
-                },
-                select: function(info) {
-                    selectedEventInfo = info;
-                    eventModal.show();
-                },
-                eventClick: function(info) {
-                    if (confirm('Do you want to delete this event?')) {
-                        info.event.remove();
-                        updateSelectedDates();
-                    }
-                },
-                events: loadEvents(),
-                eventColor: '#007bff', // Default color
-                height: '100%' // Fill the container height
-            });
-
-            calendar.render();
-
-            function loadEvents() {
-                // Load existing events from local storage or server
-                // For demonstration, returning an empty array
-                return [];
-            }
-
-            function updateSelectedDates() {
-                const events = calendar.getEvents();
-                if (events.length > 0) {
-                    const dates = events.map(event => event.start.toLocaleDateString()).join(', ');
-                    selectedDateDisplay.innerText = `Selected Dates: ${dates}`;
-                } else {
-                    selectedDateDisplay.innerText = 'No selected dates.';
+            // Load events from API
+            async function loadEvents() {
+                try {
+                    const res = await fetch('api.php?endpoint=journals');
+                    const data = await res.json();
+                    // Map journal entries to calendar events
+                    return data.map(entry => ({
+                        title: entry.title,
+                        start: entry.date,
+                        color: '#007bff'
+                    }));
+                } catch (e) {
+                    return [];
                 }
             }
 
-            eventForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const title = document.getElementById('eventTitle').value;
-                const color = document.getElementById('eventColor').value;
-
-                calendar.addEvent({
-                    title: title,
-                    start: selectedEventInfo.start,
-                    end: selectedEventInfo.end,
-                    color: color
+            // Initialize FullCalendar
+            loadEvents().then(events => {
+                const calendar = new FullCalendar.Calendar(calendarEl, {
+                    initialView: 'dayGridMonth',
+                    selectable: true,
+                    editable: true,
+                    headerToolbar: {
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                    },
+                    select: function(info) {
+                        selectedEventInfo = info;
+                        eventModal.show();
+                    },
+                    eventClick: function(info) {
+                        if (confirm('Do you want to delete this event?')) {
+                            info.event.remove();
+                            updateSelectedDates();
+                        }
+                    },
+                    events: events,
+                    eventColor: '#007bff',
+                    height: '100%'
                 });
 
-                updateSelectedDates();
-                eventModal.hide();
+                calendar.render();
+
+                function updateSelectedDates() {
+                    const events = calendar.getEvents();
+                    if (events.length > 0) {
+                        const dates = events.map(event => event.start.toLocaleDateString()).join(', ');
+                        selectedDateDisplay.innerText = `Selected Dates: ${dates}`;
+                    } else {
+                        selectedDateDisplay.innerText = 'No selected dates.';
+                    }
+                }
+
+                eventForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    const title = document.getElementById('eventTitle').value;
+                    const color = document.getElementById('eventColor').value;
+
+                    // Save event to API as a journal
+                    try {
+                        await fetch('api.php?endpoint=journals', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                title: title,
+                                text: '', // Optionally add more details
+                            })
+                        });
+                        calendar.addEvent({
+                            title: title,
+                            start: selectedEventInfo.start,
+                            end: selectedEventInfo.end,
+                            color: color
+                        });
+                        updateSelectedDates();
+                        eventModal.hide();
+                    } catch (e) {
+                        alert('Failed to save event.');
+                    }
+                });
             });
         });
     </script>
