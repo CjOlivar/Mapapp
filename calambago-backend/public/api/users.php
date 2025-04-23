@@ -17,7 +17,7 @@ switch ($method) {
             $userId = intval($_GET['id']);
             $response = $usersController->getUser($userId);
         } else {
-            $response = $usersController->getUsers();
+            $response = $userController->getUsers();
         }
         break;
 
@@ -29,12 +29,12 @@ switch ($method) {
     case 'PUT':
         $data = json_decode(file_get_contents('php://input'), true);
         $userId = intval($_GET['id']);
-        $response = $usersController->updateUser($userId, $data);
+        $response = $userController->updateUser($userId, $data);
         break;
 
     case 'DELETE':
         $userId = intval($_GET['id']);
-        $response = $usersController->deleteUser($userId);
+        $response = $userController->deleteUser($userId);
         break;
 
     default:
