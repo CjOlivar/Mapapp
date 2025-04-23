@@ -1,15 +1,11 @@
 <?php
-require_once '../../src/config/database.php';
 require_once '../../src/controllers/PlacesController.php';
 
-use src\Config\Database;
 use src\Controllers\PlacesController;
 
 header('Content-Type: application/json');
 
-$database = new Database();
-$db = $database->getConnection();
-$placesController = new PlacesController($db);
+$placesController = new PlacesController();
 
 $method = $_SERVER['REQUEST_METHOD'];
 

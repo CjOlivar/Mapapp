@@ -2,41 +2,24 @@
 
 namespace src\Models;
 
-use PDO;
-
 class Feedback {
-    private $conn;
-    private $table = 'feedback';
-
-    public function __construct(PDO $db) {
-        $this->conn = $db;
-    }
+    private static $feedbacks = [];
+    private static $nextId = 1;
 
     public function create($data) {
-        $query = "INSERT INTO " . $this->table . " (user_id, place_id, message, created_at) VALUES (:user_id, :place_id, :message, :created_at)";
-        $stmt = $this->conn->prepare($query);
-        
-        $now = date('Y-m-d H:i:s');
-        $stmt->bindParam(':user_id', $data['user_id']);
-        $stmt->bindParam(':place_id', $data['place_id']);
-        $stmt->bindParam(':message', $data['message']);
-        $stmt->bindParam(':created_at', $now);
-
-        return $stmt->execute();
+        $data['id'] = self::$nextId++;
+        $data['created_at'] = date('Y-m-d H:i:s');
+        self::$feedbacks[] = $data;
+        return $data;
     }
 
     public function getAll() {
-        $query = "SELECT * FROM " . $this->table . " ORDER BY created_at DESC";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute();
-        return $stmt;
+        return array_values(self::$feedbacks);
     }
 
     public function getByPlaceId($place_id) {
-        $query = "SELECT * FROM " . $this->table . " WHERE place_id = :place_id ORDER BY created_at DESC";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':place_id', $place_id);
-        $stmt->execute();
-        return $stmt;
+        return array_values(array_filter(self::$feedbacks, function($f) use ($place_id) {
+            return $f['place_id'] == $place_id;
+        }));
     }
 }

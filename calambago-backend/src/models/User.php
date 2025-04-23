@@ -2,86 +2,47 @@
 
 namespace src\Models;
 
-use PDO;
-
 class User {
-    private $conn;
-    private $table = 'users';
-    private $id;
-    private $username;
-    private $email;
-    private $password;
-    private $created_at;
-
-    public function __construct($db) {
-        $this->conn = $db;
-    }
+    private static $users = [];
+    private static $nextId = 1;
 
     public function create($data) {
-        $query = "INSERT INTO " . $this->table . " (username, email, password, created_at) VALUES (:username, :email, :password, :created_at)";
-        $stmt = $this->conn->prepare($query);
-        
-        $stmt->bindParam(':username', $data['username']);
-        $stmt->bindParam(':email', $data['email']);
-        $stmt->bindParam(':password', password_hash($data['password'], PASSWORD_BCRYPT));
-        $stmt->bindParam(':created_at', date('Y-m-d H:i:s'));
-
-        return $stmt->execute();
+        $data['id'] = self::$nextId++;
+        $data['created_at'] = date('Y-m-d H:i:s');
+        $data['password'] = password_hash($data['password'], PASSWORD_BCRYPT);
+        self::$users[] = $data;
+        return $data;
     }
 
     public function find($id) {
-        $query = "SELECT id, username, email, created_at FROM " . $this->table . " WHERE id = ?";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([$id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
-
-    public function login($email, $password) {
-        $query = "SELECT * FROM " . $this->table . " WHERE email = ?";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([$email]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($user && password_verify($password, $user['password'])) {
-            unset($user['password']);
-            return $user;
+        foreach (self::$users as $user) {
+            if ($user['id'] == $id) {
+                $userCopy = $user;
+                unset($userCopy['password']);
+                return $userCopy;
+            }
         }
         return false;
     }
 
-    public function getId() {
-        return $this->id;
+    public function login($email, $password) {
+        foreach (self::$users as $user) {
+            if ($user['email'] === $email && password_verify($password, $user['password'])) {
+                $userCopy = $user;
+                unset($userCopy['password']);
+                return $userCopy;
+            }
+        }
+        return false;
     }
 
-    public function getUsername() {
-        return $this->username;
-    }
-
-    public function getEmail() {
-        return $this->email;
-    }
-
-    public function getPassword() {
-        return $this->password;
-    }
-
-    public function getCreatedAt() {
-        return $this->created_at;
-    }
-
-    public function setId($id) {
-        $this->id = $id;
-    }
-
-    public function setUsername($username) {
-        $this->username = $username;
-    }
-
-    public function setEmail($email) {
-        $this->email = $email;
-    }
-
-    public function setPassword($password) {
-        $this->password = password_hash($password, PASSWORD_BCRYPT);
+    public function getAll() {
+        $users = [];
+        foreach (self::$users as $user) {
+            $userCopy = $user;
+            unset($userCopy['password']);
+            $users[] = $userCopy;
+        }
+        return $users;
     }
 }

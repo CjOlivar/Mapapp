@@ -1,14 +1,10 @@
 <?php
 require_once '../../src/controllers/UsersController.php';
-require_once '../../src/config/database.php';
 
 use src\Controllers\UsersController;
-use src\Config\Database;
 
 header('Content-Type: application/json');
 
-$database = new Database();
-$usersController = new UsersController($databaseConnection);
 $method = $_SERVER['REQUEST_METHOD'];
 
 switch ($method) {

@@ -1,17 +1,13 @@
 <?php
-require_once '/../src/config/database.php';
-require_once '/../src/controllers/PlacesController.php';
-require_once '/../src/controllers/UsersController.php';
-require_once '/../src/controllers/FeedbackController.php';
+require_once __DIR__ . '/../src/helpers/response.php';
+require_once __DIR__ . '/../src/controllers/PlacesController.php';
+require_once __DIR__ . '/../src/controllers/UsersController.php';
+require_once __DIR__ . '/../src/controllers/FeedbackController.php';
 
-use src\Config\Database;
 use src\Controllers\PlacesController;
 use src\Controllers\UsersController;
 use src\Controllers\FeedbackController;
 
-// Initialize the application
-$database = new Database();
-$db = $database->getConnection();
 header('Content-Type: application/json');
 // Set up routing
 $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
@@ -19,17 +15,17 @@ $requestMethod = $_SERVER['REQUEST_METHOD'];
 
 switch ($requestUri) {
     case '/api/places':
-        $controller = new PlacesController($db);
+        $controller = new PlacesController();
         handlePlacesRequest($controller, $requestMethod);
         break;
 
     case '/api/users':
-        $controller = new UsersController($db);
+        $controller = new UsersController();
         handleUsersRequest($controller, $requestMethod);
         break;
 
     case '/api/feedback':
-        $controller = new FeedbackController($db);
+        $controller = new FeedbackController();
         handleFeedbackRequest($controller, $requestMethod);
         break;
 
@@ -40,18 +36,21 @@ switch ($requestUri) {
 }
 
 function handlePlacesRequest($controller, $method) {
+    $data = json_decode(file_get_contents('php://input'), true);
     switch ($method) {
         case 'GET':
             $controller->getPlaces();
             break;
         case 'POST':
-            $controller->createPlace();
+            $controller->createPlace($data);
             break;
         case 'PUT':
-            $controller->updatePlace();
+            $id = $_GET['id'] ?? null;
+            $controller->updatePlace($id, $data);
             break;
         case 'DELETE':
-            $controller->deletePlace();
+            $id = $_GET['id'] ?? null;
+            $controller->deletePlace($id);
             break;
         default:
             http_response_code(405);
@@ -61,12 +60,18 @@ function handlePlacesRequest($controller, $method) {
 }
 
 function handleUsersRequest($controller, $method) {
+    $data = json_decode(file_get_contents('php://input'), true);
     switch ($method) {
         case 'POST':
-            $controller->registerUser();
+            $controller->registerUser($data);
             break;
         case 'GET':
-            $controller->getUser();
+            $id = $_GET['id'] ?? null;
+            if ($id) {
+                $controller->getUser($id);
+            } else {
+                $controller->getUsers();
+            }
             break;
         default:
             http_response_code(405);
@@ -76,9 +81,10 @@ function handleUsersRequest($controller, $method) {
 }
 
 function handleFeedbackRequest($controller, $method) {
+    $data = json_decode(file_get_contents('php://input'), true);
     switch ($method) {
         case 'POST':
-            $controller->submitFeedback();
+            $controller->submitFeedback($data);
             break;
         case 'GET':
             $controller->getFeedback();

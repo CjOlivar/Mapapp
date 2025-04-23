@@ -1,56 +1,38 @@
 <?php
 
-namespace src\controllers;
+namespace src\Controllers;
 
 use src\Models\Feedback;
-use src\Helpers\Response;
-use PDO;
-use Exception;
+use src\helpers\Response;
 
 class FeedbackController
 {
-    private $db;
-
-    public function __construct(PDO $db)
+    public function submitFeedback($data)
     {
-        $this->db = $db;
-    }
+        if (!isset($data['message']) || empty($data['message'])) {
+            Response::sendError("Feedback message is required.");
+            return;
+        }
 
-    public function submitFeedback($userId, $placeId, $feedback)
-    {
-        try {
-            // Validate required fields
-            if (!isset($data['message']) || empty($data['message'])) {
-                Response::sendError("Feedback message is required.");
-                return;
-            }
+        $feedback = new Feedback();
+        $result = $feedback->create($data);
 
-            $feedback = new Feedback($this->db);
-            $result = $feedback->create($data);
-
-            if ($result) {
-                Response::sendSuccess("Feedback submitted successfully.");
-            } else {
-                Response::sendError("Failed to submit feedback.");
-            }
-        } catch (Exception $e) {
-            Response::sendError("An error occurred: " . $e->getMessage());
+        if ($result) {
+            Response::sendSuccess($result);
+        } else {
+            Response::sendError("Failed to submit feedback.");
         }
     }
 
-    public function getFeedback(): void
+    public function getFeedback()
     {
-        try {
-            $feedback = new Feedback($this->db);
-            $results = $feedback->getAll();
+        $feedback = new Feedback();
+        $results = $feedback->getAll();
 
-            if ($results) {
-                Response::sendSuccess($results);
-            } else {
-                Response::sendError("No feedback found.");
-            }
-        } catch (Exception $e) {
-            Response::sendError("An error occurred: " . $e->getMessage());
+        if ($results) {
+            Response::sendSuccess($results);
+        } else {
+            Response::sendError("No feedback found.");
         }
     }
 }
