@@ -74,39 +74,51 @@ switch ($endpoint) {
     case 'users':
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $input = json_decode(file_get_contents('php://input'), true);
-            if (!$input || !isset($input['username'], $input['email'], $input['password'])) {
+            if (!$input || !isset($input['username'], $input['email'], $input['password'], $input['type'])) {
                 http_response_code(400);
                 echo json_encode(['error' => 'Missing fields']);
                 exit;
             }
-            $stmt = $pdo->prepare("INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
-            $stmt->execute([$input['username'], $input['email'], password_hash($input['password'], PASSWORD_DEFAULT)]);
+            // Check if email already exists
+            $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+            $stmt->execute([$input['email']]);
+            if ($stmt->fetch()) {
+                http_response_code(409);
+                echo json_encode(['error' => 'Email already registered']);
+                exit;
+            }
+            $stmt = $pdo->prepare("INSERT INTO users (username, email, password, type) VALUES (?, ?, ?, ?)");
+            $stmt->execute([
+                $input['username'],
+                $input['email'],
+                password_hash($input['password'], PASSWORD_DEFAULT),
+                $input['type']
+            ]);
             echo json_encode(['success' => true]);
         }
-        // Add more user endpoints as needed (login, update, etc.)
         elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $id = $_GET['id'] ?? '';
             if ($id) {
-            $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
-            $stmt->execute([$id]);
-            $user = $stmt->fetch();
-            if ($user) {
-                echo json_encode($user);
+                $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+                $stmt->execute([$id]);
+                $user = $stmt->fetch();
+                if ($user) {
+                    echo json_encode($user);
+                } else {
+                    http_response_code(404);
+                    echo json_encode(['error' => 'User not found']);
+                }
             } else {
-                http_response_code(404);
-                echo json_encode(['error' => 'User not found']);
-            }
-            } else {
-            $stmt = $pdo->query("SELECT * FROM users");
-            echo json_encode($stmt->fetchAll());
+                $stmt = $pdo->query("SELECT * FROM users");
+                echo json_encode($stmt->fetchAll());
             }
         } elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
             $id = $_GET['id'] ?? '';
             $input = json_decode(file_get_contents('php://input'), true);
             if (!$id || !$input || !isset($input['username'], $input['email'])) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Missing fields or id']);
-            exit;
+                http_response_code(400);
+                echo json_encode(['error' => 'Missing fields or id']);
+                exit;
             }
             $stmt = $pdo->prepare("UPDATE users SET username = ?, email = ? WHERE id = ?");
             $stmt->execute([$input['username'], $input['email'], $id]);
@@ -114,13 +126,33 @@ switch ($endpoint) {
         } elseif ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
             $id = $_GET['id'] ?? '';
             if (!$id) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Missing id']);
-            exit;
+                http_response_code(400);
+                echo json_encode(['error' => 'Missing id']);
+                exit;
             }
             $stmt = $pdo->prepare("DELETE FROM users WHERE id = ?");
             $stmt->execute([$id]);
             echo json_encode(['success' => true]);
+        }
+        break;
+    case 'login':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $input = json_decode(file_get_contents('php://input'), true);
+            if (!$input || !isset($input['email'], $input['password'], $input['type'])) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Missing fields']);
+                exit;
+            }
+            $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? AND type = ?");
+            $stmt->execute([$input['email'], $input['type']]);
+            $user = $stmt->fetch();
+            if ($user && password_verify($input['password'], $user['password'])) {
+                unset($user['password']);
+                echo json_encode(['success' => true, 'user' => $user]);
+            } else {
+                http_response_code(401);
+                echo json_encode(['error' => 'Invalid credentials']);
+            }
         }
         break;
     default:

@@ -8,95 +8,128 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Dancing+Script&family=Great+Vibes&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
 
     <link rel="stylesheet" href="style.css">
+    <style>
+    /* Responsive Navbar Styles */
+    @media (max-width: 900px) {
+        .menu {
+            display: none;
+        }
+        .menu.active {
+            display: flex !important;
+            flex-direction: column;
+            background: #202A44;
+            position: absolute;
+            top: 60px;
+            left: 0;
+            width: 100vw;
+            z-index: 3000;
+        }
+        .navbar-links a {
+            width: 100%;
+            text-align: left;
+            padding-left: 20px;
+        }
+        .menu-icon {
+            display: flex;
+            align-items: center;
+            font-size: 2.2rem;
+            color: #f1c40f;
+            cursor: pointer;
+            margin-right: 20px;
+            z-index: 4000;
+        }
+    }
+    @media (min-width: 901px) {
+        .menu {
+            display: flex !important;
+        }
+        .menu-icon {
+            display: none;
+        }
+    }
+    </style>
 </head>
 <body onload="document.dispatchEvent(new Event('DOMContentLoaded'));">
+<script>
+if (!localStorage.getItem('user')) {
+    window.location.href = 'cover.html';
+}
+</script>
     
      <!-- Navigation Bar -->
-     <div class="navbar">
+     <div class="navbar" id="main-navbar">
         <div class="icon">
             <h2 class="logo">Calamba<span style="color: #91b5dd; font-weight: bolder; font-family: 'Dancing Script', cursive; font-size: 40px;">GO!</span></h2>
         </div>
-        
-        <div class="navbar-left">
-            <b><a href="#home" data-lang-en="Home" data-lang-tl="Bahay">Home</a></b>
-            <b><a href="#famous-places" data-lang-en="Famous Places" data-lang-tl="Sikat na Lugar">Famous Places</a></b>
-            <b><a href="#about" data-lang-en="About" data-lang-tl="Tungkol">About</a></b>
-            <b><a href="#contact" data-lang-en="Contact" data-lang-tl="Makipag-ugnayan">Contact</a></b>
+        <!-- Hamburger icon will be inserted by JS -->
+        <div class="menu" id="main-menu">
+            <div class="navbar-links">
+                <b><a href="#home" data-lang-en="Home" data-lang-tl="Bahay">Home</a></b>
+                <b><a href="#famous-places" data-lang-en="Famous Places" data-lang-tl="Sikat na Lugar">Famous Places</a></b>
+                <b><a href="#about" data-lang-en="About" data-lang-tl="Tungkol">About</a></b>
+                <b><a href="#contact" data-lang-en="Contact" data-lang-tl="Makipag-ugnayan">Contact</a></b>
+            </div>
         </div>
-
-        <div class="navbar-right">
-             
-            <!-- Search Bar -->
-             <form class="search-bar" action="https://www.google.com/search" method="get">
-                <div class="input-group">
-                    <input type="text" name="q" class="search-input" placeholder="Search..." required>
-                    <button type="submit" class="search-button">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                    </button>
-                </div>
-            </form>
-
-
-            <div class="profile-dropdown">
-                <div onclick="toggle()" class="profile-dropdown-btn">
-                  <div class="profile-img">
-                    <i class="fa-solid fa-circle"></i>
-                  </div>
-        
-                  <span
-                    >ITMAWD22
-                    <i class="fa-solid fa-angle-down"></i>
-                  </span>
-                </div>
-        
-                <ul class="profile-dropdown-list">
-                  <li class="profile-dropdown-list-item">
-                    <a href="profile.html">
-                      <i class="fa-regular fa-user"></i>
-                      Edit Profile
-                    </a>
-                  </li>
-        
-                  <li class="profile-dropdown-list-item">
-                    <a href="inbox.html">
-                      <i class="fa-regular fa-envelope"></i>
-                      Inbox
-                    </a>
-                  </li>
-        
-                  <li class="profile-dropdown-list-item">
-                    <a href="featserv.html">
-                      <i class="fa-regular fa-circle-question"></i>
-                      Features & Services
-                    </a>
-                  </li>
-                  <hr />
-        
-                  <li class="profile-dropdown-list-item">
-                    <a href="cover.html">
-                      <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                      Log out
-                    </a>
-                  </li>
-                </ul>
+        <!-- Profile always visible -->
+        <div class="profile-dropdown">
+            <div onclick="toggle()" class="profile-dropdown-btn">
+              <div class="profile-img">
+                <i class="fa-solid fa-circle"></i>
               </div>
+              <span>
+                <script>
+                  // Show user type in navbar
+                  const user = JSON.parse(localStorage.getItem('user') || '{}');
+                  document.write(user.username ? user.username + ' (' + (user.type || '') + ')' : 'ITMAWD22');
+                </script>
+                <i class="fa-solid fa-angle-down"></i>
+              </span>
+            </div>
+            <ul class="profile-dropdown-list">
+              <li class="profile-dropdown-list-item">
+                <a href="profile.html">
+                  <i class="fa-regular fa-user"></i>
+                  Edit Profile
+                </a>
+              </li>
+              <li class="profile-dropdown-list-item">
+                <a href="inbox.html">
+                  <i class="fa-regular fa-envelope"></i>
+                  Inbox
+                </a>
+              </li>
+              <li class="profile-dropdown-list-item">
+                <a href="featserv.html">
+                  <i class="fa-regular fa-circle-question"></i>
+                  Features & Services
+                </a>
+              </li>
+              <hr />
+              <li class="profile-dropdown-list-item">
+                <a href="cover.html">
+                  <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                  Log out
+                </a>
+              </li>
+            </ul>
         </div>
      </div>
 
-    <!-- Add spacer to push content below navbar -->
-    <div style="height: 70px;"></div>
+     
+     <div class="navbar-spacer"></div>
+     <div class="navbar-spacer"></div>
+
 
     <!-- Google Maps Embed -->
         <div class="map-container" id="home">
             <iframe src="PRACTICE.html"></iframe>
         </div>
 
-    <div class="calendar">
+    <div class="calendar" style="margin-bottom: 24px;">
         <iframe src="manzanero.html"></iframe>
     </div>
 
@@ -150,102 +183,35 @@
 
 <script src="index.js"></script>
 <script>
-// filepath: c:\Users\CVDPS\OneDrive\Documents\GitHub\Mapapp\index.html
-// Journal API integration
 document.addEventListener('DOMContentLoaded', function() {
-    const journalButton = document.getElementById("journal-button");
-    const journalEntry = document.getElementById("journal-entry");
-    const journalTitle = document.getElementById("journal-title");
-    const journalText = document.getElementById("journal-text");
-    const savedEntries = document.getElementById("saved-entries");
+    const navbar = document.querySelector('.navbar');
+    const menu = document.getElementById('main-menu');
+    // Insert hamburger icon before menu if not present
+    if (!document.querySelector('.menu-icon')) {
+        const menuIcon = document.createElement('div');
+        menuIcon.className = 'menu-icon';
+        menuIcon.innerHTML = '<ion-icon name="menu-outline"></ion-icon>';
+        navbar.insertBefore(menuIcon, menu);
 
-    // Load journals from API
-    async function loadJournals() {
-        savedEntries.innerHTML = '';
-        try {
-            const res = await fetch('api.php?endpoint=journals');
-            const data = await res.json();
-            data.forEach(entry => {
-                addSavedEntry(entry);
-            });
-        } catch (e) {
-            savedEntries.innerHTML = '<div>Could not load journal entries.</div>';
-        }
-    }
+        menuIcon.addEventListener('click', function(e) {
+            e.stopPropagation();
+            menu.classList.toggle('active');
+        });
 
-    // Save journal to API
-    document.getElementById("save-journal").addEventListener("click", async () => {
-        const title = journalTitle.value.trim();
-        const text = journalText.value.trim();
-        if (!title || !text) {
-            alert("Please fill in both the title and the journal text.");
-            return;
-        }
-        try {
-            const res = await fetch('api.php?endpoint=journals', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, text })
-            });
-            const result = await res.json();
-            if (result.success) {
-                journalTitle.value = "";
-                journalText.value = "";
-                loadJournals();
-            } else {
-                alert(result.error || 'Failed to save journal.');
-            }
-        } catch (e) {
-            alert('Failed to save journal.');
-        }
-    });
-
-    // Delete journal from API
-    savedEntries.addEventListener('click', async function(e) {
-        if (e.target.classList.contains('delete-entry')) {
-            const entryDiv = e.target.closest('.entry');
-            const id = entryDiv.getAttribute('data-id');
-            if (id && confirm('Delete this entry?')) {
-                try {
-                    const res = await fetch('api.php?endpoint=journals&id=' + id, { method: 'DELETE' });
-                    const result = await res.json();
-                    if (result.success) {
-                        loadJournals();
-                    } else {
-                        alert(result.error || 'Failed to delete journal.');
-                    }
-                } catch (e) {
-                    alert('Failed to delete journal.');
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.menu') && !event.target.closest('.menu-icon')) {
+                if (menu.classList.contains('active')) {
+                    menu.classList.remove('active');
                 }
             }
-        }
-    });
+        });
 
-    // Add entry to DOM
-    function addSavedEntry(entry) {
-        const entryDiv = document.createElement("div");
-        entryDiv.className = "entry";
-        entryDiv.setAttribute('data-id', entry.id);
-        entryDiv.innerHTML = `
-            <div class="entry-header">
-                <span class="entry-title">${entry.title} (${entry.date})</span>
-                <button class="delete-entry">Delete</button>
-            </div>
-            <div class="entry-details" style="display: none;">
-                <textarea readonly>${entry.text}</textarea>
-            </div>
-        `;
-        entryDiv.addEventListener("click", function(e) {
-            if (!e.target.classList.contains('delete-entry')) {
-                const details = entryDiv.querySelector(".entry-details");
-                details.style.display = details.style.display === "none" ? "block" : "none";
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 900 && menu.classList.contains('active')) {
+                menu.classList.remove('active');
             }
         });
-        savedEntries.appendChild(entryDiv);
     }
-
-    // Initial load
-    loadJournals();
 });
 </script>
 </body>

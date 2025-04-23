@@ -5,6 +5,52 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Our Features & Services</title>
 <link rel="stylesheet" href="featserv.css"/>
+<style>
+/* Responsive Features & Services */
+.features-section {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 16px;
+}
+.card-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    justify-content: center;
+}
+.card {
+    flex: 1 1 300px;
+    max-width: 340px;
+    min-width: 220px;
+    margin: 10px 0;
+}
+.instruction-card {
+    margin-top: 32px;
+    background: #f8f8f8;
+    border-radius: 10px;
+    padding: 18px;
+}
+@media (max-width: 900px) {
+    .card-container {
+        flex-direction: column;
+        align-items: center;
+    }
+    .card {
+        max-width: 95vw;
+    }
+    .features-section {
+        padding: 4px;
+    }
+}
+@media (max-width: 600px) {
+    .features-section {
+        padding: 2px;
+    }
+    .instruction-card {
+        padding: 10px;
+    }
+}
+</style>
 </head>
 <body>
 
