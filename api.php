@@ -155,6 +155,96 @@ switch ($endpoint) {
             }
         }
         break;
+    case 'deliveries':
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            // ?type=driver&driver_id=... or ?type=customer&customer_id=...
+            $type = $_GET['type'] ?? '';
+            $id = $_GET['id'] ?? '';
+            if ($type === 'driver') {
+                // Show available and assigned deliveries for this driver
+                $stmt = $pdo->prepare("SELECT * FROM deliveries WHERE status IN ('pending','active') AND (driver_id IS NULL OR driver_id = ?)");
+                $stmt->execute([$id]);
+                $rows = $stmt->fetchAll();
+                // Always return coords as JSON arrays
+                foreach ($rows as &$row) {
+                    if (isset($row['pickup_coords'])) $row['pickup_coords'] = $row['pickup_coords'];
+                    if (isset($row['delivery_coords'])) $row['delivery_coords'] = $row['delivery_coords'];
+                }
+                echo json_encode($rows);
+            } elseif ($type === 'customer') {
+                // Show all deliveries for this customer
+                $stmt = $pdo->prepare("SELECT * FROM deliveries WHERE customer_id = ?");
+                $stmt->execute([$id]);
+                $rows = $stmt->fetchAll();
+                foreach ($rows as &$row) {
+                    if (isset($row['pickup_coords'])) $row['pickup_coords'] = $row['pickup_coords'];
+                    if (isset($row['delivery_coords'])) $row['delivery_coords'] = $row['delivery_coords'];
+                }
+                echo json_encode($rows);
+            } else {
+                // Admin: show all
+                $stmt = $pdo->query("SELECT * FROM deliveries");
+                $rows = $stmt->fetchAll();
+                foreach ($rows as &$row) {
+                    if (isset($row['pickup_coords'])) $row['pickup_coords'] = $row['pickup_coords'];
+                    if (isset($row['delivery_coords'])) $row['delivery_coords'] = $row['delivery_coords'];
+                }
+                echo json_encode($rows);
+            }
+        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Customer creates a new delivery order
+            $input = json_decode(file_get_contents('php://input'), true);
+            if (
+                !$input ||
+                !isset($input['customer_id'], $input['pickup_address'], $input['delivery_address'], $input['fee'], $input['package_info'], $input['priority'])
+            ) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Missing fields']);
+                exit;
+            }
+            // Accept pickup_coords and delivery_coords if provided (from frontend geocoding)
+            $pickup_coords = isset($input['pickup_coords']) ? json_encode($input['pickup_coords']) : null;
+            $delivery_coords = isset($input['delivery_coords']) ? json_encode($input['delivery_coords']) : null;
+            $stmt = $pdo->prepare("INSERT INTO deliveries (customer_id, pickup_address, delivery_address, pickup_coords, delivery_coords, fee, package_info, priority, notes, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW(), NOW())");
+            $stmt->execute([
+                $input['customer_id'],
+                $input['pickup_address'],
+                $input['delivery_address'],
+                $pickup_coords,
+                $delivery_coords,
+                $input['fee'],
+                $input['package_info'],
+                $input['priority'],
+                $input['notes'] ?? ''
+            ]);
+            echo json_encode(['success' => true]);
+        } elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+            // Driver accepts/rejects/completes a delivery
+            $id = $_GET['id'] ?? '';
+            $input = json_decode(file_get_contents('php://input'), true);
+            if (!$id || !$input || !isset($input['action'])) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Missing fields or id']);
+                exit;
+            }
+            if ($input['action'] === 'accept' && isset($input['driver_id'])) {
+                $stmt = $pdo->prepare("UPDATE deliveries SET driver_id = ?, status = 'active', updated_at = NOW() WHERE id = ? AND status = 'pending'");
+                $stmt->execute([$input['driver_id'], $id]);
+                echo json_encode(['success' => true]);
+            } elseif ($input['action'] === 'reject' && isset($input['driver_id'])) {
+                $stmt = $pdo->prepare("UPDATE deliveries SET status = 'rejected', updated_at = NOW() WHERE id = ? AND driver_id = ?");
+                $stmt->execute([$id, $input['driver_id']]);
+                echo json_encode(['success' => true]);
+            } elseif ($input['action'] === 'complete' && isset($input['driver_id'])) {
+                $stmt = $pdo->prepare("UPDATE deliveries SET status = 'completed', updated_at = NOW() WHERE id = ? AND driver_id = ?");
+                $stmt->execute([$id, $input['driver_id']]);
+                echo json_encode(['success' => true]);
+            } else {
+                http_response_code(400);
+                echo json_encode(['error' => 'Invalid action']);
+            }
+        }
+        break;
     default:
         http_response_code(404);
         echo json_encode(['error' => 'Unknown endpoint']);

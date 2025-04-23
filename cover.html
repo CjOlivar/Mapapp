@@ -35,7 +35,7 @@
                     stunning landscapes, <br> and vibrant local life of Calamba. Designed for locals and travelers alike, this interactive 
                     <br> map serves as a gateway to discovering everything Calamba has to offer.</p>
 
-                <button class="cn"><a href="index.html">JOIN US</a></button>
+                <button class="cn"><a href="driver.html">JOIN US</a></button>
             </div>
 
             <div class="form">
@@ -109,7 +109,12 @@ document.getElementById('login-btn').onclick = async function() {
     const data = await res.json();
     if (data.success) {
         localStorage.setItem('user', JSON.stringify(data.user));
-        window.location.href = 'index.html';
+        // Redirect based on user type
+        if (data.user.type === 'driver') {
+            window.location.href = 'driver.html';
+        } else {
+            window.location.href = 'customer.html';
+        }
     } else {
         alert(data.error || 'Login failed');
     }
@@ -135,12 +140,17 @@ document.getElementById('signup-btn').onclick = async function() {
         const loginRes = await fetch('api.php?endpoint=login', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({email, password, type}) // <-- add type here
+            body: JSON.stringify({email, password, type})
         });
         const loginData = await loginRes.json();
         if (loginData.success) {
             localStorage.setItem('user', JSON.stringify(loginData.user));
-            window.location.href = 'index.html';
+            // Redirect based on user type
+            if (loginData.user.type === 'driver') {
+                window.location.href = 'driver.html';
+            } else {
+                window.location.href = 'customer.html';
+            }
         } else {
             alert('Signup succeeded but login failed. Please try logging in.');
         }

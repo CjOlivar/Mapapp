@@ -573,1197 +573,159 @@
     <!-- Leaflet MarkerCluster JS -->
     <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
     
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script>
-        // Backend API Simulation
-        class DeliveryAPI {
-            constructor() {
-    this.endpoint = localStorage.getItem('api_endpoint') || 'https://api.deliverydriver.example';
-    this.apiKey = localStorage.getItem('api_key') || 'demo-api-key-12345';
-    this.connected = false;
-    this.syncInterval = parseInt(localStorage.getItem('sync_interval') || '5');
-    this.syncTimer = null;
-    this.lastSyncTime = null;
+        const DRIVER_ID = localStorage.user ? JSON.parse(localStorage.user).id : null;
 
-    this.statusElement = document.getElementById('api-status');
+        // Move these variables to the top-level scope so they are accessible everywhere
+        let map;
+        let markerCluster;
 
-    this.updateStatus();
-    this.initSyncTimer();
-    this.testConnection(); // 👈 ADD THIS LINE
-}
-            
-            // Update the API connection status display
-            updateStatus() {
-                if (this.connected) {
-                    this.statusElement.className = 'api-connected';
-                    this.statusElement.innerHTML = '<i class="fas fa-server"></i> API: Connected';
-                } else {
-                    this.statusElement.className = 'api-disconnected';
-                    this.statusElement.innerHTML = '<i class="fas fa-server"></i> API: Disconnected';
-                }
+        // Helper: Geocode address to coordinates (uses Nominatim)
+        async function geocodeAddress(address) {
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data && data.length > 0) {
+                return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
             }
-            
-            // Initialize sync timer
-            initSyncTimer() {
-                if (this.syncTimer) {
-                    clearInterval(this.syncTimer);
-                }
-                
-                // Convert minutes to milliseconds
-                const interval = this.syncInterval * 60 * 1000;
-                
-                this.syncTimer = setInterval(() => {
-                    this.syncData();
-                }, interval);
-            }
-            
-            // Set configuration
-            setConfig(endpoint, apiKey, syncInterval) {
-                this.endpoint = endpoint;
-                this.apiKey = apiKey;
-                this.syncInterval = syncInterval;
-                
-                // Save to localStorage
-                localStorage.setItem('api_endpoint', endpoint);
-                localStorage.setItem('api_key', apiKey);
-                localStorage.setItem('sync_interval', syncInterval);
-                
-                // Reset sync timer
-                this.initSyncTimer();
-                
-                // Test connection
-                this.testConnection();
-            }
-            
-            // Test the API connection
-            async testConnection() {
-                this.statusElement.innerHTML = '<div class="spinner"></div> Testing connection...';
-                
-                try {
-                    const response = await this.simulateRequest('test');
-                    if (response.status === 'ok') {
-                        this.connected = true;
-                        showToast('Connected to API successfully');
-                    } else {
-                        this.connected = false;
-                        showToast('Failed to connect to API');
-                    }
-                } catch (error) {
-                    this.connected = false;
-                    showToast('API connection error: ' + error.message);
-                }
-                
-                this.updateStatus();
-                return this.connected;
-            }
-            
-            // Simulate API request
-            simulateRequest(endpoint, method = 'GET', data = null) {
-                return new Promise((resolve, reject) => {
-                    // Simulate network delay
-                    setTimeout(() => {
-                        // Simulate random network failures (10% chance)
-                        if (Math.random() < 0.1) {
-                            reject(new Error('Network error'));
-                            return;
-                        }
-                        
-                        // Handle different endpoints
-                        switch (endpoint) {
-                            case 'test':
-                                resolve({ status: 'ok', message: 'Connection successful' });
-                                break;
-                                
-                            case 'available':
-                                resolve({
-                                    status: 'ok',
-                                    data: this.generateRandomDeliveries(3)
-                                });
-                                break;
-                                
-                            case 'sync':
-                                resolve({
-                                    status: 'ok',
-                                    message: 'Data synced successfully',
-                                    timestamp: new Date().toISOString()
-                                });
-                                break;
-                                
-                            case 'traffic':
-                                resolve({
-                                    status: 'ok',
-                                    data: [
-                                        { center: [14.2100, 121.0700], radius: 500, severity: 'high' },
-                                        { center: [14.2200, 121.1600], radius: 300, severity: 'medium' },
-                                        { center: [14.1950, 121.0900], radius: 400, severity: 'low' },
-                                        { center: [14.1850, 121.1100], radius: 350, severity: 'high' }
-                                    ]
-                                });
-                                break;
-                                
-                            case 'optimize':
-                                // Simulate route optimization algorithm
-                                const waypoints = data.waypoints;
-                                // Simply return the same waypoints with slight adjustments for demo
-                                const optimized = waypoints.map(wp => ({
-                                    lat: wp.lat + (Math.random() - 0.5) * 0.001,
-                                    lng: wp.lng + (Math.random() - 0.5) * 0.001
-                                }));
-                                
-                                resolve({
-                                    status: 'ok',
-                                    data: {
-                                        waypoints: optimized,
-                                        totalDistance: Math.round(Math.random() * 20 + 10),
-                                        estimatedTime: Math.round(Math.random() * 60 + 30)
-                                    }
-                                });
-                                break;
-                                
-                            default:
-                                reject(new Error('Unknown endpoint'));
-                        }
-                    }, 700 + Math.random() * 1000); // Simulate 700-1700ms delay
-                });
-            }
-            
-            // Generate random deliveries
-            generateRandomDeliveries(count) {
-                const names = [
-                    "Alex Reyes", "John Santos", "Maria Garcia", 
-                    "Carlos Tan", "Sophia Lee", "James Lim", 
-                    "Emma Cruz", "Daniel Aquino", "Olivia Reyes", 
-                    "David Mendoza"
-                ];
-                
-                const addresses = [
-                    "Calamba City Central", "Parian District", "Barandal Area", 
-                    "Canlubang Zone", "Real Subdivision", "Mayapa District", 
-                    "Turbina Area", "Paciano Rizal Zone", "Halang District", 
-                    "Bucal Area"
-                ];
-                
-                const packages = [
-                    "Food Delivery - 2 items", "Documents - Urgent", 
-                    "Electronics - Fragile", "Clothing Package", 
-                    "Grocery Items - 5 bags", "Medicine Delivery", 
-                    "Office Supplies", "Cake Delivery", 
-                    "Gift Package", "Books - 3 items"
-                ];
-                
-                const deliveries = [];
-                const baseId = 200 + Math.floor(Math.random() * 100);
-                
-                for (let i = 0; i < count; i++) {
-                    // Generate random location around Calamba
-                    const lat = 14.2184 + (Math.random() - 0.5) * 0.1;
-                    const lng = 121.0583 + (Math.random() - 0.5) * 0.1;
-                    
-                    const pickupLat = 14.2184 + (Math.random() - 0.5) * 0.1;
-                    const pickupLng = 121.0583 + (Math.random() - 0.5) * 0.1;
-                    
-                    const distance = Math.round((Math.random() * 5 + 1) * 10) / 10;
-                    const fee = Math.round((distance * 50 + Math.random() * 50) * 100) / 100;
-                    
-                    deliveries.push({
-                        id: baseId + i,
-                        customerName: names[Math.floor(Math.random() * names.length)],
-                        pickupAddress: addresses[Math.floor(Math.random() * addresses.length)],
-                        pickupCoords: [pickupLat, pickupLng],
-                        deliveryAddress: addresses[Math.floor(Math.random() * addresses.length)],
-                        deliveryCoords: [lat, lng],
-                        packageInfo: packages[Math.floor(Math.random() * packages.length)],
-                        status: "available",
-                        eta: `${Math.floor(Math.random() * 30 + 15)}-${Math.floor(Math.random() * 30 + 30)} min`,
-                        priority: ["High", "Medium", "Low"][Math.floor(Math.random() * 3)],
-                        fee: fee,
-                        distance: distance,
-                        notes: Math.random() > 0.7 ? "Please call before delivery" : ""
-                    });
-                }
-                
-                return deliveries;
-            }
-            
-            // Get available deliveries
-            async getAvailableDeliveries() {
-                try {
-                    const response = await this.simulateRequest('available');
-                    this.lastSyncTime = new Date();
-                    document.getElementById('last-sync').textContent = `Last updated: ${this.lastSyncTime.toLocaleTimeString()}`;
-                    return response.data;
-                } catch (error) {
-                    showToast('Error fetching deliveries: ' + error.message);
-                    return [];
-                }
-            }
-            
-            // Get traffic data
-            async getTrafficData() {
-                try {
-                    const response = await this.simulateRequest('traffic');
-                    return response.data;
-                } catch (error) {
-                    showToast('Error fetching traffic data: ' + error.message);
-                    return [];
-                }
-            }
-            
-            // Sync data with server
-            async syncData() {
-                if (!this.connected) {
-                    await this.testConnection();
-                    if (!this.connected) {
-                        showToast('Cannot sync - not connected to API');
-                        return false;
-                    }
-                }
-                
-                const syncButton = document.getElementById('sync-data');
-                if (syncButton) {
-                    syncButton.disabled = true;
-                    syncButton.innerHTML = '<div class="spinner"></div> Syncing...';
-                }
-                
-                try {
-                    // Collect data to sync
-                    const dataToSync = {
-                        myDeliveries: myDeliveries,
-                        summaryData: summaryData,
-                        weeklyData: weeklyData
-                    };
-                    
-                    // Send data to server
-                    const response = await this.simulateRequest('sync', 'POST', dataToSync);
-                    
-                    this.lastSyncTime = new Date();
-                    document.getElementById('last-sync').textContent = `Last synced: ${this.lastSyncTime.toLocaleTimeString()}`;
-                    
-                    showToast('Data synced successfully');
-                    
-                    return true;
-                } catch (error) {
-                    showToast('Sync failed: ' + error.message);
-                    return false;
-                } finally {
-                    if (syncButton) {
-                        syncButton.disabled = false;
-                        syncButton.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Sync Data';
-                    }
-                }
-            }
-            
-            // Optimize route
-            async optimizeRoute(waypoints) {
-                try {
-                    const data = {
-                        waypoints: waypoints.map(wp => ({ lat: wp.lat, lng: wp.lng }))
-                    };
-                    
-                    showToast('Optimizing route...');
-                    const response = await this.simulateRequest('optimize', 'POST', data);
-                    
-                    return response.data.waypoints.map(wp => L.latLng(wp.lat, wp.lng));
-                } catch (error) {
-                    showToast('Route optimization failed: ' + error.message);
-                    return null;
-                }
-            }
+            return null;
         }
-        
-        // Initialize the map
-        const map = L.map('map').setView([14.2184, 121.0583], 13); // Centered on Calamba
-        
-        // Add tile layer
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
-        
-        // Add mini map
-        const miniMap = new L.Control.MiniMap(
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'),
-            { toggleDisplay: true, minimized: true }
-        ).addTo(map);
-        
-        // Initialize marker clusters
-        const markerCluster = L.markerClusterGroup().addTo(map);
-        
-        // Initialize draw controls
-        const drawnItems = new L.FeatureGroup().addTo(map);
-        
-        const drawControl = new L.Control.Draw({
-            edit: {
-                featureGroup: drawnItems,
-                poly: {
-                    allowIntersection: false
-                }
-            },
-            draw: {
-                polygon: {
-                    allowIntersection: false,
-                    showArea: true
-                },
-                polyline: true,
-                rectangle: true,
-                circle: true,
-                marker: true,
-                circlemarker: false
+
+        // Fetch deliveries from backend
+        async function fetchDeliveries() {
+            const res = await fetch(`api.php?endpoint=deliveries&type=driver&id=${DRIVER_ID}`);
+            return await res.json();
+        }
+
+        // Accept delivery
+        async function acceptDelivery(deliveryId) {
+            await fetch(`api.php?endpoint=deliveries&id=${deliveryId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'accept', driver_id: DRIVER_ID })
+            });
+            await renderDeliveries();
+        }
+
+        // Reject delivery
+        async function rejectDelivery(deliveryId) {
+            await fetch(`api.php?endpoint=deliveries&id=${deliveryId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'reject', driver_id: DRIVER_ID })
+            });
+            await renderDeliveries();
+        }
+
+        // Complete delivery
+        async function completeDelivery(deliveryId) {
+            await fetch(`api.php?endpoint=deliveries&id=${deliveryId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'complete', driver_id: DRIVER_ID })
+            });
+            await renderDeliveries();
+        }
+
+        // Unique icon generator for each status
+        function getDeliveryIcon(status) {
+            let iconHtml, color;
+            switch (status) {
+                case 'pending':
+                    iconHtml = '<i class="fas fa-clock"></i>';
+                    color = '#F44336';
+                    break;
+                case 'active':
+                    iconHtml = '<i class="fas fa-motorcycle"></i>';
+                    color = '#2196F3';
+                    break;
+                case 'completed':
+                    iconHtml = '<i class="fas fa-check-circle"></i>';
+                    color = '#4CAF50';
+                    break;
+                case 'rejected':
+                    iconHtml = '<i class="fas fa-times-circle"></i>';
+                    color = '#757575';
+                    break;
+                default:
+                    iconHtml = '<i class="fas fa-box"></i>';
+                    color = '#9C27B0';
             }
-        }).addTo(map);
-        
-        // Initialize routing control
-        let routingControl = null;
-        
-        // Traffic layer
-        let trafficLayer = L.featureGroup().addTo(map);
-        let showingTraffic = false;
-        
-        // Initialize the API
-        const api = new DeliveryAPI();
-        
-        // Data structures
-        let myDeliveries = [];
-        let availableDeliveries = [];
-        let activeDeliveryId = null;
-        
-        // Summary data
-        const summaryData = {
-            completedCount: 0,
-            totalDistance: 0,
-            earnings: 0,
-            ratings: [] // Array of rating objects {value: 5, timestamp: Date}
-        };
-        
-        // Weekly data
-        const weeklyData = {
-            deliveries: 0,
-            earnings: 0
-        };
-        
-        // Helper function to get a delivery by ID
-        function getDeliveryById(id, collection = myDeliveries) {
-            return collection.find(delivery => delivery.id === id);
-        }
-        
-        // Helper function to format currency
-        function formatCurrency(amount) {
-            return '₱' + parseFloat(amount).toFixed(2);
-        }
-        
-        // Show toast notification
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            toast.innerText = message;
-            toast.className = 'show';
-            setTimeout(() => {
-                toast.className = toast.className.replace('show', '');
-            }, 3000);
-        }
-        
-        // Get current location
-        function getCurrentLocation() {
-            return new Promise((resolve, reject) => {
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                        position => {
-                            resolve(L.latLng(position.coords.latitude, position.coords.longitude));
-                        },
-                        error => {
-                            console.error('Error getting location:', error);
-                            // Default to Calamba if location access fails
-                            resolve(L.latLng(14.2184, 121.0583));
-                        }
-                    );
-                } else {
-                    console.error('Geolocation not supported');
-                    // Default to Calamba
-                    resolve(L.latLng(14.2184, 121.0583));
-                }
+            return L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="background:${color};border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;border:2px solid #fff;">${iconHtml}</div>`,
+                iconSize: [32, 32],
+                iconAnchor: [16, 16]
             });
         }
-        
-        // Create a marker for a delivery
-        function createDeliveryMarker(delivery) {
-            const iconClass = delivery.status === 'active' ? 'marker-active' :
-                            delivery.status === 'completed' ? 'marker-completed' :
-                            delivery.status === 'available' ? 'marker-available' :
-                            delivery.status === 'rejected' ? 'marker-rejected' : 'marker-delivery';
-            
-            const icon = L.divIcon({
-                className: `custom-marker ${iconClass}`,
-                html: `<i class="fas fa-${delivery.status === 'completed' ? 'check' : 'box'}"></i>`,
-                iconSize: [24, 24],
-                iconAnchor: [12, 12]
-            });
-            
-            const marker = L.marker(delivery.deliveryCoords, { icon: icon })
-                .bindPopup(`
-                    <strong>${delivery.customerName}</strong><br>
-                    ${delivery.deliveryAddress}<br>
-                    <strong>Package:</strong> ${delivery.packageInfo}<br>
-                    <strong>Status:</strong> ${delivery.status}<br>
-                    ${delivery.status === 'pending' ? `<strong>ETA:</strong> ${delivery.eta}<br>` : ''}
-                    <strong>Fee:</strong> ${formatCurrency(delivery.fee)}
-                `);
-            
-            return marker;
-        }
-        
-        // Update statistics panel
-        function updateStats() {
-            const completedCount = myDeliveries.filter(d => d.status === 'completed').length;
-            const totalCount = myDeliveries.length;
-            
-            document.getElementById('delivery-count').textContent = completedCount;
-            document.getElementById('total-deliveries').textContent = totalCount;
-            
-            // Calculate total distance of active route
-            let totalDistance = 0;
-            let activeDeliveries = myDeliveries.filter(d => d.status === 'pending' || d.status === 'active');
-            
-            if (activeDeliveries.length > 0) {
-                activeDeliveries.forEach(d => {
-                    totalDistance += d.distance || 0;
-                });
-            }
-            
-            document.getElementById('total-distance').textContent = totalDistance.toFixed(1);
-            
-            // Calculate ETA for remaining deliveries
-            if (activeDeliveries.length > 0) {
-                const activeDelivery = myDeliveries.find(d => d.status === 'active');
-                if (activeDelivery) {
-                    document.getElementById('eta').textContent = activeDelivery.eta;
-                } else {
-                    document.getElementById('eta').textContent = '--:--';
-                }
-            } else {
-                document.getElementById('eta').textContent = '--:--';
-            }
-        }
-        
-        // Update summary panel
-        function updateSummary() {
-            document.getElementById('completed-count').textContent = summaryData.completedCount;
-            document.getElementById('summary-distance').textContent = summaryData.totalDistance.toFixed(1);
-            document.getElementById('earnings').textContent = formatCurrency(summaryData.earnings);
-            
-            // Calculate average rating
-            let avgRating = 0;
-            if (summaryData.ratings.length > 0) {
-                avgRating = summaryData.ratings.reduce((sum, r) => sum + r.value, 0) / summaryData.ratings.length;
-            }
-            
-            document.getElementById('rating').textContent = avgRating.toFixed(1);
-            
-            // Display star rating
-            const stars = '★'.repeat(Math.round(avgRating)) + '☆'.repeat(5 - Math.round(avgRating));
-            document.getElementById('rating-stars').textContent = stars;
-            
-            // Update weekly stats
-            document.getElementById('week-deliveries').textContent = weeklyData.deliveries;
-            document.getElementById('week-earnings').textContent = formatCurrency(weeklyData.earnings);
-        }
-        
-        // Render delivery list
-        function renderDeliveryList() {
-            const listElement = document.getElementById('delivery-list');
-            const filter = document.getElementById('delivery-filter').value;
-            
-            listElement.innerHTML = '';
-            
-            // Filter deliveries
-            const filteredDeliveries = filter === 'all' ? 
-                myDeliveries : 
-                myDeliveries.filter(d => d.status === filter);
-            
-            // Sort deliveries: active first, then pending by priority, then completed
-            const sortedDeliveries = [...filteredDeliveries].sort((a, b) => {
-                // Active deliveries first
-                if (a.status === 'active' && b.status !== 'active') return -1;
-                if (a.status !== 'active' && b.status === 'active') return 1;
-                
-                // Then pending by priority
-                if (a.status === 'pending' && b.status === 'pending') {
-                    const priorityValues = { 'High': 0, 'Medium': 1, 'Low': 2 };
-                    return priorityValues[a.priority] - priorityValues[b.priority];
-                }
-                
-                // Pending before completed
-                if (a.status === 'pending' && b.status === 'completed') return -1;
-                if (a.status === 'completed' && b.status === 'pending') return 1;
-                
-                // Completed by most recent
-                if (a.status === 'completed' && b.status === 'completed') {
-                    return b.completedAt - a.completedAt;
-                }
-                
-                return 0;
-            });
-            
-            // Render each delivery
-            sortedDeliveries.forEach(delivery => {
-                const deliveryItem = document.createElement('div');
-                deliveryItem.className = `delivery-item delivery-${delivery.status}`;
-                if (delivery.id === activeDeliveryId) {
-                    deliveryItem.classList.add('delivery-active');
-                }
-                
-                // Format the delivery item HTML
-                deliveryItem.innerHTML = `
-                    <div class="delivery-header">
-                        <span class="status-indicator status-${delivery.status}"></span>
-                        <strong>${delivery.customerName}</strong>
-                        <span style="float: right;">${formatCurrency(delivery.fee)}</span>
-                    </div>
-                    <div>
-                        <i class="fas fa-map-marker-alt"></i> ${delivery.deliveryAddress}
-                    </div>
-                    <div>
-                        <i class="fas fa-box"></i> ${delivery.packageInfo}
-                    </div>
-                    ${delivery.status === 'pending' ? `
-                        <div>
-                            <i class="fas fa-clock"></i> ETA: ${delivery.eta}
-                        </div>
-                    ` : ''}
-                    ${delivery.notes ? `
-                        <div>
-                            <i class="fas fa-sticky-note"></i> ${delivery.notes}
-                        </div>
-                    ` : ''}
-                    ${delivery.status === 'pending' ? `
-                        <div class="button-group">
-                            <button class="btn btn-sm btn-secondary start-delivery" data-id="${delivery.id}">
-                                <i class="fas fa-play"></i> Start
-                            </button>
-                            <button class="btn btn-sm btn-danger reject-delivery" data-id="${delivery.id}">
-                                <i class="fas fa-times"></i> Reject
-                            </button>
-                        </div>
-                    ` : delivery.status === 'active' ? `
-                        <div class="button-group">
-                            <button class="btn btn-sm complete-delivery" data-id="${delivery.id}">
-                                <i class="fas fa-check"></i> Complete
-                            </button>
-                        </div>
-                    ` : ''}
-                `;
-                
-                // Add event listeners
-                deliveryItem.addEventListener('click', (e) => {
-                    // Don't trigger if clicking a button
-                    if (e.target.tagName === 'BUTTON' || e.target.parentElement.tagName === 'BUTTON') {
-                        return;
-                    }
-                    
-                    // Focus on delivery
-                    focusDelivery(delivery.id);
-                });
-                
-                // Add to the list
-                listElement.appendChild(deliveryItem);
-            });
-            
-            // Add button event listeners
-            document.querySelectorAll('.start-delivery').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    startDelivery(parseInt(button.dataset.id));
-                });
-            });
-            
-            document.querySelectorAll('.complete-delivery').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    completeDelivery(parseInt(button.dataset.id));
-                });
-            });
-            
-            document.querySelectorAll('.reject-delivery').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    rejectDelivery(parseInt(button.dataset.id));
-                });
-            });
-        }
-        
-        // Render available deliveries
-        function renderAvailableList() {
-            const listElement = document.getElementById('available-list');
-            listElement.innerHTML = '';
-            
-            if (availableDeliveries.length === 0) {
-                listElement.innerHTML = '<p>No available deliveries at the moment.</p>';
-                return;
-            }
-            
-            // Sort by priority and fee
-            const sortedDeliveries = [...availableDeliveries].sort((a, b) => {
-                const priorityValues = { 'High': 0, 'Medium': 1, 'Low': 2 };
-                const priorityDiff = priorityValues[a.priority] - priorityValues[b.priority];
-                
-                if (priorityDiff !== 0) return priorityDiff;
-                
-                // If same priority, sort by fee (higher first)
-                return b.fee - a.fee;
-            });
-            
-            // Render each available delivery
-            sortedDeliveries.forEach(delivery => {
-                const deliveryItem = document.createElement('div');
-                deliveryItem.className = 'delivery-item';
-                
-                // Format the delivery item HTML
-                deliveryItem.innerHTML = `
-                    <div class="delivery-header">
-                        <span class="status-indicator status-available"></span>
-                        <strong>${delivery.customerName}</strong>
-                        <span style="float: right;">${formatCurrency(delivery.fee)}</span>
-                    </div>
-                    <div>
-                        <i class="fas fa-map-marker-alt"></i> ${delivery.deliveryAddress}
-                    </div>
-                    <div>
-                        <i class="fas fa-route"></i> ${delivery.distance} km
-                    </div>
-                    <div>
-                        <i class="fas fa-box"></i> ${delivery.packageInfo}
-                    </div>
-                    ${delivery.priority === 'High' ? `
-                        <div><span style="color: #F44336;"><i class="fas fa-exclamation-circle"></i> High Priority</span></div>
-                    ` : ''}
-                    ${delivery.notes ? `
-                        <div>
-                            <i class="fas fa-sticky-note"></i> ${delivery.notes}
-                        </div>
-                    ` : ''}
-                    <div class="button-group">
-                        <button class="btn btn-sm accept-delivery" data-id="${delivery.id}">
-                            <i class="fas fa-check"></i> Accept
-                        </button>
-                    </div>
-                `;
-                
-                // Add event listener for accept button
-                deliveryItem.querySelector('.accept-delivery').addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    acceptDelivery(delivery.id);
-                });
-                
-                // Add event listener for clicking the item
-                deliveryItem.addEventListener('click', (e) => {
-                    // Don't trigger if clicking a button
-                    if (e.target.tagName === 'BUTTON' || e.target.parentElement.tagName === 'BUTTON') {
-                        return;
-                    }
-                    
-                    // Show delivery on map
-                    map.setView(delivery.deliveryCoords, 15);
-                    L.popup()
-                        .setLatLng(delivery.deliveryCoords)
-                        .setContent(`
-                            <strong>${delivery.customerName}</strong><br>
-                            ${delivery.deliveryAddress}<br>
-                            <strong>Package:</strong> ${delivery.packageInfo}<br>
-                            <strong>Distance:</strong> ${delivery.distance} km<br>
-                            <strong>Fee:</strong> ${formatCurrency(delivery.fee)}
-                        `)
-                        .openOn(map);
-                });
-                
-                // Add to the list
-                listElement.appendChild(deliveryItem);
-            });
-        }
-        
-        // Focus on a delivery (center map and show popup)
-        function focusDelivery(id) {
-            const delivery = getDeliveryById(id);
-            if (!delivery) return;
-            
-            // Center the map on the delivery
-            map.setView(delivery.deliveryCoords, 15);
-            
-            // Show popup
-            L.popup()
-                .setLatLng(delivery.deliveryCoords)
-                .setContent(`
-                    <strong>${delivery.customerName}</strong><br>
-                    ${delivery.deliveryAddress}<br>
-                    <strong>Package:</strong> ${delivery.packageInfo}<br>
-                    <strong>Status:</strong> ${delivery.status}<br>
-                    ${delivery.status === 'pending' || delivery.status === 'active' ? `<strong>ETA:</strong> ${delivery.eta}<br>` : ''}
-                    <strong>Fee:</strong> ${formatCurrency(delivery.fee)}
-                `)
-                .openOn(map);
-        }
-        
-        // Accept an available delivery
-        function acceptDelivery(id) {
-            const delivery = getDeliveryById(id, availableDeliveries);
-            if (!delivery) return;
-            
-            // Copy the delivery to my deliveries and set status to pending
-            const newDelivery = { ...delivery, status: 'pending' };
-            myDeliveries.push(newDelivery);
-            
-            // Remove from available deliveries
-            availableDeliveries = availableDeliveries.filter(d => d.id !== id);
-            
-            // Update markers
-            updateMarkers();
-            
-            // Update the route if needed
-            updateRoute();
-            
-            // Update deliveries display
-            renderDeliveryList();
-            renderAvailableList();
-            
-            // Update statistics
-            updateStats();
-            
-            showToast('Delivery accepted');
-        }
-        
-        // Start a delivery
-        function startDelivery(id) {
-            // Find the delivery
-            const deliveryIndex = myDeliveries.findIndex(d => d.id === id);
-            if (deliveryIndex === -1) return;
-            
-            // Check if another delivery is already active
-            const activeIndex = myDeliveries.findIndex(d => d.status === 'active');
-            if (activeIndex !== -1 && activeIndex !== deliveryIndex) {
-                // Set the current active delivery back to pending
-                myDeliveries[activeIndex].status = 'pending';
-            }
-            
-            // Update status to active
-            myDeliveries[deliveryIndex].status = 'active';
-            activeDeliveryId = id;
-            
-            // Update markers
-            updateMarkers();
-            
-            // Update the route
-            updateRoute();
-            
-            // Update deliveries display
-            renderDeliveryList();
-            
-            // Update statistics
-            updateStats();
-            
-            // Focus on the delivery
-            focusDelivery(id);
-            
-            showToast('Delivery started');
-        }
-        
-        // Complete a delivery
-        function completeDelivery(id) {
-            // Find the delivery
-            const deliveryIndex = myDeliveries.findIndex(d => d.id === id);
-            if (deliveryIndex === -1) return;
-            
-            // Update status to completed
-            myDeliveries[deliveryIndex].status = 'completed';
-            myDeliveries[deliveryIndex].completedAt = new Date();
-            
-            if (activeDeliveryId === id) {
-                activeDeliveryId = null;
-            }
-            
-            // Update summary data
-            summaryData.completedCount++;
-            summaryData.totalDistance += myDeliveries[deliveryIndex].distance || 0;
-            summaryData.earnings += myDeliveries[deliveryIndex].fee || 0;
-            
-            // Add random rating
-            summaryData.ratings.push({
-                value: Math.round(Math.random() * 2 + 3), // Random rating between 3-5
-                timestamp: new Date()
-            });
-            
-            // Update weekly data
-            weeklyData.deliveries++;
-            weeklyData.earnings += myDeliveries[deliveryIndex].fee || 0;
-            
-            // Update markers
-            updateMarkers();
-            
-            // Update the route
-            updateRoute();
-            
-            // Update deliveries display
-            renderDeliveryList();
-            
-            // Update statistics
-            updateStats();
-            updateSummary();
-            
-            showToast('Delivery completed successfully');
-        }
-        
-        // Reject a delivery
-        function rejectDelivery(id) {
-            // Find the delivery
-            const deliveryIndex = myDeliveries.findIndex(d => d.id === id);
-            if (deliveryIndex === -1) return;
-            
-            // Update status to rejected
-            myDeliveries[deliveryIndex].status = 'rejected';
-            
-            // Update markers
-            updateMarkers();
-            
-            // Update the route
-            updateRoute();
-            
-            // Update deliveries display
-            renderDeliveryList();
-            
-            // Update statistics
-            updateStats();
-            
-            showToast('Delivery rejected');
-        }
-        
-        // Update map markers
-        function updateMarkers() {
-            // Clear all markers
+
+        // Render deliveries on map and panel
+        async function renderDeliveries() {
+            const deliveries = await fetchDeliveries();
             markerCluster.clearLayers();
-            
-            // Add markers for my deliveries
-            myDeliveries.forEach(delivery => {
-                const marker = createDeliveryMarker(delivery);
-                markerCluster.addLayer(marker);
-            });
-            
-            // Add markers for available deliveries
-            availableDeliveries.forEach(delivery => {
-                const marker = createDeliveryMarker(delivery);
-                markerCluster.addLayer(marker);
+            const list = document.getElementById('delivery-list');
+            if (list) list.innerHTML = '';
+            for (const delivery of deliveries) {
+                let coords = null;
+                if (delivery.delivery_coords) {
+                    try { coords = JSON.parse(delivery.delivery_coords); } catch {}
+                }
+                if (!coords) coords = await geocodeAddress(delivery.delivery_address);
+                if (!coords) continue;
+                // Marker with unique icon
+                const marker = L.marker(coords, { icon: getDeliveryIcon(delivery.status) }).addTo(markerCluster)
+                    .bindPopup(`<b>${delivery.package_info}</b><br>${delivery.delivery_address}<br>Status: ${delivery.status}`);
+                // Panel
+                if (list) {
+                    const div = document.createElement('div');
+                    div.className = 'delivery-item';
+                    div.innerHTML = `
+                        <strong>${delivery.package_info}</strong><br>
+                        ${delivery.delivery_address}<br>
+                        Status: ${delivery.status}<br>
+                        <button onclick="acceptDelivery(${delivery.id})" ${delivery.status !== 'pending' ? 'disabled' : ''}>Accept</button>
+                        <button onclick="rejectDelivery(${delivery.id})" ${delivery.status !== 'active' ? 'disabled' : ''}>Reject</button>
+                        <button onclick="completeDelivery(${delivery.id})" ${delivery.status !== 'active' ? 'disabled' : ''}>Complete</button>
+                    `;
+                    list.appendChild(div);
+                }
+            }
+        }
+
+        // When customer creates a delivery, geocode and send coords
+        async function createDelivery(data) {
+            data.pickup_coords = await geocodeAddress(data.pickup_address);
+            data.delivery_coords = await geocodeAddress(data.delivery_address);
+            await fetch('api.php?endpoint=deliveries', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
             });
         }
-        
-        // Update route based on active deliveries
-        async function updateRoute() {
-            // Remove existing route
-            if (routingControl) {
-                map.removeControl(routingControl);
-                routingControl = null;
-            }
-            
-            // Get active and pending deliveries
-            const activeDeliveries = myDeliveries.filter(d => d.status === 'active' || d.status === 'pending');
-            if (activeDeliveries.length === 0) {
-                return;
-            }
-            
-            // Get current location as starting point
-            const currentLocation = await getCurrentLocation();
-            
-            // Create waypoints array
-            let waypoints = [currentLocation];
-            
-            // Add active delivery first if exists
-            const activeDelivery = myDeliveries.find(d => d.status === 'active');
-            if (activeDelivery) {
-                waypoints.push(L.latLng(activeDelivery.deliveryCoords[0], activeDelivery.deliveryCoords[1]));
-            }
-            
-            // Add pending deliveries
-            myDeliveries
-                .filter(d => d.status === 'pending')
-                .forEach(delivery => {
-                    waypoints.push(L.latLng(delivery.deliveryCoords[0], delivery.deliveryCoords[1]));
-                });
-            
-            // Create routing control
-            routingControl = L.Routing.control({
-                waypoints: waypoints,
-                routeWhileDragging: true,
-                showAlternatives: true,
-                altLineOptions: {
-                    styles: [
-                        { color: 'black', opacity: 0.15, weight: 9 },
-                        { color: 'white', opacity: 0.8, weight: 6 },
-                        { color: 'blue', opacity: 0.5, weight: 2 }
-                    ]
-                },
-                lineOptions: {
-                    styles: [
-                        { color: 'black', opacity: 0.15, weight: 9 },
-                        { color: 'white', opacity: 0.8, weight: 6 },
-                        { color: '#2196F3', opacity: 0.8, weight: 4 }
-                    ]
-                },
-                createMarker: function() {
-                    return null; // Don't create markers for waypoints
-                }
+
+        // On page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Initialize the map
+            map = L.map('map').setView([14.2184, 121.0583], 13); // Centered on Calamba
+
+            // Add tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
-        }
-        
-        // Optimize the current route
-        async function optimizeRoute() {
-            // Check if there are active/pending deliveries
-            const activeDeliveries = myDeliveries.filter(d => d.status === 'active' || d.status === 'pending');
-            if (activeDeliveries.length < 2) {
-                showToast('Need at least 2 deliveries to optimize route');
-                return;
-            }
-            
-            // Get current location
-            const currentLocation = await getCurrentLocation();
-            
-            // Create waypoints array
-            let waypoints = [currentLocation];
-            
-            // Add all deliveries as waypoints
-            activeDeliveries.forEach(delivery => {
-                waypoints.push(L.latLng(delivery.deliveryCoords[0], delivery.deliveryCoords[1]));
-            });
-            
-            // Send to API for optimization
-            showToast('Optimizing route...');
-            document.getElementById('optimize-route').disabled = true;
-            document.getElementById('optimize-route').innerHTML = '<div class="spinner"></div> Optimizing...';
-            
-            try {
-                const optimizedWaypoints = await api.optimizeRoute(waypoints);
-                if (!optimizedWaypoints) {
-                    throw new Error('Failed to optimize route');
-                }
-                
-                // Update the route with optimized waypoints
-                if (routingControl) {
-                    map.removeControl(routingControl);
-                }
-                
-                routingControl = L.Routing.control({
-                    waypoints: optimizedWaypoints,
-                    routeWhileDragging: true,
-                    lineOptions: {
-                        styles: [
-                            { color: 'black', opacity: 0.15, weight: 9 },
-                            { color: 'white', opacity: 0.8, weight: 6 },
-                            { color: '#2196F3', opacity: 0.8, weight: 4 }
-                        ]
-                    },
-                    createMarker: function() {
-                        return null;
-                    }
-                }).addTo(map);
-                
-                showToast('Route optimized successfully');
-            } catch (error) {
-                showToast('Route optimization failed: ' + error.message);
-            } finally {
-                document.getElementById('optimize-route').disabled = false;
-                document.getElementById('optimize-route').innerHTML = '<i class="fas fa-route"></i> Optimize Route';
-            }
-        }
-        
-        // Toggle traffic display
-        async function toggleTraffic() {
-            showingTraffic = !showingTraffic;
-            
-            if (showingTraffic) {
-                // Show loading state
-                document.getElementById('toggle-traffic').innerHTML = '<div class="spinner"></div> Loading...';
-                document.getElementById('toggle-traffic').disabled = true;
-                
-                try {
-                    // Get traffic data from API
-                    const trafficData = await api.getTrafficData();
-                    
-                    // Clear existing traffic
-                    trafficLayer.clearLayers();
-                    
-                    // Add traffic circles
-                    trafficData.forEach(item => {
-                        const color = item.severity === 'high' ? '#F44336' : 
-                                    item.severity === 'medium' ? '#FF9800' : '#4CAF50';
-                        
-                        const circle = L.circle(item.center, {
-                            radius: item.radius,
-                            color: color,
-                            fillColor: color,
-                            fillOpacity: 0.3,
-                            weight: 1
-                        }).bindPopup(`
-                            <strong>Traffic ${item.severity}</strong><br>
-                            Delay: ${Math.round(item.radius / 100)} minutes
-                        `);
-                        
-                        trafficLayer.addLayer(circle);
-                    });
-                    
-                    document.getElementById('toggle-traffic').innerHTML = '<i class="fas fa-car"></i> Hide Traffic';
-                    document.getElementById('toggle-traffic').classList.add('btn-danger');
-                    document.getElementById('toggle-traffic').classList.remove('btn-secondary');
-                } catch (error) {
-                    showToast('Failed to load traffic data: ' + error.message);
-                    showingTraffic = false;
-                } finally {
-                    document.getElementById('toggle-traffic').disabled = false;
-                }
-            } else {
-                // Clear traffic layer
-                trafficLayer.clearLayers();
-                
-                document.getElementById('toggle-traffic').innerHTML = '<i class="fas fa-car"></i> Show Traffic';
-                document.getElementById('toggle-traffic').classList.add('btn-secondary');
-                document.getElementById('toggle-traffic').classList.remove('btn-danger');
-            }
-        }
-        
-        // Initialize the UI
-        async function init() {
-            // Set up tab switching
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.addEventListener('click', () => {
-                    // Remove active class from all tabs and content
-                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                    
-                    // Add active class to clicked tab
-                    tab.classList.add('active');
-                    
-                    // Show corresponding content
-                    const contentId = tab.dataset.tab;
-                    document.getElementById(contentId).classList.add('active');
-                });
-            });
-            
-            // Set up filter change
-            document.getElementById('delivery-filter').addEventListener('change', renderDeliveryList);
-            
-            // Set up optimize route button
-            document.getElementById('optimize-route').addEventListener('click', optimizeRoute);
-            
-            // Set up toggle traffic button
-            document.getElementById('toggle-traffic').addEventListener('click', toggleTraffic);
-            
-            // Set up refresh available button
-            document.getElementById('refresh-available').addEventListener('click', async () => {
-                document.getElementById('refresh-available').disabled = true;
-                document.getElementById('refresh-available').innerHTML = '<div class="spinner"></div> Refreshing...';
-                
-                try {
-                    availableDeliveries = await api.getAvailableDeliveries();
-                    renderAvailableList();
-                    updateMarkers();
-                    showToast('Available deliveries refreshed');
-                } catch (error) {
-                    showToast('Failed to refresh deliveries: ' + error.message);
-                } finally {
-                    document.getElementById('refresh-available').disabled = false;
-                    document.getElementById('refresh-available').innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
-                }
-            });
-            
-            // Set up sync data button
-            document.getElementById('sync-data').addEventListener('click', () => {
-                api.syncData();
-            });
-            
-            // Set up reset data button
-            document.getElementById('reset-data').addEventListener('click', () => {
-                if (confirm('Are you sure you want to reset all data? This cannot be undone.')) {
-                    // Reset data
-                    myDeliveries = [];
-                    availableDeliveries = [];
-                    activeDeliveryId = null;
-                    
-                    // Reset summary data
-                    summaryData.completedCount = 0;
-                    summaryData.totalDistance = 0;
-                    summaryData.earnings = 0;
-                    summaryData.ratings = [];
 
-                    weeklyData.deliveries = 0;
-                    weeklyData.earnings = 0;
+            // Add mini map
+            const miniMap = new L.Control.MiniMap(
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'),
+                { toggleDisplay: true, minimized: true }
+            ).addTo(map);
 
-                    // Clear UI
-                    renderDeliveryList();
-                    renderAvailableList();
-                    updateStats();
-                    updateSummary();
-                    updateMarkers();
+            // Initialize marker clusters (make sure this is global)
+            markerCluster = L.markerClusterGroup().addTo(map);
 
-                    if (routingControl) {
-                        map.removeControl(routingControl);
-                        routingControl = null;
-                    }
-
-                    trafficLayer.clearLayers();
-                    showToast('All data has been reset');
-                }
-            });
-
-            // Set up delivery form
-            document.getElementById('delivery-form').addEventListener('submit', (e) => {
-                e.preventDefault();
-
-                const newDelivery = {
-                    id: Date.now(),
-                    customerName: document.getElementById('customer-name').value,
-                    pickupAddress: document.getElementById('pickup-address').value,
-                    deliveryAddress: document.getElementById('delivery-address').value,
-                    pickupCoords: [14.2184 + (Math.random() - 0.5) * 0.01, 121.0583 + (Math.random() - 0.5) * 0.01],
-                    deliveryCoords: [14.2184 + (Math.random() - 0.5) * 0.01, 121.0583 + (Math.random() - 0.5) * 0.01],
-                    packageInfo: document.getElementById('package-info').value,
-                    fee: parseFloat(document.getElementById('delivery-fee').value),
-                    priority: document.getElementById('priority').value,
-                    notes: document.getElementById('notes').value,
-                    status: 'pending',
-                    eta: `${Math.floor(Math.random() * 20 + 10)}-${Math.floor(Math.random() * 20 + 30)} min`
-                };
-
-                myDeliveries.push(newDelivery);
-                updateMarkers();
-                updateStats();
-                renderDeliveryList();
-
-                document.getElementById('delivery-form').reset();
-                document.getElementById('new-delivery-panel').classList.remove('active');
-                showToast('New delivery added');
-            });
-
-            // Cancel new delivery
-            document.getElementById('cancel-delivery').addEventListener('click', () => {
-                document.getElementById('delivery-form').reset();
-                document.getElementById('new-delivery-panel').classList.remove('active');
-            });
-
-            // Server settings
-            document.getElementById('server-settings-form').addEventListener('submit', (e) => {
-                e.preventDefault();
-                const endpoint = document.getElementById('api-endpoint').value;
-                const key = document.getElementById('api-key').value;
-                const interval = parseInt(document.getElementById('sync-interval').value);
-
-                api.setConfig(endpoint, key, interval);
-                document.getElementById('server-settings-panel').classList.remove('active');
-            });
-
-            document.getElementById('cancel-settings').addEventListener('click', () => {
-                document.getElementById('server-settings-panel').classList.remove('active');
-            });
-
-            // Initial data load
-            availableDeliveries = await api.getAvailableDeliveries();
-            renderAvailableList();
-            updateMarkers();
-            updateStats();
-            updateSummary();
-        }
-
-        // Start everything
-        init();
+            await renderDeliveries();
+            setInterval(renderDeliveries, 30000);
+        });
     </script>
 </body>
 </html>

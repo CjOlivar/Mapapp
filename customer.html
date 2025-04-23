@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CalambaGO! - Customer Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Navigation Bar (reuse from index.html if desired) -->
+    <div class="navbar" id="main-navbar">
+        <div class="icon">
+            <h2 class="logo">Calamba<span style="color: #91b5dd; font-weight: bolder; font-family: 'Dancing Script', cursive; font-size: 40px;">GO!</span></h2>
+        </div>
+        <div class="menu" id="main-menu">
+            <div class="navbar-links">
+                <b><a href="#home">Home</a></b>
+                <b><a href="#orders">My Orders</a></b>
+                <b><a href="#about">About</a></b>
+                <b><a href="#contact">Contact</a></b>
+            </div>
+        </div>
+        <div class="profile-dropdown">
+            <!-- ...existing profile dropdown code... -->
+        </div>
+    </div>
+    <div class="navbar-spacer"></div>
+    <div class="navbar-spacer"></div>
+
+    <div class="section" id="home">
+        <h2>Welcome, Customer!</h2>
+        <p>
+            Place new delivery orders, track your orders, and view your delivery history here.
+        </p>
+    </div>
+
+    <div class="section" id="orders">
+        <h2>My Orders</h2>
+        <div id="customer-orders-list">
+            <!-- Orders will be loaded here via JS -->
+        </div>
+        <button id="new-order-btn">Place New Order</button>
+        <div id="new-order-form" style="display:none;">
+            <!-- Add your order form fields here -->
+            <form id="orderForm">
+                <input type="text" id="pickup-address" placeholder="Pickup Address" required>
+                <input type="text" id="delivery-address" placeholder="Delivery Address" required>
+                <input type="text" id="package-info" placeholder="Package Info" required>
+                <input type="number" id="delivery-fee" placeholder="Delivery Fee" min="0" step="0.01" required>
+                <select id="priority">
+                    <option value="High">High</option>
+                    <option value="Medium" selected>Medium</option>
+                    <option value="Low">Low</option>
+                </select>
+                <textarea id="notes" placeholder="Notes"></textarea>
+                <button type="submit">Submit Order</button>
+                <button type="button" id="cancel-order-btn">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="section" id="about">
+        <h2>About CalambaGO!</h2>
+        <p>
+            CalambaGO! is your GO-to guide for discovering the best that Calamba has to offer.
+        </p>
+    </div>
+
+    <div class="section" id="contact">
+        <h2>Contact Us</h2>
+        <p>
+            Have questions or need more information? Reach out to us at infocalambaGO@gmail.com
+        </p>
+    </div>
+
+    <script>
+    // Show/hide new order form
+    document.getElementById('new-order-btn').onclick = function() {
+        document.getElementById('new-order-form').style.display = 'block';
+    };
+    document.getElementById('cancel-order-btn').onclick = function() {
+        document.getElementById('new-order-form').style.display = 'none';
+    };
+
+    // Load customer orders (basic example)
+    async function loadOrders() {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        if (!user.id) return;
+        const res = await fetch('api.php?endpoint=deliveries&type=customer&id=' + user.id);
+        const orders = await res.json();
+        const list = document.getElementById('customer-orders-list');
+        list.innerHTML = '';
+        if (orders.length === 0) {
+            list.innerHTML = '<p>No orders yet.</p>';
+        } else {
+            orders.forEach(order => {
+                const div = document.createElement('div');
+                div.className = 'order-item';
+                div.innerHTML = `
+                    <b>${order.package_info}</b><br>
+                    From: ${order.pickup_address}<br>
+                    To: ${order.delivery_address}<br>
+                    Status: ${order.status}<br>
+                    Fee: ₱${order.fee}
+                `;
+                list.appendChild(div);
+            });
+        }
+    }
+
+    // Submit new order
+    document.getElementById('orderForm').onsubmit = async function(e) {
+        e.preventDefault();
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const data = {
+            customer_id: user.id,
+            pickup_address: document.getElementById('pickup-address').value,
+            delivery_address: document.getElementById('delivery-address').value,
+            package_info: document.getElementById('package-info').value,
+            fee: document.getElementById('delivery-fee').value,
+            priority: document.getElementById('priority').value,
+            notes: document.getElementById('notes').value
+        };
+        // Geocode addresses before sending (optional, for accuracy)
+        async function geocodeAddress(address) {
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data && data.length > 0) {
+                return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+            }
+            return null;
+        }
+        data.pickup_coords = await geocodeAddress(data.pickup_address);
+        data.delivery_coords = await geocodeAddress(data.delivery_address);
+
+        await fetch('api.php?endpoint=deliveries', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        document.getElementById('new-order-form').style.display = 'none';
+        await loadOrders();
+    };
+
+    // Load orders on page load
+    window.onload = loadOrders;
+    </script>
+</body>
+</html>
