@@ -4,10 +4,188 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CalambaGO! - Customer Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Dancing+Script&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .navbar {
+            width: 100vw;
+            min-width: 100vw;
+            left: 0;
+            right: 0;
+            background-color: var(--navbar-bg, #202A44);
+            box-sizing: border-box;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .main-content {
+            margin-top: 70px; /* Space for fixed navbar */
+            padding: 20px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .customer-section {
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+            padding: 24px;
+            transition: transform 0.2s ease;
+        }
+
+        .customer-section:hover {
+            transform: translateY(-5px);
+        }
+
+        #home {
+            background: #ffffff;
+            border-left: 5px solid #10468b;
+            padding: 24px;
+        }
+
+        h2 {
+            color: #202A44;
+            margin-bottom: 16px;
+            font-size: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 10px;
+            }
+            .customer-section {
+                padding: 16px;
+                margin-bottom: 16px;
+            }
+        }
+
+        .icons-bar {
+            width: 100vw;
+            min-width: 100vw;
+            left: 0;
+            right: 0;
+            background-color: #202A44;
+            box-sizing: border-box;
+            margin-left: calc(-50vw + 50%);
+            position: relative;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #new-order-btn {
+            background: #10468b;
+            color: #ffffff;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin: 10px 0;
+        }
+
+        #new-order-btn:hover {
+            background: #f1c40f;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .order-item {
+            background: #f7f9fc;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-left: 5px solid #91b5dd;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: transform 0.2s ease;
+        }
+
+        .order-item:hover {
+            transform: translateX(5px);
+        }
+
+        /* Order Form Styling */
+        #new-order-form {
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        #orderForm input, 
+        #orderForm select, 
+        #orderForm textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        #orderForm input:focus,
+        #orderForm select:focus,x
+        #orderForm textarea:focus {
+            border-color: #10468b;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(16,70,139,0.1);
+        }
+
+        .form-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        #orderForm button[type="submit"] {
+            background: #10468b;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #orderForm button[type="submit"]:hover {
+            background: #f1c40f;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        #cancel-order-btn {
+            background: #dc3545 !important;
+            color: white !important;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #cancel-order-btn:hover {
+            background: #c82333 !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+    </style>
 </head>
 <body>
-    <!-- Navigation Bar (reuse from index.html if desired) -->
     <div class="navbar" id="main-navbar">
         <div class="icon">
             <h2 class="logo">Calamba<span style="color: #91b5dd; font-weight: bolder; font-family: 'Dancing Script', cursive; font-size: 40px;">GO!</span></h2>
@@ -21,60 +199,105 @@
             </div>
         </div>
         <div class="profile-dropdown">
-            <!-- ...existing profile dropdown code... -->
+            <div onclick="toggle()" class="profile-dropdown-btn">
+                <div class="profile-img">
+                    <i class="fa-solid fa-circle"></i>
+                </div>
+                <span>
+                    <script>
+                        const user = JSON.parse(localStorage.getItem('user') || '{}');
+                        document.write(user.username ? user.username + ' (' + (user.type || '') + ')' : 'ITMAWD22');
+                    </script>
+                    <i class="fa-solid fa-angle-down"></i>
+                </span>
+            </div>
+            <ul class="profile-dropdown-list">
+                <li class="profile-dropdown-list-item">
+                    <a href="profile.html">
+                        <i class="fa-regular fa-user"></i>
+                        Edit Profile
+                    </a>
+                </li>
+                <li class="profile-dropdown-list-item">
+                    <a href="inbox.html">
+                        <i class="fa-regular fa-envelope"></i>
+                        Inbox
+                    </a>
+                </li>
+                <li class="profile-dropdown-list-item">
+                    <a href="featserv.html">
+                        <i class="fa-regular fa-circle-question"></i>
+                        Features & Services
+                    </a>
+                </li>
+                <hr />
+                <li class="profile-dropdown-list-item">
+                    <a href="index.html" id="logout-link">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                        Log out
+                    </a>
+                </li>
+            </ul>
         </div>
     </div>
     <div class="navbar-spacer"></div>
-    <div class="navbar-spacer"></div>
-
-    <div class="section" id="home">
-        <h2>Welcome, Customer!</h2>
-        <p>
-            Place new delivery orders, track your orders, and view your delivery history here.
-        </p>
-    </div>
-
-    <div class="section" id="orders">
-        <h2>My Orders</h2>
-        <div id="customer-orders-list">
-            <!-- Orders will be loaded here via JS -->
+    <div class="main-content">
+        <div class="customer-section" id="home">
+            <h2>Welcome, Customer!</h2>
+            <p>
+                Place new delivery orders, track your orders, and view your delivery history here.
+            </p>
         </div>
-        <button id="new-order-btn">Place New Order</button>
-        <div id="new-order-form" style="display:none;">
-            <!-- Add your order form fields here -->
-            <form id="orderForm">
-                <input type="text" id="pickup-address" placeholder="Pickup Address" required>
-                <input type="text" id="delivery-address" placeholder="Delivery Address" required>
-                <input type="text" id="package-info" placeholder="Package Info" required>
-                <input type="number" id="delivery-fee" placeholder="Delivery Fee" min="0" step="0.01" required>
-                <select id="priority">
-                    <option value="High">High</option>
-                    <option value="Medium" selected>Medium</option>
-                    <option value="Low">Low</option>
-                </select>
-                <textarea id="notes" placeholder="Notes"></textarea>
-                <button type="submit">Submit Order</button>
-                <button type="button" id="cancel-order-btn">Cancel</button>
-            </form>
+        <div class="customer-section" id="orders">
+            <h2>My Orders</h2>
+            <div id="customer-orders-list">
+                <!-- Orders will be loaded here via JS -->
+            </div>
+            <button id="new-order-btn">Place New Order</button>
+            <div id="new-order-form" style="display:none;">
+                <form id="orderForm">
+                    <input type="text" id="pickup-address" placeholder="Pickup Address" required>
+                    <input type="text" id="delivery-address" placeholder="Delivery Address" required>
+                    <input type="text" id="package-info" placeholder="Package Info" required>
+                    <input type="number" id="delivery-fee" placeholder="Delivery Fee" min="0" step="0.01" required>
+                    <select id="priority">
+                        <option value="High">High</option>
+                        <option value="Medium" selected>Medium</option>
+                        <option value="Low">Low</option>
+                    </select>
+                    <textarea id="notes" placeholder="Additional Notes"></textarea>
+                    <div class="form-buttons">
+                        <button type="submit">Submit Order</button>
+                        <button type="button" id="cancel-order-btn">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="customer-section" id="about">
+            <h2>About CalambaGO!</h2>
+            <p>
+                CalambaGO! is your GO-to guide for discovering the best that Calamba has to offer.
+            </p>
+        </div>
+        <div class="customer-section" id="contact">
+            <h2>Contact Us</h2>
+            <p>
+                Have questions or need more information? Reach out to us at <b>infocalambaGO@gmail.com</b>
+            </p>
         </div>
     </div>
-
-    <div class="section" id="about">
-        <h2>About CalambaGO!</h2>
-        <p>
-            CalambaGO! is your GO-to guide for discovering the best that Calamba has to offer.
-        </p>
+    <div class="icons-bar">
+        <div class="icons">
+            <a href="#"><ion-icon name="logo-facebook"></ion-icon></a>
+            <a href="#"><ion-icon name="logo-instagram"></ion-icon></a>
+            <a href="#"><ion-icon name="logo-twitter"></ion-icon></a>
+            <a href="#"><ion-icon name="logo-google"></ion-icon></a>
+            <a href="#"><ion-icon name="logo-skype"></ion-icon></a>
+        </div>
     </div>
-
-    <div class="section" id="contact">
-        <h2>Contact Us</h2>
-        <p>
-            Have questions or need more information? Reach out to us at infocalambaGO@gmail.com
-        </p>
-    </div>
-
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
     <script>
-    // Show/hide new order form
     document.getElementById('new-order-btn').onclick = function() {
         document.getElementById('new-order-form').style.display = 'block';
     };
@@ -82,7 +305,6 @@
         document.getElementById('new-order-form').style.display = 'none';
     };
 
-    // Load customer orders (basic example)
     async function loadOrders() {
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         if (!user.id) return;
@@ -98,17 +320,16 @@
                 div.className = 'order-item';
                 div.innerHTML = `
                     <b>${order.package_info}</b><br>
-                    From: ${order.pickup_address}<br>
-                    To: ${order.delivery_address}<br>
-                    Status: ${order.status}<br>
-                    Fee: ₱${order.fee}
+                    <span style="color:#888;">From:</span> ${order.pickup_address}<br>
+                    <span style="color:#888;">To:</span> ${order.delivery_address}<br>
+                    <span style="color:#888;">Status:</span> <b>${order.status}</b><br>
+                    <span style="color:#888;">Fee:</span> <b>₱${order.fee}</b>
                 `;
                 list.appendChild(div);
             });
         }
     }
 
-    // Submit new order
     document.getElementById('orderForm').onsubmit = async function(e) {
         e.preventDefault();
         const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -121,29 +342,50 @@
             priority: document.getElementById('priority').value,
             notes: document.getElementById('notes').value
         };
-        // Geocode addresses before sending (optional, for accuracy)
-        async function geocodeAddress(address) {
-            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
-            const res = await fetch(url);
-            const data = await res.json();
-            if (data && data.length > 0) {
-                return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-            }
-            return null;
-        }
-        data.pickup_coords = await geocodeAddress(data.pickup_address);
-        data.delivery_coords = await geocodeAddress(data.delivery_address);
 
-        await fetch('api.php?endpoint=deliveries', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        document.getElementById('new-order-form').style.display = 'none';
-        await loadOrders();
+        try {
+            data.pickup_coords = await geocodeAddress(data.pickup_address);
+            data.delivery_coords = await geocodeAddress(data.delivery_address);
+
+            const response = await fetch('api.php?endpoint=deliveries', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                document.getElementById('new-order-form').style.display = 'none';
+                document.getElementById('orderForm').reset();
+                await loadOrders();
+            } else {
+                alert('Failed to submit order. Please try again.');
+            }
+        } catch (error) {
+            alert('Error submitting order. Please try again.');
+        }
     };
 
-    // Load orders on page load
+    async function geocodeAddress(address) {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data && data.length > 0) {
+            return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+        }
+        return null;
+    }
+
+    let profileDropdownList = document.querySelector(".profile-dropdown-list");
+    let btn = document.querySelector(".profile-dropdown-btn");
+    let classList = profileDropdownList.classList;
+    function toggle() { classList.toggle("active"); }
+    window.addEventListener("click", function (e) {
+        if (!btn.contains(e.target)) classList.remove("active");
+    });
+    document.getElementById('logout-link').addEventListener('click', function(e) {
+        localStorage.removeItem('user');
+    });
+
     window.onload = loadOrders;
     </script>
 </body>
