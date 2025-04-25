@@ -1,14 +1,20 @@
 <?php
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Origin: *');  // Allow from any origin
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Accept, Origin');
+header('Access-Control-Max-Age: 86400'); // 24 hours cache
 
+// Handle preflight OPTIONS request
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
 
-$host = 'localhost';
-$db   = 'calambago';
-$user = 'root';
-$pass = ''; 
+$host = 'sql102.infinityfree.com';
+$db   = 'if0_38825041_calambago';
+$user = 'if0_38825041';
+$pass = 'gaqAneRGHv9TvRI';
 $charset = 'utf8mb4';
 
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";

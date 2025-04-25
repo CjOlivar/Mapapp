@@ -35,7 +35,7 @@
                     stunning landscapes, <br> and vibrant local life of Calamba. Designed for locals and travelers alike, this interactive 
                     <br> map serves as a gateway to discovering everything Calamba has to offer.</p>
 
-                <button class="cn"><a href="driver.html">JOIN US</a></button>
+                <button class="cn"><a href="/driver.html">JOIN US</a></button>
             </div>
 
             <div class="form">
@@ -98,25 +98,48 @@ document.getElementById('show-signup').onclick = function(e) {
 };
 
 document.getElementById('login-btn').onclick = async function() {
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-    const type = document.getElementById('login-type').value;
-    const res = await fetch('api.php?endpoint=login', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({email, password, type})
-    });
-    const data = await res.json();
-    if (data.success) {
-        localStorage.setItem('user', JSON.stringify(data.user));
-        // Redirect based on user type
-        if (data.user.type === 'driver') {
-            window.location.href = 'driver.html';
-        } else {
-            window.location.href = 'customer.html';
+    try {
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+        const type = document.getElementById('login-type').value;
+
+        if (!email || !password) {
+            alert('Please fill in all login fields');
+            return;
         }
-    } else {
-        alert(data.error || 'Login failed');
+
+        const res = await fetch('http://calambago.free.nf/api.php?endpoint=login', {
+            method: 'POST',
+            mode: "no-cors",
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                email: email,
+                password: password, 
+                type: type
+            })
+        });
+
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
+
+        const data = await res.json();
+        if (data.success) {
+            localStorage.setItem('user', JSON.stringify(data.user));
+            if (data.user.type === 'driver') {
+                window.location.href = '/driver.html';
+            } else {
+                window.location.href = '/customer.html';
+            }
+        } else {
+            alert(data.error || 'Login failed');
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        alert('Connection failed. Please try again.');
     }
 };
 
@@ -129,33 +152,46 @@ document.getElementById('signup-btn').onclick = async function() {
         alert('Please fill in all signup fields.');
         return;
     }
-    const res = await fetch('api.php?endpoint=users', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({username, email, password, type})
-    });
-    const data = await res.json();
-    if (data.success) {
-        // Immediately log in after signup
-        const loginRes = await fetch('api.php?endpoint=login', {
+    try {
+        const res = await fetch('http://calambago.free.nf/api.php?endpoint=users', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({email, password, type})
+            mode: "no-cors",
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({username, email, password, type})
         });
-        const loginData = await loginRes.json();
-        if (loginData.success) {
-            localStorage.setItem('user', JSON.stringify(loginData.user));
-            // Redirect based on user type
-            if (loginData.user.type === 'driver') {
-                window.location.href = 'driver.html';
+        const data = await res.json();
+        if (data.success) {
+            // Immediately log in after signup
+            const loginRes = await fetch('http://calambago.free.nf/api.php?endpoint=login', {
+                method: 'POST',
+                mode: "no-cors", // Add no-cors mode
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({email, password, type})
+            });
+            const loginData = await loginRes.json();
+            if (loginData.success) {
+                localStorage.setItem('user', JSON.stringify(loginData.user));
+                // Redirect based on user type
+                if (loginData.user.type === 'driver') {
+                    window.location.href = 'driver.html';
+                } else {
+                    window.location.href = 'customer.html';
+                }
             } else {
-                window.location.href = 'customer.html';
+                alert('Signup succeeded but login failed. Please try logging in.');
             }
         } else {
-            alert('Signup succeeded but login failed. Please try logging in.');
+            alert(data.error || 'Signup failed');
         }
-    } else {
-        alert(data.error || 'Signup failed');
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Connection failed. Please try again.');
     }
 };
     </script>
