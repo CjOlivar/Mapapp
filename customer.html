@@ -113,21 +113,13 @@
             transform: translateX(5px);
         }
 
-        /* Order Form Styling */
-        #new-order-form {
-            background: #ffffff;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
+        /* Fix input box sizes */
         #orderForm input, 
         #orderForm select, 
         #orderForm textarea {
-            width: 100%;
+            width: 100%;          /* Make inputs full width */
+            margin-bottom: 20px;  
             padding: 12px;
-            margin-bottom: 15px;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
             font-size: 15px;
@@ -256,16 +248,27 @@
             <button id="new-order-btn">Place New Order</button>
             <div id="new-order-form" style="display:none;">
                 <form id="orderForm">
-                    <input type="text" id="pickup-address" placeholder="Pickup Address" required>
-                    <input type="text" id="delivery-address" placeholder="Delivery Address" required>
-                    <input type="text" id="package-info" placeholder="Package Info" required>
-                    <input type="number" id="delivery-fee" placeholder="Delivery Fee" min="0" step="0.01" required>
+                    <label for="pickup-address">Pickup Address:</label>
+                    <input type="text" id="pickup-address" placeholder="Enter pickup location" required>
+                    
+                    <label for="delivery-address">Delivery Address:</label>
+                    <input type="text" id="delivery-address" placeholder="Enter delivery location" required>
+                    
+                    <label for="package-info">Package Description:</label>
+                    <input type="text" id="package-info" placeholder="What are you sending?" required>
+                    
+                    <label for="delivery-fee">Delivery Fee (₱):</label>
+                    <input type="number" id="delivery-fee" placeholder="Enter amount" min="0" step="0.01" required>
+                    
+                    <label for="priority">Delivery Priority:</label>
                     <select id="priority">
-                        <option value="High">High</option>
-                        <option value="Medium" selected>Medium</option>
-                        <option value="Low">Low</option>
+                        <option value="High">High Priority</option>
+                        <option value="Medium" selected>Medium Priority</option>
+                        <option value="Low">Low Priority</option>
                     </select>
-                    <textarea id="notes" placeholder="Additional Notes"></textarea>
+                    
+                    <label for="notes">Additional Notes:</label>
+                    <textarea id="notes" placeholder="Any special instructions?"></textarea>
                     <div class="form-buttons">
                         <button type="submit">Submit Order</button>
                         <button type="button" id="cancel-order-btn">Cancel</button>
@@ -276,7 +279,7 @@
         <div class="customer-section" id="about">
             <h2>About CalambaGO!</h2>
             <p>
-                CalambaGO! is your GO-to guide for discovering the best that Calamba has to offer.
+                CalambaGO! is your GO-to guide for dis  ing the best that Calamba has to offer.
             </p>
         </div>
         <div class="customer-section" id="contact">
@@ -306,27 +309,56 @@
     };
 
     async function loadOrders() {
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        if (!user.id) return;
-        const res = await fetch('api.php?endpoint=deliveries&type=customer&id=' + user.id);
-        const orders = await res.json();
-        const list = document.getElementById('customer-orders-list');
-        list.innerHTML = '';
-        if (orders.length === 0) {
-            list.innerHTML = '<p>No orders yet.</p>';
-        } else {
+        try {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (!user.id) {
+                console.error('No user ID found');
+                return;
+            }
+
+            const res = await fetch(`api.php?endpoint=deliveries&type=customer&id=${user.id}`);
+            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+
+            const data = await res.json();
+            // Accept both array and {deliveries: array}
+            let orders = [];
+            if (Array.isArray(data)) {
+                orders = data;
+            } else if (Array.isArray(data.deliveries)) {
+                orders = data.deliveries;
+            } else {
+                orders = [];
+            }
+
+            const list = document.getElementById('customer-orders-list');
+            if (!list) return;
+            list.innerHTML = '';
+
+            if (orders.length === 0) {
+                list.innerHTML = '<p>No orders yet.</p>';
+                return;
+            }
+
             orders.forEach(order => {
                 const div = document.createElement('div');
-                div.className = 'order-item';
+                div.className = `order-item ${order.status || 'pending'}`;
                 div.innerHTML = `
-                    <b>${order.package_info}</b><br>
-                    <span style="color:#888;">From:</span> ${order.pickup_address}<br>
-                    <span style="color:#888;">To:</span> ${order.delivery_address}<br>
-                    <span style="color:#888;">Status:</span> <b>${order.status}</b><br>
-                    <span style="color:#888;">Fee:</span> <b>₱${order.fee}</b>
+                    <b>${order.package_info || 'No package info'}</b><br>
+                    <span style="color:#888;">From:</span> ${order.pickup_address || 'No pickup address'}<br>
+                    <span style="color:#888;">To:</span> ${order.delivery_address || 'No delivery address'}<br>
+                    <span style="color:#888;">Status:</span> <b>${order.status || 'Pending'}</b><br>
+                    <span style="color:#888;">Fee:</span> <b>₱${order.fee || '0'}</b><br>
+                    <span style="color:#888;">Priority:</span> <b>${order.priority || 'Normal'}</b>
                 `;
                 list.appendChild(div);
             });
+
+        } catch (error) {
+            console.error('Error loading orders:', error);
+            const list = document.getElementById('customer-orders-list');
+            if (list) {
+                list.innerHTML = '<p style="color: red;">Error loading orders. Please try again.</p>';
+            }
         }
     }
 

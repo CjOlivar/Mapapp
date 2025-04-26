@@ -9,52 +9,58 @@ window.addEventListener("click", function (e) {
   if (!btn.contains(e.target)) classList.remove("active");
 });
 
-document.querySelector('.profile-dropdown-list [href="cover.html"]').addEventListener('click', function(e) {
+document.querySelector('.profile-dropdown-list [href="index.html"]').addEventListener('click', function(e) {
   localStorage.removeItem('user');
 });
 
+// Add null checks before accessing journal elements
 const journalButton = document.getElementById("journal-button");
 const journalEntry = document.getElementById("journal-entry");
 const journalTitle = document.getElementById("journal-title");
 const journalText = document.getElementById("journal-text");
 const savedEntries = document.getElementById("saved-entries");
 
-// Toggle the journal display
-journalButton.addEventListener("click", () => {
-    journalEntry.style.display = (journalEntry.style.display === "none" || !journalEntry.style.display) ? "block" : "none";
-});
+// Only add event listeners if elements exist
+if (journalButton && journalEntry) {
+    journalButton.addEventListener("click", () => {
+        journalEntry.style.display = (journalEntry.style.display === "none" || !journalEntry.style.display) ? "block" : "none";
+    });
+}
 
-// Close journal
-document.getElementById("close-journal").addEventListener("click", () => {
-    journalEntry.style.display = "none";
-});
+if (document.getElementById("close-journal")) {
+    document.getElementById("close-journal").addEventListener("click", () => {
+        if (journalEntry) journalEntry.style.display = "none";
+    });
+}
 
-// Save entry with title and timestamp to localStorage
-document.getElementById("save-journal").addEventListener("click", () => {
-    const journalTitleValue = journalTitle.value.trim();
-    const journalTextValue = journalText.value.trim();
+if (document.getElementById("save-journal")) {
+    document.getElementById("save-journal").addEventListener("click", () => {
+        if (!journalTitle || !journalText) return;
+        const journalTitleValue = journalTitle.value.trim();
+        const journalTextValue = journalText.value.trim();
 
-    if (journalTitleValue && journalTextValue) {
-        // Check if entry with the same title already exists
-        const existingEntry = Object.keys(localStorage).find(key => key.includes(journalTitleValue));
+        if (journalTitleValue && journalTextValue) {
+            // Check if entry with the same title already exists
+            const existingEntry = Object.keys(localStorage).find(key => key.includes(journalTitleValue));
 
-        if (existingEntry) {
-            alert("An entry with this title already exists!");
-            return;
+            if (existingEntry) {
+                alert("An entry with this title already exists!");
+                return;
+            }
+
+            const date = new Date().toLocaleString();
+            const entry = { title: journalTitleValue, text: journalTextValue, date };
+            localStorage.setItem(`journalEntry-${date}`, JSON.stringify(entry));
+            addSavedEntry(entry);
+
+            // Clear the inputs after saving
+            journalTitle.value = "";
+            journalText.value = "";
+        } else {
+            alert("Please fill in both the title and the journal text.");
         }
-
-        const date = new Date().toLocaleString();
-        const entry = { title: journalTitleValue, text: journalTextValue, date };
-        localStorage.setItem(`journalEntry-${date}`, JSON.stringify(entry));
-        addSavedEntry(entry);
-
-        // Clear the inputs after saving
-        journalTitle.value = "";
-        journalText.value = "";
-    } else {
-        alert("Please fill in both the title and the journal text.");
-    }
-});
+    });
+}
 
 // Function to add an entry to the saved entries section
 function addSavedEntry(entry) {

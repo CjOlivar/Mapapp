@@ -98,34 +98,46 @@ document.getElementById('show-signup').onclick = function(e) {
 };
 
 document.getElementById('login-btn').onclick = async function() {
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-    const type = document.getElementById('login-type').value;
-
     try {
+        // Get values from form inputs
+        const email = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value.trim();
+        const type = document.getElementById('login-type').value;
+
+        // Validate inputs
+        if (!email || !password) {
+            alert('Please fill in all fields');
+            return;
+        }
+
         const res = await fetch('http://calambago.free.nf/api.php?endpoint=login', {
             method: 'POST',
-            mode: 'no-cors', // Add no-cors mode
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
-            body: JSON.stringify({email, password, type})
+            body: JSON.stringify({
+                email: email,
+                password: password,
+                type: type
+            })
         });
+
+        console.log('Response:', await res.clone().text()); // Debug response
+
         const data = await res.json();
         if (data.success) {
             localStorage.setItem('user', JSON.stringify(data.user));
-            // Update paths to be relative to domain root
             if (data.user.type === 'driver') {
-                window.location.href = 'driver.html';
+                window.location.href = '/driver.html';
             } else {
-                window.location.href = 'customer.html';
+                window.location.href = '/customer.html';
             }
         } else {
             alert(data.error || 'Login failed');
         }
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Login error:', error);
         alert('Connection failed. Please try again.');
     }
 };
@@ -151,28 +163,12 @@ document.getElementById('signup-btn').onclick = async function() {
         });
         const data = await res.json();
         if (data.success) {
-            // Immediately log in after signup
-            const loginRes = await fetch('http://calambago.free.nf/api.php?endpoint=login', {
-                method: 'POST',
-                mode: "no-cors", // Add no-cors mode
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({email, password, type})
-            });
-            const loginData = await loginRes.json();
-            if (loginData.success) {
-                localStorage.setItem('user', JSON.stringify(loginData.user));
-                // Redirect based on user type
-                if (loginData.user.type === 'driver') {
-                    window.location.href = 'driver.html';
-                } else {
-                    window.location.href = 'customer.html';
-                }
-            } else {
-                alert('Signup succeeded but login failed. Please try logging in.');
-            }
+            alert('Signup successful! Please login with your credentials.');
+            document.getElementById('signup-form').style.display = 'none';
+            // Clear signup form
+            document.getElementById('signup-username').value = '';
+            document.getElementById('signup-email').value = '';
+            document.getElementById('signup-password').value = '';
         } else {
             alert(data.error || 'Signup failed');
         }

@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');  // Allow from any origin
+header('Access-Control-Allow-Origin: *'); 
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Accept, Origin');
 header('Access-Control-Max-Age: 86400'); // 24 hours cache
@@ -163,39 +163,25 @@ switch ($endpoint) {
         break;
     case 'deliveries':
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-            // ?type=driver&driver_id=... or ?type=customer&customer_id=...
             $type = $_GET['type'] ?? '';
             $id = $_GET['id'] ?? '';
+            error_log("Fetching deliveries for type: $type, id: $id"); // Debug log
+
             if ($type === 'driver') {
                 // Show available and assigned deliveries for this driver
                 $stmt = $pdo->prepare("SELECT * FROM deliveries WHERE status IN ('pending','active') AND (driver_id IS NULL OR driver_id = ?)");
                 $stmt->execute([$id]);
                 $rows = $stmt->fetchAll();
-                // Always return coords as JSON arrays
-                foreach ($rows as &$row) {
-                    if (isset($row['pickup_coords'])) $row['pickup_coords'] = $row['pickup_coords'];
-                    if (isset($row['delivery_coords'])) $row['delivery_coords'] = $row['delivery_coords'];
-                }
-                echo json_encode($rows);
+                // Always return as { deliveries: [...] }
+                echo json_encode(['deliveries' => $rows]);
             } elseif ($type === 'customer') {
                 // Show all deliveries for this customer
-                $stmt = $pdo->prepare("SELECT * FROM deliveries WHERE customer_id = ?");
+                $stmt = $pdo->prepare("SELECT * FROM deliveries WHERE customer_id = ? ORDER BY created_at DESC");
                 $stmt->execute([$id]);
                 $rows = $stmt->fetchAll();
-                foreach ($rows as &$row) {
-                    if (isset($row['pickup_coords'])) $row['pickup_coords'] = $row['pickup_coords'];
-                    if (isset($row['delivery_coords'])) $row['delivery_coords'] = $row['delivery_coords'];
-                }
-                echo json_encode($rows);
-            } else {
-                // Admin: show all
-                $stmt = $pdo->query("SELECT * FROM deliveries");
-                $rows = $stmt->fetchAll();
-                foreach ($rows as &$row) {
-                    if (isset($row['pickup_coords'])) $row['pickup_coords'] = $row['pickup_coords'];
-                    if (isset($row['delivery_coords'])) $row['delivery_coords'] = $row['delivery_coords'];
-                }
-                echo json_encode($rows);
+                
+                error_log("Found " . count($rows) . " deliveries for customer"); // Debug log
+                echo json_encode(['deliveries' => $rows]);
             }
         } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Customer creates a new delivery order

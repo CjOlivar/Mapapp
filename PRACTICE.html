@@ -575,11 +575,8 @@
     
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script>
-        const DRIVER_ID = localStorage.user ? JSON.parse(localStorage.user).id : null;
-
-        // Move these variables to the top-level scope so they are accessible everywhere
-        let map;
-        let markerCluster;
+        // Use a fallback driver ID for demo/testing if localStorage is not used
+        const DRIVER_ID = 1; // Replace with actual driver ID from your authentication/session
 
         // Helper: Geocode address to coordinates (uses Nominatim)
         async function geocodeAddress(address) {
@@ -594,8 +591,18 @@
 
         // Fetch deliveries from backend
         async function fetchDeliveries() {
-            const res = await fetch(`api.php?endpoint=deliveries&type=driver&id=${DRIVER_ID}`);
-            return await res.json();
+            try {
+                const res = await fetch(`api.php?endpoint=deliveries&type=driver&id=${DRIVER_ID}`);
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                const data = await res.json();
+                // Always return an array for rendering
+                if (Array.isArray(data)) return data;
+                if (data && Array.isArray(data.deliveries)) return data.deliveries;
+                return [];
+            } catch (error) {
+                console.error('Error fetching deliveries:', error);
+                return [];
+            }
         }
 
         // Accept delivery
@@ -662,33 +669,67 @@
 
         // Render deliveries on map and panel
         async function renderDeliveries() {
-            const deliveries = await fetchDeliveries();
-            markerCluster.clearLayers();
-            const list = document.getElementById('delivery-list');
-            if (list) list.innerHTML = '';
-            for (const delivery of deliveries) {
-                let coords = null;
-                if (delivery.delivery_coords) {
-                    try { coords = JSON.parse(delivery.delivery_coords); } catch {}
+            try {
+                if (markerCluster) markerCluster.clearLayers();
+                let deliveries = await fetchDeliveries();
+                // Ensure deliveries is always an array
+                if (!Array.isArray(deliveries)) deliveries = [];
+                const list = document.getElementById('delivery-list');
+                if (list) list.innerHTML = '';
+                if (deliveries.length === 0) {
+                    if (list) list.innerHTML = '<p>No deliveries available</p>';
+                    return;
                 }
-                if (!coords) coords = await geocodeAddress(delivery.delivery_address);
-                if (!coords) continue;
-                // Marker with unique icon
-                const marker = L.marker(coords, { icon: getDeliveryIcon(delivery.status) }).addTo(markerCluster)
-                    .bindPopup(`<b>${delivery.package_info}</b><br>${delivery.delivery_address}<br>Status: ${delivery.status}`);
-                // Panel
+                deliveries.forEach(delivery => {
+                    // Add marker for delivery location
+                    if (delivery.delivery_coords) {
+                        try {
+                            const coords = JSON.parse(delivery.delivery_coords);
+                            const marker = L.marker(coords, {
+                                icon: getDeliveryIcon(delivery.status)
+                            }).bindPopup(`
+                                <b>${delivery.package_info}</b><br>
+                                Delivery to: ${delivery.delivery_address}<br>
+                                Status: ${delivery.status}
+                            `);
+                            markerCluster.addLayer(marker);
+                        } catch (e) {
+                            console.error('Error parsing coords:', e);
+                        }
+                    }
+
+                    // Add to list
+                    if (list) {
+                        const div = document.createElement('div');
+                        div.className = `delivery-item ${delivery.status}`;
+                        div.innerHTML = `
+                            <strong>${delivery.package_info}</strong><br>
+                            To: ${delivery.delivery_address}<br>
+                            Status: ${delivery.status}<br>
+                            <div class="button-group">
+                                <button onclick="acceptDelivery(${delivery.id})" 
+                                    ${delivery.status !== 'pending' ? 'disabled' : ''}>Accept</button>
+                                <button onclick="rejectDelivery(${delivery.id})"
+                                    ${delivery.status !== 'active' ? 'disabled' : ''}>Reject</button>
+                                <button onclick="completeDelivery(${delivery.id})"
+                                    ${delivery.status !== 'active' ? 'disabled' : ''}>Complete</button>
+                            </div>
+                        `;
+                        list.appendChild(div);
+                    }
+                });
+
+                // Update stats if available
+                if (data.stats) {
+                    document.getElementById('completed-count').textContent = data.stats.completed_count || '0';
+                    document.getElementById('earnings').textContent = 
+                        `₱${(data.stats.total_earnings || 0).toFixed(2)}`;
+                }
+            } catch (error) {
+                console.error('Error in renderDeliveries:', error);
+                const list = document.getElementById('delivery-list');
                 if (list) {
-                    const div = document.createElement('div');
-                    div.className = 'delivery-item';
-                    div.innerHTML = `
-                        <strong>${delivery.package_info}</strong><br>
-                        ${delivery.delivery_address}<br>
-                        Status: ${delivery.status}<br>
-                        <button onclick="acceptDelivery(${delivery.id})" ${delivery.status !== 'pending' ? 'disabled' : ''}>Accept</button>
-                        <button onclick="rejectDelivery(${delivery.id})" ${delivery.status !== 'active' ? 'disabled' : ''}>Reject</button>
-                        <button onclick="completeDelivery(${delivery.id})" ${delivery.status !== 'active' ? 'disabled' : ''}>Complete</button>
-                    `;
-                    list.appendChild(div);
+                    list.innerHTML = '<p>Error loading deliveries</p>';
                 }
             }
         }

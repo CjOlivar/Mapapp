@@ -51,7 +51,70 @@
             display: none;
         }
     }
+
+    .stats-dashboard {
+        width: 100%;
+        max-width: 1200px;
+        margin: 20px auto;
+        padding: 20px;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        transition: transform 0.3s;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .stat-card i {
+        font-size: 24px;
+        color: #10468b;
+        margin-bottom: 10px;
+    }
+
+    .stat-card span {
+        font-size: 24px;
+        font-weight: bold;
+        color: #202A44;
+        display: block;
+        margin: 10px 0;
+    }
+
+    .stat-card h3 {
+        font-size: 16px;
+        color: #666;
+        margin: 5px 0;
+    }
+
+    .stat-card p {
+        color: #888;
+        font-size: 14px;
+    }
+
+    .performance-chart {
+        margin-top: 20px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
     </style>
+    <!-- Add Chart.js before using it -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body onload="document.dispatchEvent(new Event('DOMContentLoaded'));">
 <script>
@@ -129,9 +192,38 @@ if (!localStorage.getItem('user')) {
             <iframe src="PRACTICE.html"></iframe>
         </div>
 
-    <div class="calendar" style="margin-bottom: 24px;">
-        <iframe src="manzanero.html"></iframe>
+<div class="stats-dashboard">
+    <h2>Delivery Analytics</h2>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <i class="fas fa-route"></i>
+            <h3>Today's Deliveries</h3>
+            <span id="today-deliveries">0</span>
+            <p>Completed / Total</p>
+        </div>
+        <div class="stat-card">
+            <i class="fas fa-money-bill-wave"></i>
+            <h3>Today's Earnings</h3>
+            <span id="today-earnings">₱0.00</span>
+            <p>Total earnings today</p>
+        </div>
+        <div class="stat-card">
+            <i class="fas fa-clock"></i>
+            <h3>Average Time</h3>
+            <span id="avg-delivery-time">0 min</span>
+            <p>Per delivery</p>
+        </div>
+        <div class="stat-card">
+            <i class="fas fa-star"></i>
+            <h3>Rating</h3>
+            <span id="driver-rating">0.0</span>
+            <p>Customer rating</p>
+        </div>
     </div>
+    <div class="performance-chart">
+        <canvas id="deliveryChart"></canvas>
+    </div>
+</div>
 
     <!-- Famous Places Section -->
     <section class="famous-places" id="famous-places">
@@ -213,6 +305,42 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// Initialize delivery chart
+const ctx = document.getElementById('deliveryChart').getContext('2d');
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: ['6am', '8am', '10am', '12pm', '2pm', '4pm', '6pm', '8pm'],
+        datasets: [{
+            label: 'Deliveries',
+            data: [0, 2, 4, 3, 5, 4, 6, 2],
+            borderColor: '#10468b',
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            title: {
+                display: true,
+                text: 'Delivery Performance Today'
+            }
+        }
+    }
+});
+
+// Update stats periodically
+function updateStats() {
+    // Here you would fetch real data from your API
+    document.getElementById('today-deliveries').textContent = '5/8';
+    document.getElementById('today-earnings').textContent = '₱2,450.00';
+    document.getElementById('avg-delivery-time').textContent = '35 min';
+    document.getElementById('driver-rating').textContent = '4.8';
+}
+
+updateStats();
+setInterval(updateStats, 60000); // Update every minute
 </script>
 </body>
 </html>
