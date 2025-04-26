@@ -63,20 +63,20 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-        const navbar = document.querySelector('.navbar');
-        const menu = document.querySelector('.menu');
-    
-        const menuIcon = document.createElement('div');
-        menuIcon.className = 'menu-icon';
-        menuIcon.innerHTML = '<ion-icon name="menu-outline"></ion-icon>';
-    
-            navbar.insertBefore(menuIcon, menu);
-    
-        menuIcon.addEventListener('click', function() {
+document.addEventListener('DOMContentLoaded', function() {
+    const navbar = document.querySelector('.navbar');
+    const menu = document.querySelector('.menu');
+
+    const menuIcon = document.createElement('div');
+    menuIcon.className = 'menu-icon';
+    menuIcon.innerHTML = '<ion-icon name="menu-outline"></ion-icon>';
+
+        navbar.insertBefore(menuIcon, menu);
+
+    menuIcon.addEventListener('click', function() {
         menu.classList.toggle('active');
     });
-    
+
     document.addEventListener('click', function(event) {
         if (!event.target.closest('.menu') && !event.target.closest('.menu-icon')) {
             if (menu.classList.contains('active')) {
@@ -90,93 +90,88 @@
             menu.classList.remove('active');
         }
     });
-});
 
-document.getElementById('show-signup').onclick = function(e) {
-    e.preventDefault();
-    document.getElementById('signup-form').style.display = 'block';
-};
+    document.getElementById('show-signup').onclick = function(e) {
+        e.preventDefault();
+        document.getElementById('signup-form').style.display = 'block';
+    };
 
-document.getElementById('login-btn').onclick = async function() {
-    try {
-        // Get values from form inputs
-        const email = document.getElementById('login-email').value.trim();
-        const password = document.getElementById('login-password').value.trim();
-        const type = document.getElementById('login-type').value;
+    document.getElementById('login-btn').onclick = async function() {
+        try {
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+            const type = document.getElementById('login-type').value;
 
-        // Validate inputs
-        if (!email || !password) {
-            alert('Please fill in all fields');
+            if (!email || !password) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            const res = await fetch('api.php?endpoint=login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    email: email,
+                    password: password,
+                    type: type
+                })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                // Store user info in localStorage
+                localStorage.setItem('user', JSON.stringify(data.user));
+                if (data.user.type === 'driver') {
+                    window.location.href = 'driver.html';
+                } else {
+                    window.location.href = 'customer.html';
+                }
+            } else {
+                alert(data.error || 'Login failed');
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            alert('Connection failed. Please try again.');
+        }
+    };
+
+    document.getElementById('signup-btn').onclick = async function() {
+        const username = document.getElementById('signup-username').value;
+        const email = document.getElementById('signup-email').value;
+        const password = document.getElementById('signup-password').value;
+        const type = document.getElementById('signup-type').value;
+        if (!username || !email || !password) {
+            alert('Please fill in all signup fields.');
             return;
         }
-
-        const res = await fetch('api.php?endpoint=login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-                email: email,
-                password: password,
-                type: type
-            })
-        });
-
-        console.log('Response:', await res.clone().text()); // Debug response
-
-        const data = await res.json();
-        if (data.success) {
-            localStorage.setItem('user', JSON.stringify(data.user));
-            if (data.user.type === 'driver') {
-                window.location.href = '/driver.html';
+        try {
+            const res = await fetch('api.php?endpoint=users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({username, email, password, type})
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert('Signup successful! Please login with your credentials.');
+                document.getElementById('signup-form').style.display = 'none';
+                document.getElementById('signup-username').value = '';
+                document.getElementById('signup-email').value = '';
+                document.getElementById('signup-password').value = '';
             } else {
-                window.location.href = '/customer.html';
+                alert(data.error || 'Signup failed');
             }
-        } else {
-            alert(data.error || 'Login failed');
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Connection failed. Please try again.');
         }
-    } catch (error) {
-        console.error('Login error:', error);
-        alert('Connection failed. Please try again.');
-    }
-};
-
-document.getElementById('signup-btn').onclick = async function() {
-    const username = document.getElementById('signup-username').value;
-    const email = document.getElementById('signup-email').value;
-    const password = document.getElementById('signup-password').value;
-    const type = document.getElementById('signup-type').value;
-    if (!username || !email || !password) {
-        alert('Please fill in all signup fields.');
-        return;
-    }
-    try {
-        const res = await fetch('api.php?endpoint=users', {
-            method: 'POST',
-            mode: "no-cors",
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({username, email, password, type})
-        });
-        const data = await res.json();
-        if (data.success) {
-            alert('Signup successful! Please login with your credentials.');
-            document.getElementById('signup-form').style.display = 'none';
-            // Clear signup form
-            document.getElementById('signup-username').value = '';
-            document.getElementById('signup-email').value = '';
-            document.getElementById('signup-password').value = '';
-        } else {
-            alert(data.error || 'Signup failed');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Connection failed. Please try again.');
-    }
-};
-    </script>
+    };
+});
+</script>
 </body>
 </html>

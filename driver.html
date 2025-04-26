@@ -275,6 +275,14 @@ if (!localStorage.getItem('user')) {
 
 <script src="index.js"></script>
 <script>
+// Logout: remove user from localStorage
+const logoutLink = document.querySelector('.profile-dropdown-list [href="index.html"]');
+if (logoutLink) {
+    logoutLink.addEventListener('click', function(e) {
+        localStorage.removeItem('user');
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const navbar = document.querySelector('.navbar');
     const menu = document.getElementById('main-menu');

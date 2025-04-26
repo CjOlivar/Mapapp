@@ -576,7 +576,8 @@
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script>
         // Use a fallback driver ID for demo/testing if localStorage is not used
-        const DRIVER_ID = 1; // Replace with actual driver ID from your authentication/session
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const DRIVER_ID = user.id || 1; // fallback to 1 for demo/testing
 
         // Helper: Geocode address to coordinates (uses Nominatim)
         async function geocodeAddress(address) {
