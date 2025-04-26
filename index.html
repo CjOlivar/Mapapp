@@ -110,7 +110,7 @@ document.getElementById('login-btn').onclick = async function() {
             return;
         }
 
-        const res = await fetch('http://calambago.free.nf/api.php?endpoint=login', {
+        const res = await fetch('api.php?endpoint=login', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -152,7 +152,7 @@ document.getElementById('signup-btn').onclick = async function() {
         return;
     }
     try {
-        const res = await fetch('http://calambago.free.nf/api.php?endpoint=users', {
+        const res = await fetch('api.php?endpoint=users', {
             method: 'POST',
             mode: "no-cors",
             headers: {
