@@ -9,9 +9,12 @@ window.addEventListener("click", function (e) {
   if (!btn.contains(e.target)) classList.remove("active");
 });
 
-document.querySelector('.profile-dropdown-list [href="index.html"]').addEventListener('click', function(e) {
-  localStorage.removeItem('user');
-});
+const logoutLink = document.querySelector('.profile-dropdown-list [href="index.html"]');
+if (logoutLink) {
+  logoutLink.addEventListener('click', function(e) {
+    localStorage.removeItem('user');
+  });
+}
 
 // Add null checks before accessing journal elements
 const journalButton = document.getElementById("journal-button");
