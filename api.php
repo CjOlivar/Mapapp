@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *'); 
+header('Access-Control-Allow-Origin: *');  // Allow from any origin
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Accept, Origin');
 header('Access-Control-Max-Age: 86400'); // 24 hours cache
@@ -168,12 +168,25 @@ switch ($endpoint) {
             error_log("Fetching deliveries for type: $type, id: $id"); // Debug log
 
             if ($type === 'driver') {
-                // Show available and assigned deliveries for this driver
-                $stmt = $pdo->prepare("SELECT * FROM deliveries WHERE status IN ('pending','active') AND (driver_id IS NULL OR driver_id = ?)");
-                $stmt->execute([$id]);
+                // Show both pending deliveries and this driver's active deliveries
+                $stmt = $pdo->prepare("
+                    SELECT d.*, u.username as customer_name,
+                        (SELECT COUNT(*) FROM deliveries WHERE driver_id = ? AND status = 'completed') as completed_count,
+                        (SELECT SUM(fee) FROM deliveries WHERE driver_id = ? AND status = 'completed') as total_earnings
+                    FROM deliveries d 
+                    LEFT JOIN users u ON d.customer_id = u.id 
+                    WHERE d.status = 'pending' 
+                       OR (d.driver_id = ? AND d.status IN ('active','completed'))
+                    ORDER BY d.created_at DESC
+                ");
+                $stmt->execute([$id, $id, $id]);
                 $rows = $stmt->fetchAll();
-                // Always return as { deliveries: [...] }
-                echo json_encode(['deliveries' => $rows]);
+                $stats = [
+                    'completed_count' => $rows[0]['completed_count'] ?? 0,
+                    'total_earnings' => $rows[0]['total_earnings'] ?? 0
+                ];
+                
+                echo json_encode(['deliveries' => $rows, 'stats' => $stats]);
             } elseif ($type === 'customer') {
                 // Show all deliveries for this customer
                 $stmt = $pdo->prepare("SELECT * FROM deliveries WHERE customer_id = ? ORDER BY created_at DESC");
@@ -181,7 +194,7 @@ switch ($endpoint) {
                 $rows = $stmt->fetchAll();
                 
                 error_log("Found " . count($rows) . " deliveries for customer"); // Debug log
-                echo json_encode(['deliveries' => $rows]);
+                echo json_encode(['deliveries' => $rows]); // Always wrap in deliveries object
             }
         } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Customer creates a new delivery order
@@ -228,12 +241,103 @@ switch ($endpoint) {
                 $stmt->execute([$id, $input['driver_id']]);
                 echo json_encode(['success' => true]);
             } elseif ($input['action'] === 'complete' && isset($input['driver_id'])) {
+                // Mark as completed
                 $stmt = $pdo->prepare("UPDATE deliveries SET status = 'completed', updated_at = NOW() WHERE id = ? AND driver_id = ?");
                 $stmt->execute([$id, $input['driver_id']]);
+                // Get customer_id for notification
+                $stmt = $pdo->prepare("SELECT customer_id FROM deliveries WHERE id = ?");
+                $stmt->execute([$id]);
+                $row = $stmt->fetch();
+                if ($row && $row['customer_id']) {
+                    // Insert notification for customer
+                    $stmt = $pdo->prepare("INSERT INTO notifications (user_id, message, created_at, is_read) VALUES (?, ?, NOW(), 0)");
+                    $stmt->execute([$row['customer_id'], 'Your order has been completed by the driver.']);
+                }
                 echo json_encode(['success' => true]);
             } else {
                 http_response_code(400);
                 echo json_encode(['error' => 'Invalid action']);
+            }
+        } elseif ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+            // Support removing a delivery order
+            $id = $_GET['id'] ?? '';
+            if (!$id) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Missing id']);
+                exit;
+            }
+            $stmt = $pdo->prepare("DELETE FROM deliveries WHERE id = ?");
+            $stmt->execute([$id]);
+            echo json_encode(['success' => true]);
+        }
+        break;
+    case 'notifications':
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            $user_id = $_GET['user_id'] ?? '';
+            if (!$user_id) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Missing user_id']);
+                exit;
+            }
+            $stmt = $pdo->prepare("SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC");
+            $stmt->execute([$user_id]);
+            echo json_encode(['notifications' => $stmt->fetchAll()]);
+        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $input = json_decode(file_get_contents('php://input'), true);
+            if (!$input || !isset($input['user_id'], $input['message'])) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Missing fields']);
+                exit;
+            }
+            $stmt = $pdo->prepare("INSERT INTO notifications (user_id, message, created_at, is_read) VALUES (?, ?, NOW(), 0)");
+            $stmt->execute([$input['user_id'], $input['message']]);
+            echo json_encode(['success' => true]);
+        } elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+            $id = $_GET['id'] ?? '';
+            if (!$id) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Missing id']);
+                exit;
+            }
+            $stmt = $pdo->prepare("UPDATE notifications SET is_read = 1 WHERE id = ?");
+            $stmt->execute([$id]);
+            echo json_encode(['success' => true]);
+        }
+        break;
+    case 'stats':
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            $driver_id = $_GET['driver_id'] ?? null;
+            
+            try {
+                // Get today's stats
+                $stmt = $pdo->prepare("
+                    SELECT 
+                        COUNT(*) as totalDeliveries,
+                        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completedDeliveries,
+                        SUM(CASE WHEN status = 'completed' THEN fee ELSE 0 END) as earnings,
+                        AVG(CASE 
+                            WHEN status = 'completed' 
+                            THEN TIMESTAMPDIFF(MINUTE, created_at, updated_at) 
+                            ELSE NULL 
+                        END) as avgDeliveryTime
+                    FROM deliveries 
+                    WHERE DATE(created_at) = CURDATE()
+                    AND (driver_id = ? OR driver_id IS NULL)
+                ");
+                
+                $stmt->execute([$driver_id]);
+                $stats = $stmt->fetch();
+                
+                echo json_encode([
+                    'totalDeliveries' => (int)$stats['totalDeliveries'],
+                    'completedDeliveries' => (int)$stats['completedDeliveries'],
+                    'earnings' => (float)$stats['earnings'],
+                    'avgDeliveryTime' => round((float)$stats['avgDeliveryTime'] ?? 0),
+                    'rating' => 4.5 // Hardcoded for now, you can add a ratings table later
+                ]);
+            } catch (Exception $e) {
+                http_response_code(500);
+                echo json_encode(['error' => 'Failed to fetch stats']);
             }
         }
         break;

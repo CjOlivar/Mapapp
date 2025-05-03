@@ -1,72 +1,206 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CalambaGO! - A CalaMap of INNOViGATION</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Dancing+Script&family=Great+Vibes&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
-    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
-
-    <link rel="stylesheet" href="style.css">
-    <style>
-    /* Responsive Navbar Styles */
-    @media (max-width: 900px) {
-        .menu {
-            display: none;
-        }
-        .menu.active {
-            display: flex !important;
-            flex-direction: column;
-            background: #202A44;
-            position: absolute;
-            top: 60px;
-            left: 0;
-            width: 100vw;
-            z-index: 3000;
-        }
-        .navbar-links a {
-            width: 100%;
-            text-align: left;
-            padding-left: 20px;
-        }
-        .menu-icon {
-            display: flex;
-            align-items: center;
-            font-size: 2.2rem;
-            color: #f1c40f;
-            cursor: pointer;
-            margin-right: 20px;
-            z-index: 4000;
-        }
-    }
-    @media (min-width: 901px) {
-        .menu {
-            display: flex !important;
-        }
-        .menu-icon {
-            display: none;
-        }
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>CalambaGO! Driver Dashboard</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+        <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+        <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+        <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="style.css"/>
+        <style>
+            html {
+        scroll-behavior: smooth; /* Enables smooth scrolling */
     }
 
-    .stats-dashboard {
+    body {
+        background-color: #f5f5f5;
+        margin: 0;
+        padding: 0;
+        font-family: "Poppins", sans-serif;
+    }
+
+    * {
+        font-family: "Poppins", sans-serif;
+        box-sizing: border-box;
+    }
+
+    /* Google Maps Embed */
+    .map-container {
+        width: 100%;
+        height: 700px;
+        position: relative;
+    }
+
+    #map {
+        width: 100%;
+        border-radius: 10px;
+    }
+
+    /* Calendar Styles */
+    .calendar {
         width: 100%;
         max-width: 1200px;
-        margin: 20px auto;
-        padding: 20px;
-        background: #fff;
+        margin: 45px auto 0 auto;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.10);
+        border-radius: 15px;
+        padding: 12px;
+        background: #f0f0f0;
+        position: relative;
+        z-index: 1;
+        margin-top: 0 !important; /* Remove if you use the spacer div in HTML */
+    }
+
+    .calendar iframe {
+        width: 100%;
+        height: 620px;
+        border: none;
         border-radius: 10px;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .logo {
+        font-family: 'Dancing Script', cursive;
+        font-size: 2.2rem;
+        color: #91b5dd;
+        margin-bottom: 30px;
+        font-weight: bold;
+        letter-spacing: 1px;
+        text-align: center;
+        width: 100%;
+        transition: opacity 0.3s;
+    }
+
+    /* Navigation Bar */
+    .navbar {
+        width: 100%;
+        background-color: #202A44;
+        position: fixed;
+        top: 0;
+        z-index: 2000; /* Increased z-index to ensure navbar is above all content */
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 20px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.7);
+    }
+
+    .menu {
+        display: flex;
+        align-items: center;
+    }
+
+    .navbar-links {
+        display: flex;
+        align-items: center;
+    }
+
+    .navbar-links a {
+        color: #fff;
+        text-decoration: none;
+        padding: 14px 20px;
+        font-size: 17px;
+        transition: background-color 0.3s;
+    }
+
+    .navbar-links a:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .navbar-spacer {
+        height: 70px;
+    }
+
+    /* Profile Dropdown */
+    .profile-dropdown {
+        position: relative;
+        margin-left: auto;
+    }
+
+    .profile-dropdown-btn {
+        display: flex;
+        align-items: center;
+        padding: 8px;
+        color: white;
+        cursor: pointer;
+    }
+
+    .profile-img {
+        width: 35px;
+        height: 35px;
+        margin-right: 10px;
+    }
+
+    .profile-dropdown-list {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: white;
+        width: 200px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        display: none;
+        z-index: 1000;
+    }
+
+    .profile-dropdown-list.active {
+        display: block;
+    }
+
+    .profile-dropdown-list-item {
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .profile-dropdown-list-item:last-child {
+        border-bottom: none;
+    }
+
+    .profile-dropdown-list-item a {
+        color: #333;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    /* Delivery Panel */
+    .delivery-panel {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        padding: 15px;
+        margin-top: 20px;
+    }
+
+    .delivery-item {
+        background: #f7f9fc;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 12px;
+        border-left: 5px solid #91b5dd;
+        transition: transform 0.2s;
+    }
+
+    .delivery-item:hover {
+        transform: translateX(5px);
+    }
+
+    /* Stats Dashboard */
+    .stats-dashboard {
+        margin-top: 20px;
+        padding: 20px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
 
     .stats-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 20px;
-        margin-bottom: 30px;
     }
 
     .stat-card {
@@ -74,281 +208,577 @@
         padding: 20px;
         border-radius: 8px;
         text-align: center;
-        transition: transform 0.3s;
     }
 
-    .stat-card:hover {
-        transform: translateY(-5px);
+    /* --- DRIVER DASHBOARD SIDEBAR & LAYOUT --- */
+    .dashboard-container {
+        display: flex;
+        min-height: 100vh;
+        background: #f4f6f9;
     }
-
-    .stat-card i {
-        font-size: 24px;
-        color: #10468b;
-        margin-bottom: 10px;
+    .sidebar {
+        background: #202A44;
+        color: white;
+        width: 230px;
+        min-width: 60px;
+        height: 100vh;
+        position: fixed;
+        left: 0;
+        top: 0;
+        z-index: 2000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-top: 30px;
+        transition: width 0.3s;
     }
-
-    .stat-card span {
-        font-size: 24px;
-        font-weight: bold;
-        color: #202A44;
+    .sidebar .user-profile {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 30px;
+        transition: margin-top 0.3s;
+    }
+    .sidebar .user-profile i {
+        font-size: 2.2rem;
+        margin-bottom: 8px;
+    }
+    .sidebar .user-profile span {
+        font-size: 1rem;
+        color: #fff;
+        transition: opacity 0.3s;
+    }
+    .sidebar .nav-menu {
+        list-style: none;
+        padding: 0;
+        width: 100%;
+    }
+    .sidebar .nav-menu li {
+        width: 100%;
+    }
+    .sidebar .nav-menu a {
+        color: white;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        padding: 14px 30px;
+        border-radius: 5px;
+        transition: background 0.3s, color 0.3s;
+        font-size: 1rem;
+        width: 100%;
+    }
+    .sidebar .nav-menu a.active, .sidebar .nav-menu a:focus, .sidebar .nav-menu a:hover {
+        background: #10468b;
+        color: #f1c40f;
+    }
+    .sidebar .nav-menu i {
+        margin-right: 12px;
+        width: 22px;
+        text-align: center;
+    }
+    .sidebar .nav-menu span {
+        display: inline;
+        transition: opacity 0.3s;
+    }
+    .hamburger {
+        display: none;
+        position: fixed;
+        top: 18px;
+        left: 18px;
+        font-size: 2rem;
+        cursor: pointer;
+        z-index: 4000;
+        background: transparent;
+        border: none;
+    }
+    .hamburger i {
+        color: #fff !important;
+        font-size: 2rem;
+    }
+    /* Hamburger sidebar collapsed */
+    .sidebar.collapsed {
+        left: -230px;
+    }
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.3);
+        z-index: 1999;
+    }
+    .sidebar-open .sidebar-overlay {
         display: block;
-        margin: 10px 0;
     }
-
-    .stat-card h3 {
-        font-size: 16px;
-        color: #666;
-        margin: 5px 0;
+    .main-content {
+        margin-left: 230px;
+        padding: 40px 20px 20px 20px;
+        width: 100%;
+        max-width: 1200px;
+        min-height: 100vh;
+        transition: margin-left 0.3s, padding 0.3s;
     }
-
-    .stat-card p {
-        color: #888;
-        font-size: 14px;
+    .sidebar.collapsed ~ .main-content {
+        margin-left: 0;
     }
-
-    .performance-chart {
-        margin-top: 20px;
-        padding: 20px;
-        background: #f8f9fa;
-        border-radius: 8px;
-    }
-    </style>
-    <!-- Add Chart.js before using it -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body onload="document.dispatchEvent(new Event('DOMContentLoaded'));">
-<script>
-if (!localStorage.getItem('user')) {
-    window.location.href = 'index.html';
-}
-</script>
-    
-     <!-- Navigation Bar -->
-     <div class="navbar" id="main-navbar">
-        <div class="icon">
-            <h2 class="logo">Calamba<span style="color: #91b5dd; font-weight: bolder; font-family: 'Dancing Script', cursive; font-size: 40px;">GO!</span></h2>
-        </div>
-        <!-- Hamburger icon will be inserted by JS -->
-        <div class="menu" id="main-menu">
-            <div class="navbar-links">
-                <b><a href="#home" data-lang-en="Home" data-lang-tl="Bahay">Home</a></b>
-                <b><a href="#famous-places" data-lang-en="Famous Places" data-lang-tl="Sikat na Lugar">Famous Places</a></b>
-                <b><a href="#about" data-lang-en="About" data-lang-tl="Tungkol">About</a></b>
-                <b><a href="#contact" data-lang-en="Contact" data-lang-tl="Makipag-ugnayan">Contact</a></b>
-            </div>
-        </div>
-        <!-- Profile always visible -->
-        <div class="profile-dropdown">
-            <div onclick="toggle()" class="profile-dropdown-btn">
-              <div class="profile-img">
-                <i class="fa-solid fa-circle"></i>
-              </div>
-              <span>
-                <script>
-                  // Show user type in navbar
-                  const user = JSON.parse(localStorage.getItem('user') || '{}');
-                  document.write(user.username ? user.username + ' (' + (user.type || '') + ')' : 'ITMAWD22');
-                </script>
-                <i class="fa-solid fa-angle-down"></i>
-              </span>
-            </div>
-            <ul class="profile-dropdown-list">
-              <li class="profile-dropdown-list-item">
-                <a href="profile.html">
-                  <i class="fa-regular fa-user"></i>
-                  Edit Profile
-                </a>
-              </li>
-              <li class="profile-dropdown-list-item">
-                <a href="inbox.html">
-                  <i class="fa-regular fa-envelope"></i>
-                  Inbox
-                </a>
-              </li>
-              <li class="profile-dropdown-list-item">
-                <a href="featserv.html">
-                  <i class="fa-regular fa-circle-question"></i>
-                  Features & Services
-                </a>
-              </li>
-              <hr />
-              <li class="profile-dropdown-list-item">
-                <a href="index.html">
-                  <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                  Log out
-                </a>
-              </li>
-            </ul>
-        </div>
-     </div>
-
-     
-     <div class="navbar-spacer"></div>
-     <div class="navbar-spacer"></div>
-
-
-    <!-- Google Maps Embed -->
-        <div class="map-container" id="home">
-            <iframe src="PRACTICE.html"></iframe>
-        </div>
-
-<div class="stats-dashboard">
-    <h2>Delivery Analytics</h2>
-    <div class="stats-grid">
-        <div class="stat-card">
-            <i class="fas fa-route"></i>
-            <h3>Today's Deliveries</h3>
-            <span id="today-deliveries">0</span>
-            <p>Completed / Total</p>
-        </div>
-        <div class="stat-card">
-            <i class="fas fa-money-bill-wave"></i>
-            <h3>Today's Earnings</h3>
-            <span id="today-earnings">₱0.00</span>
-            <p>Total earnings today</p>
-        </div>
-        <div class="stat-card">
-            <i class="fas fa-clock"></i>
-            <h3>Average Time</h3>
-            <span id="avg-delivery-time">0 min</span>
-            <p>Per delivery</p>
-        </div>
-        <div class="stat-card">
-            <i class="fas fa-star"></i>
-            <h3>Rating</h3>
-            <span id="driver-rating">0.0</span>
-            <p>Customer rating</p>
-        </div>
-    </div>
-    <div class="performance-chart">
-        <canvas id="deliveryChart"></canvas>
-    </div>
-</div>
-
-    <!-- Famous Places Section -->
-    <section class="famous-places" id="famous-places">
-        <!-- Will be filled by JS from backend -->
-    </section>
-
-   
-    <!-- Optional: About Section -->
-     <div class="section">
-    <section class="famous-places" id="about">
-        <div class="style"><h2 data-lang-en="About CalambaGO!" data-lang-tl="Tungkol sa CalambaGO!">About CalambaGO!</h2></div>
-        <p data-lang-en="CalambaGO! is your GO-to guide for discovering the best that Calamba has to offer. From historical landmarks to vibrant local businesses, our platform provides comprehensive information to help you navigate and enjoy the city to the fullest." data-lang-tl="Ang CalambaGO! ang iyong gabay para tuklasin ang pinakamaganda na inaalok ng Calamba. Mula sa mga makasaysayang pook hanggang sa masiglang lokal na negosyo, nagbibigay ang aming plataporma ng komprehensibong impormasyon upang matulungan kang mag-navigate at tamasahin ang lungsod nang lubos.">CalambaGO! is your GO-to guide for discovering the best that Calamba has to offer. From historical landmarks to vibrant local businesses, our platform provides comprehensive information to help you navigate and enjoy the city to the fullest.</p>
-    </section>
-
-    <!-- Optional: Contact Section -->
-    <section class="famous-places" id="contact">
-        <div class="style"><h2 data-lang-en="Contact Us" data-lang-tl="Makipag-ugnayan sa Amin">Contact Us</h2></div>
-        <p data-lang-en="Have questions or need more information? Reach out to us at infocalambaGO@gmail.com" data-lang-tl="May mga tanong o kailangan mo pa ng karagdagang impormasyon? Makipag-ugnayan sa amin sa infocalambaGO@gmail.com" Have questions or need more information? Reach out to us at infocalambaGO@gmail.com </p>
-    </section>
-    </div>
-
-    <div class="icons-bar">
-        <div class="icons">
-            <a href="#"><ion-icon name="logo-facebook"></ion-icon></a>
-            <a href="#"><ion-icon name="logo-instagram"></ion-icon></a>
-            <a href="#"><ion-icon name="logo-twitter"></ion-icon></a>
-            <a href="#"><ion-icon name="logo-google"></ion-icon></a>
-            <a href="#"><ion-icon name="logo-skype"></ion-icon></a>
-        </div>
-    </div>
-
-   <!-- Journal Button -->
-   <div id="journal-container">
-    <button id="journal-button">Open Journal</button>
-    <div id="journal-entry">
-        <input type="text" id="journal-title" placeholder="Title of your entry..." />
-        <textarea id="journal-text" placeholder="Write about your journey..."></textarea>
-        <button id="save-journal">Save</button>
-        <button id="close-journal">Close</button>
-        <div class="saved-entries" id="saved-entries">
-            <!-- Saved entries will be displayed here -->
-        </div>
-    </div>
-</div>
-
-        
-            <!-- Leaflet JS -->
-            <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
-<script src="index.js"></script>
-<script>
-// Logout: remove user from localStorage
-const logoutLink = document.querySelector('.profile-dropdown-list [href="index.html"]');
-if (logoutLink) {
-    logoutLink.addEventListener('click', function(e) {
-        localStorage.removeItem('user');
-    });
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    const navbar = document.querySelector('.navbar');
-    const menu = document.getElementById('main-menu');
-    // Insert hamburger icon before menu if not present
-    if (!document.querySelector('.menu-icon')) {
-        const menuIcon = document.createElement('div');
-        menuIcon.className = 'menu-icon';
-        menuIcon.innerHTML = '<ion-icon name="menu-outline"></ion-icon>';
-        navbar.insertBefore(menuIcon, menu);
-
-        menuIcon.addEventListener('click', function(e) {
-            e.stopPropagation();
-            menu.classList.toggle('active');
-        });
-
-        document.addEventListener('click', function(event) {
-            if (!event.target.closest('.menu') && !event.target.closest('.menu-icon')) {
-                if (menu.classList.contains('active')) {
-                    menu.classList.remove('active');
-                }
-            }
-        });
-
-        window.addEventListener('resize', function() {
-            if (window.innerWidth > 900 && menu.classList.contains('active')) {
-                menu.classList.remove('active');
-            }
-        });
-    }
-});
-
-// Initialize delivery chart
-const ctx = document.getElementById('deliveryChart').getContext('2d');
-new Chart(ctx, {
-    type: 'line',
-    data: {
-        labels: ['6am', '8am', '10am', '12pm', '2pm', '4pm', '6pm', '8pm'],
-        datasets: [{
-            label: 'Deliveries',
-            data: [0, 2, 4, 3, 5, 4, 6, 2],
-            borderColor: '#10468b',
-            tension: 0.4
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-            title: {
-                display: true,
-                text: 'Delivery Performance Today'
-            }
+    @media (max-width: 900px) {
+        .sidebar {
+            width: 60px;
+            min-width: 60px;
+            padding-top: 10px;
+            align-items: stretch;
+        }
+        .main-content {
+            margin-left: 60px;
+            padding: 10px;
+        }
+        .sidebar .logo {
+            display: none;
+            margin-top: 0;
+            width: auto;
+        }
+        .sidebar .user-profile span,
+        .sidebar .nav-menu span {
+            display: none;
+        }
+        .hamburger {
+            display: block;
+        }
+        .sidebar .user-profile {
+            margin-top: 80px; /* Space below hamburger */
+        }
+        .sidebar.open .logo {
+            display: block;
+            margin-top: 60px;
+        }
+        .sidebar.open .user-profile {
+            margin-top: 20px;
+        }
+        .sidebar.open .user-profile span,
+        .sidebar.open .nav-menu span {
+            display: inline;
+        }
+        .sidebar.open {
+            width: 230px;
+            min-width: 230px;
+            transition: width 0.3s;
+        }
+        .main-content.sidebar-open {
+            margin-left: 230px;
+            transition: margin-left 0.3s;
         }
     }
-});
+    @media (max-width: 600px) {
+        .sidebar {
+            width: 50px;
+            min-width: 50px;
+            padding-top: 5px;
+        }
+        .main-content {
+            margin-left: 50px;
+            padding: 5px;
+        }
+    }
+    /* --- END DRIVER DASHBOARD SIDEBAR & LAYOUT --- */
 
-// Update stats periodically
-function updateStats() {
-    // Here you would fetch real data from your API
-    document.getElementById('today-deliveries').textContent = '5/8';
-    document.getElementById('today-earnings').textContent = '₱2,450.00';
-    document.getElementById('avg-delivery-time').textContent = '35 min';
-    document.getElementById('driver-rating').textContent = '4.8';
-}
+    /* Responsive Design */
+    @media (max-width: 900px) {
+        .menu {
+            display: none;
+        }
 
-updateStats();
-setInterval(updateStats, 60000); // Update every minute
-</script>
-</body>
-</html>
+        .menu.active {
+            display: flex;
+            flex-direction: column;
+            position: absolute;
+            top: 60px;
+            left: 0;
+            width: 100%;
+            background: #202A44;
+        }
+
+        .navbar-links {
+            flex-direction: column;
+        }
+
+        .navbar-links a {
+            width: 100%;
+            padding: 15px 20px;
+        }
+
+        .profile-dropdown {
+            position: static;
+        }
+
+        .profile-dropdown-list {
+            width: 100%;
+            position: fixed;
+            top: auto;
+            bottom: 0;
+        }
+
+        .map-container, .calendar {
+            width: 100%;
+            max-width: 100vw;
+            margin: 10px 0 0 0;
+            padding: 0;
+        }
+
+        .map-container iframe, .calendar iframe {
+            height: 350px;
+        }
+    }
+
+    /* Icons Bar */
+    .icons-bar {
+        background: #202A44;
+        padding: 15px 0;
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    .icons {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+    }
+
+    .icons a {
+        color: white;
+        font-size: 24px;
+    }
+
+    .icons ion-icon:hover {
+        color: #f1c40f;
+    }
+
+    /* Responsive override for map container */
+    .map-card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(32,42,68,0.08);
+        padding: 12px;
+        margin: 0 auto 24px auto;
+        max-width: 100%;
+        position: relative;
+        border: 1px solid #91b5dd;
+    }
+    .driver-map-frame {
+        width: 100%;
+        height: 350px;
+        border-radius: 10px;
+        border: 2px solid #202A44;
+        box-shadow: 0 2px 12px rgba(32,42,68,0.12);
+        background: #eaf1fa;
+        margin: 0 auto;
+    }
+    @media (max-width: 900px) {
+        .driver-map-frame {
+            height: 250px;
+        }
+    }
+    @media (max-width: 600px) {
+        .main-content {
+            padding: 8px;
+        }
+        .driver-map-frame {
+            height: 180px;
+        }
+        .map-card {
+            padding: 4px;
+        }
+    }
+        </style>
+    </head>
+    <body>
+        <div class="dashboard-container">
+            <div class="hamburger"><i class="fas fa-bars"></i></div>
+            <nav class="sidebar">
+                <div class="logo">Calamba<span style="color: #91b5dd;">GO!</span></div>
+                <div class="user-profile">
+                    <i class="fas fa-user-circle"></i>
+                    <span id="driver-username">Driver</span>
+                </div>
+                <ul class="nav-menu">
+                    <li><a href="#" class="active"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a></li>
+                    <li><a href="#deliveries"><i class="fas fa-box"></i><span>Deliveries</span></a></li>
+                    <li><a href="#map"><i class="fas fa-map-marked-alt"></i><span>Map</span></a></li>
+                    <li><a href="profile.html"><i class="fas fa-user"></i><span>Profile</span></a></li>
+                    <li><a href="index.html" id="logout-link"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-overlay"></div>
+            <main class="main-content">
+                <h1 style="font-family: 'Dancing Script', cursive; color: #202A44; margin-bottom: 24px;">Welcome, <span id="main-driver-name">Driver</span>!</h1>
+                <section class="stats-dashboard">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <i class="fas fa-box" style="color:#10468b;"></i>
+                            <div class="stat-value" id="stat-total">0</div>
+                            <div class="stat-label">Total Deliveries</div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-check-circle" style="color:#28a745;"></i>
+                            <div class="stat-value" id="stat-completed">0</div>
+                            <div class="stat-label">Completed</div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-clock" style="color:#f1c40f;"></i>
+                            <div class="stat-value" id="stat-pending">0</div>
+                            <div class="stat-label">Pending</div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-money-bill-wave" style="color:#91b5dd;"></i>
+                            <div class="stat-value" id="stat-earnings">₱0.00</div>
+                            <div class="stat-label">Earnings</div>
+                        </div>
+                    </div>
+                </section>
+                <section id="deliveries" class="delivery-panel">
+                    <h2 style="color:#202A44;">Orders Available</h2>
+                    <div id="delivery-list"></div>
+                </section>
+                <section id="map-section" style="margin-top:32px;">
+                    <h2 style="color:#202A44;">Delivery Map</h2>
+                    <div class="map-card">
+                        <div id="map" style="width:100%;height:350px;border-radius:10px;"></div>
+                    </div>
+                </section>
+            </main>
+        </div>
+        <div class="icons-bar">
+            <div class="icons">
+                <a href="#"><ion-icon name="logo-facebook"></ion-icon></a>
+                <a href="#"><ion-icon name="logo-instagram"></ion-icon></a>
+                <a href="#"><ion-icon name="logo-twitter"></ion-icon></a>
+                <a href="#"><ion-icon name="logo-google"></ion-icon></a>
+                <a href="#"><ion-icon name="logo-skype"></ion-icon></a>
+            </div>
+        </div>
+        <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+        <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+        <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+        <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+        <script>
+        // Set driver name
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('driver-username').textContent = user.username || 'Driver';
+        document.getElementById('main-driver-name').textContent = user.username || 'Driver';
+
+        // Logout
+        document.getElementById('logout-link').onclick = function() {
+            localStorage.removeItem('user');
+        };
+
+        // Stats and deliveries
+        let dashboardMap, markerCluster;
+        let fetchErrorShown = false; // Add this flag
+
+        async function fetchDeliveries() {
+            try {
+                const res = await fetch('api.php?endpoint=deliveries&type=driver&id=' + (user.id || ''));
+                if (!res.ok) {
+                    const text = await res.text();
+                    console.error('API error:', res.status, text);
+                    throw new Error('API error: ' + res.status);
+                }
+                const data = await res.json();
+                fetchErrorShown = false; // Reset flag on success
+                return {
+                    deliveries: data.deliveries || [],
+                    stats: data.stats || {}
+                };
+            } catch (e) {
+                if (!fetchErrorShown) {
+                    alert('Failed to fetch deliveries. Please check your connection or try again later.');
+                    fetchErrorShown = true;
+                }
+                console.error('Fetch error:', e);
+                return { deliveries: [], stats: {} };
+            }
+        }
+
+        function getDeliveryIcon(status) {
+            let iconHtml, color;
+            switch (status) {
+                case 'pending': iconHtml = '<i class="fas fa-clock"></i>'; color = '#F44336'; break;
+                case 'active': iconHtml = '<i class="fas fa-motorcycle"></i>'; color = '#2196F3'; break;
+                case 'completed': iconHtml = '<i class="fas fa-check-circle"></i>'; color = '#4CAF50'; break;
+                case 'rejected': iconHtml = '<i class="fas fa-times-circle"></i>'; color = '#757575'; break;
+                default: iconHtml = '<i class="fas fa-box"></i>'; color = '#9C27B0';
+            }
+            return L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="background:${color};border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;border:2px solid #fff;">${iconHtml}</div>`,
+                iconSize: [28, 28],
+                iconAnchor: [14, 14]
+            });
+        }
+
+        async function renderDashboard() {
+            const { deliveries, stats } = await fetchDeliveries();
+            let total = deliveries.length;
+            let completed = deliveries.filter(d => d.status === 'completed').length;
+            let pending = deliveries.filter(d => d.status === 'pending').length;
+            let earnings = stats.total_earnings || 0;
+
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-completed').textContent = completed;
+            document.getElementById('stat-pending').textContent = pending;
+            document.getElementById('stat-earnings').textContent = '₱' + (+earnings).toFixed(2);
+
+            const list = document.getElementById('delivery-list');
+            list.innerHTML = '';
+            // Only show deliveries that are not completed or rejected
+            const availableDeliveries = deliveries.filter(d => d.status !== 'completed' && d.status !== 'rejected');
+            if (availableDeliveries.length === 0) {
+                list.innerHTML = '<p>No deliveries yet.</p>';
+            } else {
+                availableDeliveries.forEach(delivery => {
+                    const div = document.createElement('div');
+                    div.className = 'delivery-item';
+                    div.innerHTML = `
+                        <b>${delivery.package_info}</b><br>
+                        <span style="color:#888;">From:</span> ${delivery.pickup_address}<br>
+                        <span style="color:#888;">To:</span> ${delivery.delivery_address}<br>
+                        <span style="color:#888;">Status:</span> <b>${delivery.status}</b><br>
+                        <span style="color:#888;">Fee:</span> <b>₱${delivery.fee}</b>
+                        <div class="delivery-actions">
+                            <button class="accept-btn" ${delivery.status !== 'pending' ? 'disabled' : ''}>Accept</button>
+                            <button class="reject-btn" ${delivery.status !== 'active' ? 'disabled' : ''}>Reject</button>
+                            <button class="complete-btn" ${delivery.status !== 'active' ? 'disabled' : ''}>Complete</button>
+                        </div>
+                    `;
+                    div.querySelector('.accept-btn').addEventListener('click', () => acceptDelivery(delivery.id));
+                    div.querySelector('.reject-btn').addEventListener('click', () => rejectDelivery(delivery.id));
+                    div.querySelector('.complete-btn').addEventListener('click', () => completeDelivery(delivery.id));
+                    list.appendChild(div);
+                });
+            }
+
+            if (!dashboardMap) {
+                const mapDiv = document.getElementById('map');
+                if (mapDiv) {
+                    dashboardMap = L.map(mapDiv).setView([14.2184, 121.0583], 13);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(dashboardMap);
+                    markerCluster = L.markerClusterGroup().addTo(dashboardMap);
+                }
+            }
+            if (markerCluster) markerCluster.clearLayers();
+
+            deliveries.forEach(delivery => {
+                if (delivery.delivery_coords) {
+                    try {
+                        const coords = JSON.parse(delivery.delivery_coords);
+                        const marker = L.marker(coords, {
+                            icon: getDeliveryIcon(delivery.status)
+                        }).bindPopup(`
+                            <b>${delivery.package_info}</b><br>
+                            Delivery to: ${delivery.delivery_address}<br>
+                            Status: ${delivery.status}
+                        `);
+                        markerCluster.addLayer(marker);
+                    } catch (e) {}
+                }
+            });
+        }
+
+        window.renderDashboard = renderDashboard;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            renderDashboard();
+            setInterval(renderDashboard, 30000);
+        });
+
+        async function acceptDelivery(id) {
+            try {
+                const res = await fetch(`api.php?endpoint=deliveries&id=${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'accept', driver_id: user.id })
+                });
+                const text = await res.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (err) {
+                    console.error('API did not return JSON:', text);
+                    alert('Server error: ' + text);
+                    return;
+                }
+                if (!data.success) throw new Error(data.error || 'Failed to accept delivery');
+                await renderDashboard();
+            } catch (e) {
+                alert('Failed to accept delivery. Please try again.');
+                console.error(e);
+            }
+        }
+        async function rejectDelivery(id) {
+            try {
+                const res = await fetch(`api.php?endpoint=deliveries&id=${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'reject', driver_id: user.id })
+                });
+                const text = await res.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (err) {
+                    console.error('API did not return JSON:', text);
+                    alert('Server error: ' + text);
+                    return;
+                }
+                if (!data.success) throw new Error(data.error || 'Failed to reject delivery');
+                await renderDashboard();
+            } catch (e) {
+                alert('Failed to reject delivery. Please try again.');
+                console.error(e);
+            }
+        }
+        async function completeDelivery(id) {
+            try {
+                const res = await fetch(`api.php?endpoint=deliveries&id=${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'complete', driver_id: user.id })
+                });
+                const text = await res.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (err) {
+                    console.error('API did not return JSON:', text);
+                    alert('Server error: ' + text);
+                    return;
+                }
+                if (!data.success) throw new Error(data.error || 'Failed to complete delivery');
+                await renderDashboard();
+            } catch (e) {
+                alert('Failed to complete delivery. Please try again.');
+                console.error(e);
+            }
+        }
+        window.acceptDelivery = acceptDelivery;
+        window.rejectDelivery = rejectDelivery;
+        window.completeDelivery = completeDelivery;
+
+        // Hamburger menu toggle for sidebar (responsive)
+        document.querySelector('.hamburger').addEventListener('click', function() {
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+            sidebar.classList.toggle('open');
+            mainContent.classList.toggle('sidebar-open');
+            document.body.classList.toggle('sidebar-open');
+        });
+        document.querySelector('.sidebar-overlay').addEventListener('click', function() {
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+            sidebar.classList.remove('open');
+            mainContent.classList.remove('sidebar-open');
+            document.body.classList.remove('sidebar-open');
+        });
+        </script>
+    </body>
+    </html>

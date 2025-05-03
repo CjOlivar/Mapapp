@@ -8,26 +8,115 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .navbar {
-            width: 100vw;
-            min-width: 100vw;
-            left: 0;
-            right: 0;
-            background-color: var(--navbar-bg, #202A44);
-            box-sizing: border-box;
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+            background: #f4f6f9;
+        }
+        .sidebar {
+            background: #202A44;
+            color: white;
+            width: 230px;
+            min-width: 60px;
+            height: 100vh;
             position: fixed;
+            left: 0;
             top: 0;
-            z-index: 1000;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 30px;
+            transition: width 0.3s;
         }
-
+        .hamburger {
+            display: none;
+            position: fixed;
+            top: 18px;
+            left: 18px;
+            font-size: 2rem;
+            cursor: pointer;
+            z-index: 4000;
+            background: transparent;
+            border: none;
+        }
+        .hamburger i {
+            color: #fff !important;
+            font-size: 2rem;
+        }
+        .sidebar .hamburger {
+            display: none;
+            width: 100%;
+            text-align: left;
+            padding: 18px 0 0 18px;
+            box-sizing: border-box;
+        }
+        .sidebar .hamburger i {
+            color: #fff !important;
+            font-size: 2rem;
+        }
+        .sidebar .logo {
+            font-family: 'Dancing Script', cursive;
+            font-size: 2.2rem;
+            color: #91b5dd;
+            margin-bottom: 30px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-align: center;
+            width: 100%;
+            transition: opacity 0.3s;
+        }
+        .sidebar .user-profile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .sidebar .user-profile i {
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+        }
+        .sidebar .user-profile span {
+            font-size: 1rem;
+            color: #fff;
+            transition: opacity 0.3s;
+        }
+        .sidebar .nav-menu {
+            list-style: none;
+            padding: 0;
+            width: 100%;
+        }
+        .sidebar .nav-menu li {
+            width: 100%;
+        }
+        .sidebar .nav-menu a {
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            padding: 14px 30px;
+            border-radius: 5px;
+            transition: background 0.3s, color 0.3s;
+            font-size: 1rem;
+            width: 100%;
+        }
+        .sidebar .nav-menu a.active, .sidebar .nav-menu a:focus, .sidebar .nav-menu a:hover {
+            background: #10468b;
+            color: #f1c40f;
+        }
+        .sidebar .nav-menu i {
+            margin-right: 12px;
+            width: 22px;
+            text-align: center;
+        }
         .main-content {
-            margin-top: 70px; /* Space for fixed navbar */
-            padding: 20px;
-            max-width: 1200px;
-            margin-left: auto;
-            margin-right: auto;
+            margin-left: 230px;
+            padding: 40px;
+            width: 100%;
+            max-width: 1100px;
+            min-height: 100vh;
+            transition: margin-left 0.3s, padding 0.3s;
         }
-
         .customer-section {
             background: #fff;
             border-radius: 14px;
@@ -36,49 +125,19 @@
             padding: 24px;
             transition: transform 0.2s ease;
         }
-
         .customer-section:hover {
             transform: translateY(-5px);
         }
-
         #home {
             background: #ffffff;
             border-left: 5px solid #10468b;
             padding: 24px;
         }
-
         h2 {
             color: #202A44;
             margin-bottom: 16px;
             font-size: 24px;
         }
-
-        @media (max-width: 768px) {
-            .main-content {
-                padding: 10px;
-            }
-            .customer-section {
-                padding: 16px;
-                margin-bottom: 16px;
-            }
-        }
-
-        .icons-bar {
-            width: 100vw;
-            min-width: 100vw;
-            left: 0;
-            right: 0;
-            background-color: #202A44;
-            box-sizing: border-box;
-            margin-left: calc(-50vw + 50%);
-            position: relative;
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-        }
-
         #new-order-btn {
             background: #10468b;
             color: #ffffff;
@@ -92,13 +151,12 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             margin: 10px 0;
         }
-
         #new-order-btn:hover {
             background: #f1c40f;
+            color: #202A44;
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
-
         .order-item {
             background: #f7f9fc;
             border-radius: 8px;
@@ -108,38 +166,33 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             transition: transform 0.2s ease;
         }
-
         .order-item:hover {
             transform: translateX(5px);
         }
-
-        /* Fix input box sizes */
         #orderForm input, 
         #orderForm select, 
         #orderForm textarea {
-            width: 100%;          /* Make inputs full width */
-            margin-bottom: 20px;  
+            width: 100%;
+            margin-bottom: 20px;
             padding: 12px;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
             font-size: 15px;
             transition: all 0.3s ease;
         }
-
         #orderForm input:focus,
-        #orderForm select:focus,x
+        #orderForm select:focus,
         #orderForm textarea:focus {
             border-color: #10468b;
             outline: none;
             box-shadow: 0 0 0 3px rgba(16,70,139,0.1);
         }
-
         .form-buttons {
             display: flex;
             gap: 10px;
             margin-top: 15px;
+            flex-wrap: wrap;
         }
-
         #orderForm button[type="submit"] {
             background: #10468b;
             color: white;
@@ -151,13 +204,12 @@
             cursor: pointer;
             transition: all 0.3s ease;
         }
-
         #orderForm button[type="submit"]:hover {
             background: #f1c40f;
+            color: #202A44;
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
-
         #cancel-order-btn {
             background: #dc3545 !important;
             color: white !important;
@@ -169,124 +221,158 @@
             cursor: pointer;
             transition: all 0.3s ease;
         }
-
         #cancel-order-btn:hover {
             background: #c82333 !important;
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .main-content {
+                max-width: 100vw;
+                padding: 25px;
+            }
+        }
+        @media (max-width: 900px) {
+            .sidebar {
+                width: 60px;
+                min-width: 60px;
+                padding-top: 10px;
+            }
+            .main-content {
+                margin-left: 60px;
+                padding: 10px;
+            }
+            .sidebar .logo {
+                margin-top: 60px; /* Add space below hamburger */
+            }
+            .sidebar .logo,
+            .sidebar .user-profile span,
+            .sidebar .nav-menu span {
+                display: none;
+            }
+            .hamburger {
+                display: block;
+            }
+            .sidebar .user-profile {
+                margin-top: 80px; /* Increased space to push profile icon below hamburger when collapsed */
+                transition: margin-top 0.3s;
+            }
+            .sidebar.open .user-profile {
+                margin-top: 20px; /* Normal space when expanded */
+            }
+            .sidebar.open {
+                width: 230px;
+                min-width: 230px;
+                transition: width 0.3s;
+            }
+            .sidebar.open .logo,
+            .sidebar.open .user-profile span,
+            .sidebar.open .nav-menu span {
+                display: inline;
+            }
+            .main-content.sidebar-open {
+                margin-left: 230px;
+                transition: margin-left 0.3s;
+            }
+        }
+        @media (max-width: 600px) {
+            .sidebar {
+                width: 50px;
+                min-width: 50px;
+                padding-top: 5px;
+            }
+            .main-content {
+                margin-left: 50px;
+                padding: 5px;
+            }
+        }
+        body {
+            margin: 0;
+            padding: 0;
+        }
     </style>
 </head>
 <body>
-    <div class="navbar" id="main-navbar">
-        <div class="icon">
-            <h2 class="logo">Calamba<span style="color: #91b5dd; font-weight: bolder; font-family: 'Dancing Script', cursive; font-size: 40px;">GO!</span></h2>
-        </div>
-        <div class="menu" id="main-menu">
-            <div class="navbar-links">
-                <b><a href="#home">Home</a></b>
-                <b><a href="#orders">My Orders</a></b>
-                <b><a href="#about">About</a></b>
-                <b><a href="#contact">Contact</a></b>
-            </div>
-        </div>
-        <div class="profile-dropdown">
-            <div onclick="toggle()" class="profile-dropdown-btn">
-                <div class="profile-img">
-                    <i class="fa-solid fa-circle"></i>
-                </div>
+    <div class="dashboard-container">
+        <div class="hamburger"><i class="fas fa-bars"></i></div>
+        <nav class="sidebar">
+            <div class="hamburger"><i class="fas fa-bars"></i></div>
+            <div class="logo">CalambaGO!</div>
+            <div class="user-profile">
+                <i class="fas fa-user-circle"></i>
                 <span>
                     <script>
                         const user = JSON.parse(localStorage.getItem('user') || '{}');
-                        document.write(user.username ? user.username + ' (' + (user.type || '') + ')' : 'ITMAWD22');
+                        document.write(user.username || 'Customer');
                     </script>
-                    <i class="fa-solid fa-angle-down"></i>
                 </span>
             </div>
-            <ul class="profile-dropdown-list">
-                <li class="profile-dropdown-list-item">
-                    <a href="profile.html">
-                        <i class="fa-regular fa-user"></i>
-                        Edit Profile
-                    </a>
-                </li>
-                <li class="profile-dropdown-list-item">
-                    <a href="inbox.html">
-                        <i class="fa-regular fa-envelope"></i>
-                        Inbox
-                    </a>
-                </li>
-                <li class="profile-dropdown-list-item">
-                    <a href="featserv.html">
-                        <i class="fa-regular fa-circle-question"></i>
-                        Features & Services
-                    </a>
-                </li>
-                <hr />
-                <li class="profile-dropdown-list-item">
-                    <a href="index.html" id="logout-link">
-                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                        Log out
-                    </a>
-                </li>
+            <ul class="nav-menu">
+                <li><a href="#home" class="nav-link active"><i class="fas fa-home"></i><span>Home</span></a></li>
+                <li><a href="#orders" class="nav-link"><i class="fas fa-box"></i><span>My Orders</span></a></li>
+                <li><a href="#about" class="nav-link"><i class="fas fa-info-circle"></i><span>About</span></a></li>
+                <li><a href="#contact" class="nav-link"><i class="fas fa-envelope"></i><span>Contact</span></a></li>
+                <li><a href="profile.html"><i class="fas fa-user"></i><span>Profile</span></a></li>
+                <li><a href="index.html" id="logout-link"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
             </ul>
-        </div>
-    </div>
-    <div class="navbar-spacer"></div>
-    <div class="main-content">
-        <div class="customer-section" id="home">
-            <h2>Welcome, Customer!</h2>
-            <p>
-                Place new delivery orders, track your orders, and view your delivery history here.
-            </p>
-        </div>
-        <div class="customer-section" id="orders">
-            <h2>My Orders</h2>
-            <div id="customer-orders-list">
-                <!-- Orders will be loaded here via JS -->
+        </nav>
+        <div class="sidebar-overlay"></div>
+        <div class="main-content">
+            <div class="customer-section" id="home">
+                <h2>Welcome, Customer!</h2>
+                <p>
+                    Place new delivery orders, track your orders, and view your delivery history here.
+                </p>
             </div>
-            <button id="new-order-btn">Place New Order</button>
-            <div id="new-order-form" style="display:none;">
-                <form id="orderForm">
-                    <label for="pickup-address">Pickup Address:</label>
-                    <input type="text" id="pickup-address" placeholder="Enter pickup location" required>
-                    
-                    <label for="delivery-address">Delivery Address:</label>
-                    <input type="text" id="delivery-address" placeholder="Enter delivery location" required>
-                    
-                    <label for="package-info">Package Description:</label>
-                    <input type="text" id="package-info" placeholder="What are you sending?" required>
-                    
-                    <label for="delivery-fee">Delivery Fee (₱):</label>
-                    <input type="number" id="delivery-fee" placeholder="Enter amount" min="0" step="0.01" required>
-                    
-                    <label for="priority">Delivery Priority:</label>
-                    <select id="priority">
-                        <option value="High">High Priority</option>
-                        <option value="Medium" selected>Medium Priority</option>
-                        <option value="Low">Low Priority</option>
-                    </select>
-                    
-                    <label for="notes">Additional Notes:</label>
-                    <textarea id="notes" placeholder="Any special instructions?"></textarea>
-                    <div class="form-buttons">
-                        <button type="submit">Submit Order</button>
-                        <button type="button" id="cancel-order-btn">Cancel</button>
-                    </div>
-                </form>
+            <div class="customer-section" id="orders">
+                <h2>My Orders</h2>
+                <div id="customer-orders-list">
+                    <!-- Orders will be loaded here via JS -->
+                </div>
+                <button id="new-order-btn">Place New Order</button>
+                <div id="new-order-form" style="display:none;">
+                    <form id="orderForm">
+                        <label for="pickup-address">Pickup Address:</label>
+                        <input type="text" id="pickup-address" placeholder="Enter pickup location" required>
+                        
+                        <label for="delivery-address">Delivery Address:</label>
+                        <input type="text" id="delivery-address" placeholder="Enter delivery location" required>
+                        
+                        <label for="package-info">Package Description:</label>
+                        <input type="text" id="package-info" placeholder="What are you sending?" required>
+                        
+                        <label for="delivery-fee">Delivery Fee (₱):</label>
+                        <input type="number" id="delivery-fee" placeholder="Enter amount" min="0" step="0.01" required>
+                        
+                        <label for="priority">Delivery Priority:</label>
+                        <select id="priority">
+                            <option value="High">High Priority</option>
+                            <option value="Medium" selected>Medium Priority</option>
+                            <option value="Low">Low Priority</option>
+                        </select>
+                        
+                        <label for="notes">Additional Notes:</label>
+                        <textarea id="notes" placeholder="Any special instructions?"></textarea>
+                        <div class="form-buttons">
+                            <button type="submit">Submit Order</button>
+                            <button type="button" id="cancel-order-btn">Cancel</button>
+                        </div>
+                    </form>
+                </div>
             </div>
-        </div>
-        <div class="customer-section" id="about">
-            <h2>About CalambaGO!</h2>
-            <p>
-                CalambaGO! is your GO-to guide for dis  ing the best that Calamba has to offer.
-            </p>
-        </div>
-        <div class="customer-section" id="contact">
-            <h2>Contact Us</h2>
-            <p>
-                Have questions or need more information? Reach out to us at <b>infocalambaGO@gmail.com</b>
-            </p>
+            <div class="customer-section" id="about">
+                <h2>About CalambaGO!</h2>
+                <p>
+                    CalambaGO! is your GO-to guide for discovering the best that Calamba has to offer.
+                </p>
+            </div>
+            <div class="customer-section" id="contact">
+                <h2>Contact Us</h2>
+                <p>
+                    Have questions or need more information? Reach out to us at <b>infocalambaGO@gmail.com</b>
+                </p>
+            </div>
         </div>
     </div>
     <div class="icons-bar">
@@ -316,24 +402,17 @@
                 return;
             }
 
-            const res = await fetch(`api.php?endpoint=deliveries&type=customer&id=${user.id}`);
-            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-
+            const res = await fetch('api.php?endpoint=deliveries&type=customer&id=' + user.id);
             const data = await res.json();
-            // Accept both array and {deliveries: array}
-            let orders = [];
-            if (Array.isArray(data)) {
-                orders = data;
-            } else if (Array.isArray(data.deliveries)) {
-                orders = data.deliveries;
-            } else {
-                orders = [];
-            }
+            
+            const orders = (data.deliveries || []).filter(order => order.status !== 'completed' && order.status !== 'rejected');
+            console.log('Loaded orders:', orders);
 
             const list = document.getElementById('customer-orders-list');
             if (!list) return;
+            
             list.innerHTML = '';
-
+            
             if (orders.length === 0) {
                 list.innerHTML = '<p>No orders yet.</p>';
                 return;
@@ -341,7 +420,7 @@
 
             orders.forEach(order => {
                 const div = document.createElement('div');
-                div.className = `order-item ${order.status || 'pending'}`;
+                div.className = 'order-item';
                 div.innerHTML = `
                     <b>${order.package_info || 'No package info'}</b><br>
                     <span style="color:#888;">From:</span> ${order.pickup_address || 'No pickup address'}<br>
@@ -349,36 +428,113 @@
                     <span style="color:#888;">Status:</span> <b>${order.status || 'Pending'}</b><br>
                     <span style="color:#888;">Fee:</span> <b>₱${order.fee || '0'}</b><br>
                     <span style="color:#888;">Priority:</span> <b>${order.priority || 'Normal'}</b>
+                    <br>
+                    <button class="remove-order-btn" style="margin-top:8px;background:#dc3545;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;">Remove</button>
                 `;
+                const removeBtn = div.querySelector('.remove-order-btn');
+                if (removeBtn) {
+                    removeBtn.onclick = async function() {
+                        if (confirm('Are you sure you want to remove this order?')) {
+                            await removeOrder(order.id);
+                        }
+                    };
+                }
                 list.appendChild(div);
             });
+
+            // Fetch and show notifications
+            loadNotifications(user.id);
 
         } catch (error) {
             console.error('Error loading orders:', error);
             const list = document.getElementById('customer-orders-list');
             if (list) {
-                list.innerHTML = '<p style="color: red;">Error loading orders. Please try again.</p>';
+                list.innerHTML = '<p>Error loading orders. Please try again.</p>';
             }
         }
+    }
+
+    async function loadNotifications(userId) {
+        try {
+            const res = await fetch('api.php?endpoint=notifications&user_id=' + userId);
+            const data = await res.json();
+            if (data.notifications && data.notifications.length > 0) {
+                // Show the latest unread notification as an alert, then mark as read
+                const unread = data.notifications.filter(n => n.is_read == 0);
+                if (unread.length > 0) {
+                    alert(unread[0].message);
+                    // Mark as read
+                    await fetch('api.php?endpoint=notifications&id=' + unread[0].id, {
+                        method: 'PUT'
+                    });
+                }
+            }
+        } catch (e) {
+            // Ignore notification errors
+        }
+    }
+
+    async function removeOrder(orderId) {
+        try {
+            const res = await fetch('api.php?endpoint=deliveries&id=' + orderId, {
+                method: 'DELETE'
+            });
+            const data = await res.json();
+            if (data.success) {
+                await loadOrders();
+            } else {
+                alert(data.error || 'Failed to remove order.');
+            }
+        } catch (e) {
+            alert('Failed to remove order.');
+        }
+    }
+
+    async function geocodeAddress(address) {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data && data.length > 0) {
+            return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+        }
+        return null;
     }
 
     document.getElementById('orderForm').onsubmit = async function(e) {
         e.preventDefault();
         const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const pickup_address = document.getElementById('pickup-address').value;
+        const delivery_address = document.getElementById('delivery-address').value;
+
+        // Validate pickup address
+        const pickup_coords = await geocodeAddress(pickup_address);
+        if (!pickup_coords) {
+            alert('Pickup address is not a valid/existing place. Please enter a real location.');
+            document.getElementById('pickup-address').focus();
+            return;
+        }
+
+        // Validate delivery address
+        const delivery_coords = await geocodeAddress(delivery_address);
+        if (!delivery_coords) {
+            alert('Delivery address is not a valid/existing place. Please enter a real location.');
+            document.getElementById('delivery-address').focus();
+            return;
+        }
+
         const data = {
             customer_id: user.id,
-            pickup_address: document.getElementById('pickup-address').value,
-            delivery_address: document.getElementById('delivery-address').value,
+            pickup_address: pickup_address,
+            delivery_address: delivery_address,
             package_info: document.getElementById('package-info').value,
             fee: document.getElementById('delivery-fee').value,
             priority: document.getElementById('priority').value,
-            notes: document.getElementById('notes').value
+            notes: document.getElementById('notes').value,
+            pickup_coords: pickup_coords,
+            delivery_coords: delivery_coords
         };
 
         try {
-            data.pickup_coords = await geocodeAddress(data.pickup_address);
-            data.delivery_coords = await geocodeAddress(data.delivery_address);
-
             const response = await fetch('api.php?endpoint=deliveries', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -397,31 +553,43 @@
         }
     };
 
-    async function geocodeAddress(address) {
-        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
-        const res = await fetch(url);
-        const data = await res.json();
-        if (data && data.length > 0) {
-            return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-        }
-        return null;
-    }
-
-    let profileDropdownList = document.querySelector(".profile-dropdown-list");
-    let btn = document.querySelector(".profile-dropdown-btn");
-    let classList = profileDropdownList.classList;
-    function toggle() { classList.toggle("active"); }
-    window.addEventListener("click", function (e) {
-        if (!btn.contains(e.target)) classList.remove("active");
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            const href = this.getAttribute('href');
+            if (href && href.startsWith('#')) {
+                e.preventDefault();
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+                const target = document.querySelector(href);
+                if (target) {
+                    window.scrollTo({
+                        top: target.getBoundingClientRect().top + window.scrollY - 20,
+                        behavior: 'smooth'
+                    });
+                }
+            }
+        });
     });
+
     document.getElementById('logout-link').addEventListener('click', function(e) {
         localStorage.removeItem('user');
     });
 
-    // Check login on page load
-    if (!localStorage.getItem('user')) {
-        window.location.href = 'index.html';
-    }
+    // Hamburger menu toggle for sidebar (responsive)
+    document.querySelector('.hamburger').addEventListener('click', function() {
+        const sidebar = document.querySelector('.sidebar');
+        const mainContent = document.querySelector('.main-content');
+        sidebar.classList.toggle('open');
+        mainContent.classList.toggle('sidebar-open');
+        document.body.classList.toggle('sidebar-open');
+    });
+    document.querySelector('.sidebar-overlay').addEventListener('click', function() {
+        const sidebar = document.querySelector('.sidebar');
+        const mainContent = document.querySelector('.main-content');
+        sidebar.classList.remove('open');
+        mainContent.classList.remove('sidebar-open');
+        document.body.classList.remove('sidebar-open');
+    });
 
     window.onload = loadOrders;
     </script>

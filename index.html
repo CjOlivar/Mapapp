@@ -125,9 +125,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Store user info in localStorage
                 localStorage.setItem('user', JSON.stringify(data.user));
                 if (data.user.type === 'driver') {
-                    window.location.href = 'driver.html';
+                    window.location.href = '/driver.html';
                 } else {
-                    window.location.href = 'customer.html';
+                    window.location.href = '/customer.html';
                 }
             } else {
                 alert(data.error || 'Login failed');

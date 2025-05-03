@@ -4,8 +4,9 @@ html {
 
 body {
     background-color: #f5f5f5;
-    background-color: var(--navbar-hover-bg);
-    margin-top: 0; /* Remove default body margin to eliminate gap */
+    margin: 0;
+    padding: 0;
+    font-family: "Poppins", sans-serif;
 }
 
 * {
@@ -16,24 +17,14 @@ body {
 /* Google Maps Embed */
 .map-container {
     width: 100%;
-    max-width: 1200px;
-    margin: 35px auto 0 auto;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.13);
-    border-radius: 15px;
-    padding: 12px;
-    background-color: #f0f0f0;
-    border: 5px solid #202A44;
+    height: 700px;
     position: relative;
-    z-index: 1;
-    margin-top: 0 !important; /* Remove if you use the spacer div in HTML */
 }
 
-.map-container iframe {
+#map {
     width: 100%;
-    height: 700px;
-    border: none;
+    /* height: 100%; */
     border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06);
 }
 
 /* Calendar Styles */
@@ -62,89 +53,25 @@ body {
     color: #ffffff;
     font-size: 25px;
     font-family: Arial;
-    padding-left: 20px;
-    padding-top: 6px;
     font-weight: bold;
 }
 
 /* Navigation Bar */
 .navbar {
     width: 100%;
-    background-color: var(--navbar-bg, #202A44); /* fallback color */
+    background-color: #202A44;
     position: fixed;
     top: 0;
     z-index: 2000; /* Increased z-index to ensure navbar is above all content */
     display: flex;
-    justify-content: flex-start;
-    align-items: center; /* vertical alignment */
-    padding: 8px;
-    padding-left: 20px;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 20px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.7);
 }
 
-.navbar-left, .navbar-right {
+.menu {
     display: flex;
-    align-items: center;
-}
-
-.navbar a {
-    display: block;
-    color: #fff;
-    text-align: center;
-    padding: 14px 20px;
-    text-decoration: none;
-    font-size: 17px;
-    transition: background-color 0.3s, color 0.3s;
-}
-
-.navbar a:hover {
-    background-color: var(--navbar-hover-bg);
-    color: var(--navbar-hover-text);
-}
-
-/* Spacer to prevent content from being hidden under navbar */
-.navbar + .content {
-    padding-top: 60px;
-}
-
-/* Add a spacer class for content below navbar if needed */
-.navbar-spacer {
-    height: 70px;
-    width: 100%;
-}
-
-/* Navbar layout */
-.navbar {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-}
-
-.menu, .profile-dropdown, .menu-icon {
-    /* Remove vertical margins that break alignment */
-    margin-top: 0;
-    margin-bottom: 0;
-}
-
-/* Remove .search-bar styles */
-.search-bar,
-.input-group,
-.search-input,
-.search-button {
-    display: none !important;
-}
-
-.profile-dropdown {
-    margin-left: auto;
-    margin-right: 30px;
-    position: relative;
-    width: fit-content; 
-}
-
-.navbar-menu {
-    display: flex;
-    flex: 1;
-    justify-content: flex-end;
     align-items: center;
 }
 
@@ -153,982 +80,400 @@ body {
     align-items: center;
 }
 
+.navbar-links a {
+    color: #fff;
+    text-decoration: none;
+    padding: 14px 20px;
+    font-size: 17px;
+    transition: background-color 0.3s;
+}
+
+.navbar-links a:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.navbar-spacer {
+    height: 70px;
+}
+
+/* Profile Dropdown */
+.profile-dropdown {
+    position: relative;
+    margin-left: auto;
+}
+
+.profile-dropdown-btn {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    color: white;
+    cursor: pointer;
+}
+
+.profile-img {
+    width: 35px;
+    height: 35px;
+    margin-right: 10px;
+}
+
+.profile-dropdown-list {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    width: 200px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: none;
+    z-index: 1000;
+}
+
+.profile-dropdown-list.active {
+    display: block;
+}
+
+.profile-dropdown-list-item {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.profile-dropdown-list-item:last-child {
+    border-bottom: none;
+}
+
+.profile-dropdown-list-item a {
+    color: #333;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Delivery Panel */
+.delivery-panel {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    padding: 18px;
+    margin-top: 24px;
+}
+
+.delivery-item {
+    background: #f7f9fc;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    border-left: 5px solid #91b5dd;
+    transition: transform 0.2s;
+}
+
+.delivery-item:hover {
+    transform: translateX(5px);
+}
+
+.delivery-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+}
+
+.delivery-actions button {
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: none;
+    font-size: 0.95rem;
+    cursor: pointer;
+    background: #10468b;
+    color: #fff;
+    transition: background 0.2s;
+}
+
+.delivery-actions button:disabled {
+    background: #ccc;
+    color: #888;
+    cursor: not-allowed;
+}
+
+.delivery-actions button.complete {
+    background: #28a745;
+}
+
+.delivery-actions button.reject {
+    background: #dc3545;
+}
+
+/* Stats Dashboard */
+.stats-dashboard {
+    margin-top: 20px;
+    margin-bottom: 24px;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 18px;
+}
+
+.stat-card {
+    background: #f8f9fa;
+    padding: 20px 10px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 1px 4px rgba(32,42,68,0.07);
+    min-width: 120px;
+}
+
+/* --- DRIVER DASHBOARD SIDEBAR & LAYOUT --- */
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+    background: #f4f6f9;
+}
+
+.sidebar {
+    background: #202A44;
+    color: white;
+    width: 230px;
+    min-width: 230px;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 30px;
+    box-shadow: 2px 0 10px rgba(32,42,68,0.08);
+}
+
+.sidebar .logo {
+    font-family: 'Dancing Script', cursive;
+    font-size: 2.2rem;
+    color: #91b5dd;
+    margin-bottom: 30px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-align: center;
+    width: 100%;
+}
+
+.sidebar .user-profile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.sidebar .user-profile i {
+    font-size: 2.2rem;
+    margin-bottom: 8px;
+}
+
+.sidebar .user-profile span {
+    font-size: 1rem;
+    color: #fff;
+}
+
+.sidebar .nav-menu {
+    list-style: none;
+    padding: 0;
+    width: 100%;
+}
+
+.sidebar .nav-menu li {
+    width: 100%;
+}
+
+.sidebar .nav-menu a {
+    color: white;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    padding: 14px 30px;
+    border-radius: 5px;
+    transition: background 0.3s, color 0.3s;
+    font-size: 1rem;
+    width: 100%;
+}
+
+.sidebar .nav-menu a.active, .sidebar .nav-menu a:focus, .sidebar .nav-menu a:hover {
+    background: #10468b;
+    color: #f1c40f;
+}
+
+.sidebar .nav-menu i {
+    margin-right: 12px;
+    width: 22px;
+    text-align: center;
+}
+
+.sidebar .hamburger {
+    display: none;
+    position: absolute;
+    top: 18px;
+    left: 18px;
+    font-size: 2rem;
+    cursor: pointer;
+    z-index: 3000;
+}
+
+/* Hamburger sidebar collapsed */
+.sidebar.collapsed {
+    left: -230px;
+}
+
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.3);
+    z-index: 1999;
+}
+
+.sidebar-open .sidebar-overlay {
+    display: block;
+}
+
+.main-content {
+    margin-left: 230px;
+    padding: 40px 24px 24px 24px;
+    width: 100%;
+    max-width: 1200px;
+    min-height: 100vh;
+    background: #f4f6f9;
+    transition: margin-left 0.3s, padding 0.3s;
+}
+
+.sidebar.collapsed ~ .main-content {
+    margin-left: 0;
+}
+
 @media (max-width: 900px) {
-    .navbar {
-        flex-wrap: wrap;
-        align-items: center;
+    .sidebar {
+        position: relative;
+        width: 100%;
+        min-width: unset;
+        height: auto;
+        box-shadow: none;
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 10px 0;
     }
-    .menu-icon {
-        display: flex;
+
+    .main-content {
+        margin-left: 0;
+        padding: 10px;
+        max-width: 100vw;
     }
+}
+
+@media (max-width: 600px) {
+    .main-content {
+        padding: 4px;
+    }
+
+    .sidebar {
+        font-size: 0.95rem;
+        padding: 8px 0;
+    }
+}
+
+/* --- END DRIVER DASHBOARD SIDEBAR & LAYOUT --- */
+
+/* Map Card Frame for Driver Dashboard */
+.map-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(32,42,68,0.08);
+    padding: 12px;
+    margin: 0 auto 24px auto;
+    max-width: 100%;
+    position: relative;
+    border: 1px solid #91b5dd;
+}
+
+.driver-map-frame {
+    width: 100%;
+    height: 350px;
+    border-radius: 10px;
+    border: 2px solid #202A44;
+    box-shadow: 0 2px 12px rgba(32,42,68,0.12);
+    background: #eaf1fa;
+    margin: 0 auto;
+}
+
+/* Responsive Design */
+@media (max-width: 900px) {
     .menu {
         display: none;
+    }
+
+    .menu.active {
+        display: flex;
         flex-direction: column;
-        background: #202A44;
         position: absolute;
         top: 60px;
         left: 0;
-        width: 100vw;
-        z-index: 3000;
+        width: 100%;
+        background: #202A44;
     }
-    .menu.active {
-        display: flex !important;
-    }
+
     .navbar-links {
         flex-direction: column;
-        align-items: flex-start;
-        width: 100%;
     }
+
     .navbar-links a {
         width: 100%;
-        padding-left: 20px;
-        margin-bottom: 10px;
-        text-align: left;
+        padding: 15px 20px;
     }
+
     .profile-dropdown {
-        margin: 10px 0 0 0;
-        align-self: center;
-        flex: 1 1 100%;
-        max-width: 100vw;
-        min-width: 0;
+        position: static;
     }
+
+    .profile-dropdown-list {
+        width: 100%;
+        position: fixed;
+        top: auto;
+        bottom: 0;
+    }
+
     .map-container, .calendar {
         width: 100%;
         max-width: 100vw;
         margin: 10px 0 0 0;
         padding: 0;
     }
+
     .map-container iframe, .calendar iframe {
         height: 350px;
     }
 }
 
-/* Profile Dropdown Styles */
-.profile-dropdown-btn {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-right: 1rem;
-    font-size: 0.9rem;
-    font-weight: 500;
-    width: 170px;
-    border-radius: 50px;
-    color: var(--black);
-    color: white;
-    cursor: pointer;
-    border: 1px solid var(--secondary);
-    transition: box-shadow 0.2s ease-in, background-color 0.2s ease-in,
-        border 0.3s;
-}
-
-.profile-dropdown-btn:hover {
-    background-color: var(--secondary-light-2);
-    box-shadow: var(--shadow);
-}
-
-.profile-img {
-    position: relative;
-    width: 3rem;
-    height: 3rem;
-    border-radius: 50%;
-    background: url(https://i.pinimg.com/originals/f1/0f/f7/f10ff70a7155e5ab666bcdd1b45b726d.jpg);
-    background-size: cover;
-}
-
-.profile-img i {
-    position: absolute;
-    right: 0;
-    bottom: 0.3rem;
-    font-size: 0.5rem;
-    color: #28a745; /* green */
-}
-
-.profile-dropdown-btn span {
-    margin: 0 0.5rem;
-    margin-right: 0;
-}
-
-.profile-dropdown-list {
-    list-style-type: none;  
-    margin-left: 0; 
-    padding-left: 0;
-    position: absolute;
-    top: 68px;
-    width: 300px;
-    right: 0;    /* Align dropdown to the right of the button */
-    left: auto;  /* Override left alignment */
-    background-color: #fff; /* Ensure background is white */
-    color: #000; /* Ensure dropdown text is black */
-    border-radius: 10px;
-    min-width: 220px; /* Prevent too small dropdown */
-    max-height: 0;
-    overflow: hidden;
-    box-shadow: var(--shadow);
-    transition: max-height 0.5s;
-}
-
-.profile-dropdown-list hr {
-    border: 0.5px solid var(--green);
-}
-
-.profile-dropdown-list.active {
-    max-height: 500px;
-}
-
-.profile-dropdown-list-item {
-    padding: 0.5rem 0rem 0.5rem 1rem;
-    transition: background-color 0.2s ease-in, padding-left 0.2s;
-    padding-bottom: 1px;
-
-}
-
-.profile-dropdown-list-item a {
-    display: flex;
-    align-items: center;
-    text-decoration: none;
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: #000; /* Ensure link text is black */
-    justify-content: space-between; /* Space between text and icon */
-    padding-right: 0.5rem;
-}
-
-.profile-dropdown-list-item a span {
-    /* Text on the left */
-    order: 1;
-}
-
-.profile-dropdown-list-item a i {
-    /* Icon on the right */
-    order: 2;
-    margin-left: 0.8rem;
-    margin-right: 0; /* Remove right margin */
-    font-size: 1.1rem;
-    width: 2.3rem;
-    height: 2.3rem;
-    background-color: #28a745 !important; /* green background */
-    color: #fff !important; /* white icon */
-    line-height: 2.3rem;
-    text-align: center;
-    border-radius: 50%;
-    transition: margin-left 0.3s;
-}
-
-.profile-dropdown-list-item:hover {
-    padding-left: 1.5rem;
-    background-color: var(--secondary-light);
-}
-
-/* Famous Places Section */
-.famous-places {
-    width: 90%;
-    max-width: 1200px;
-    margin: 40px auto;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin-top: 0 !important;
-}
-
-.famous-place {
-    background-color: var(--card-bg);
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s, box-shadow 0.3s;
-    position: relative;
-}
-
-.famous-place:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.6);
-}
-
-.famous-place img {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
-}
-
-.famous-place-content {
-    padding: 15px;
-    text-align: center;
-}
-
-.famous-place-content h3 {
-    padding: 30px;
-    margin-bottom: 10px;
-    color: var(--text-color);
-    font-weight: bold;
-}
-
-.famous-place .famous-place-content p {
-    color: var(--text-color);
-}
-
-.section {
-    margin-top: 0 !important; /* Remove top margin to bring section up */
-    padding-top: 24px; /* Optional: add some padding if you want spacing */
-    padding-right: 12px;
-    padding-bottom: 12px;
-    padding-left: 12px;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.382); /* Fallback color */
-    background: rgba(0, 0, 0, 0.219); /* Black background with 0.5 opacity */
-    color: #ffffff;
-    padding: 15px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.10);
-    color: var(--text-color);
-}
-
-.section h2 {
-    font-weight: bold;
-    font-size: 28px;
-    color: var(--text-color);
-}
-
+/* Icons Bar */
 .icons-bar {
-    position: relative;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background-color: #202A44; /* or any dark color */
-    padding: 18px 0 10px 0; /* taller bar */
-    border-top: 2px solid #18203a; /* subtle separation */
-    box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
-    display: flex;
-    justify-content: center; /* Center the icons horizontally */
-    z-index: 1000; /* Ensure it appears above other elements */
-    margin-top: 24px;
+    background: #202A44;
+    padding: 15px 0;
+    text-align: center;
+    margin-top: 20px;
 }
 
 .icons {
     display: flex;
-    gap: 15px; /* Space between icons */
+    justify-content: center;
+    gap: 20px;
 }
 
 .icons a {
     color: white;
     font-size: 24px;
-    text-align: center;
 }
 
-.icons ion-icon {
-    color: #fff;
-    font-size: 35px;
-    padding-left: 14px;
-    padding-top: 5px;
-    transition: 0.3s ease;
-}
 .icons ion-icon:hover {
     color: #f1c40f;
-}
-
-.style {
-    font-size: 70px;
-    color: #000000; 
-}
-
-.famous-place-content p {
-    color: #666;
-    font-size: 0.9rem;
-}
-
-/* Favorite Button */
-.favorite-btn {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    color: #e74c3c;
-    cursor: pointer;
-    transition: transform 0.3s;
-}
-
-.favorite-btn:hover {
-    transform: scale(1.2);
-}
-
-.favorite-btn.favorited {
-    color: #c0392b;
-}
-
-/* Slider Styles */
-.slider-container {
-    position: relative;
-    width: 90%;
-    max-width: 1200px;
-    margin: 40px auto;
-    overflow: hidden;
-}
-
-.slider {
-    display: flex;
-    transition: transform 0.5s ease-in-out;
-    /* Allow more space for all cards */
-    width: calc(250px * 3 + 20px * 2); 
-}
-
-/* Card Flip Effect */
-.card {
-    width: 250px;
-    height: 350px; /* Adjusted height to accommodate description */
-    perspective: 1000px;
-    margin: 0 10px;
-    flex-shrink: 0;
-    position: relative;
-    background-color: var(--card-bg);
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.card-inner {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    transition: transform 0.6s;
-    transform-style: preserve-3d;
-    cursor: pointer;
-}
-
-.card:hover .card-inner,
-.card.active .card-inner {
-    transform: rotateY(180deg);
-}
-
-.card-front, .card-back {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    backface-visibility: hidden;
-    border-radius: 10px;
-}
-
-.card-front {
-    background-color: var(--card-bg);
-    text-align: center;
-    padding: 20px;
-}
-
-.card-front img {
-    width: 100%;
-    height: 150px;
-    object-fit: cover;
-    border-radius: 10px;
-}
-
-.card-front h3 {
-    margin: 10px 0;
-    font-size: 1.2rem;
-    color: var(--text-color);
-    font-weight: bold;
-}
-
-.card-front p {
-    font-size: 0.9rem;
-    color: var(--text-color);
-    margin-top: 10px;
-}
-
-.card-back {
-    background-color: var(--card-back-bg);
-    color: white;
-    transform: rotateY(180deg);
-    display: flex;
-    flex-direction: column;
-    justify-content: center; /* Center vertically */
-    align-items: center; /* Center horizontally */
-    padding: 20px;
-    text-align: center;
-    border-radius: 10px;
-    overflow-y: auto;
-}
-
-.card-back p {
-    font-size: 1rem;
-    margin-bottom: 15px;
-}
-
-/* Bullet Indicators Styles */
-.bullet-indicators {
-    display: flex;
-    justify-content: center;
-    margin-top: 15px;
-}
-
-.bullet {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background-color: #ccc;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    margin: 0 5px;
-    cursor: pointer;
-    transition: background-color 0.3s, transform 0.3s;
-}
-
-.bullet.active {
-    background-color: #4CAF50; /* Active bullet color */
-    transform: scale(1.5); /* Scale up active bullet */
-}
-
-/* Rating Stars */
-.stars {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 10px;
-}
-
-.stars i {
-    font-size: 1.5rem;
-    color: #f1c40f;
-    cursor: pointer;
-    transition: transform 0.2s;
-}
-
-.stars i:hover {
-    transform: scale(1.2);
-}
-
-.stars i.filled {
-    color: #f1c40f;
-}
-
-/* Feedback Form */
-.feedback-form {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.feedback-form textarea {
-    width: 100%;
-    padding: 10px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    resize: vertical;
-    min-height: 60px;
-    margin-bottom: 10px;
-}
-
-.feedback-form button {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 5px;
-    background-color: #4CAF50;
-    color: white;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    font-size: 1rem;
-}
-
-.feedback-form button:hover {
-    background-color: #f1c40f;
-}
-
-/* Leaderboard Section */
-.leaderboard {
-    width: 90%;
-    max-width: 800px;
-    margin: 40px auto;
-    background-color: var(--card-bg);
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
-}
-
-.leaderboard h2 {
-    text-align: center;
-    margin-bottom: 20px;
-    color: var(--text-color);
-    font-weight: bold;
-}
-
-.leaderboard ul {
-    list-style: none;
-}
-
-.leaderboard li {
-    padding: 10px;
-    border-bottom: 1px solid #ccc;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: var(--text-color);
-}
-
-.leaderboard li:last-child {
-    border-bottom: none;
-}
-
-/* Language Selector */
-.language-selector {
-    margin-left: 20px;
-}
-
-.language-selector select {
-    padding: 7px 10px; /* Add more padding for better touch targets */
-    border-radius: 5px;
-    border: 2px solid #28a745; /* Add a light gray border */
-    background-color: #f9f9f9; /* Light background color */
-    color: #333; /* Text color */
-    font-size: 16px; /* Larger font size for readability */
-    cursor: pointer;
-    transition: border-color 0.3s ease, background-color 0.3s ease; /* Smooth transition effect */
-}
-
-.language-selector select:hover {
-    border-color: #f1c40f; /* Change border color on hover */
-    background-color: #e9f5fff1; /* Change background color on hover */
-}
-
-/* Toggle Button */
-.toggle-btn {
-    margin-left: 20px;
-    margin-right: 20px;
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-}
-
-.toggle-btn input {
-    display: none;
-}
-
-.toggle-btn label {
-    position: relative;
-    display: inline-block;
-    width: 50px;
-    height: 24px;
-    background-color: #ccc;
-    border-radius: 34px;
-    transition: background-color 0.3s;
-}
-
-.toggle-btn label::after {
-    content: "";
-    position: absolute;
-    width: 20px;
-    height: 20px;
-    left: 2px;
-    top: 2px;
-    background-color: white;
-    border-radius: 50%;
-    transition: transform 0.3s;
-}
-
-.toggle-btn input:checked + label {
-    background-color: #4CAF50;
-}
-
-.toggle-btn input:checked + label::after {
-    transform: translateX(26px);
-}
-
-/* Journal Entry */
-#journal-container {
-    position: fixed;
-    bottom: 40px;
-    left: 30px;
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-#journal-button {
-    background: #28a745;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.4);
-    color: white;
-    padding: 14px 20px;
-    border: none;
-    border-radius: 50px;
-    cursor: pointer;
-    font-size: 18px;
-    width: 160px;
-    height: 55px;
-    transition: transform 0.4s ease, box-shadow 0.3s ease;
-}
-
-#journal-button:hover {
-    transform: scale(1.15);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-    background-color: #f1c40f;
-}
-
-#journal-entry {
-    margin-top: 20px;
-    background-color: #ffffff;
-    border-radius: 15px;
-    padding: 20px;
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.4);
-    display: none;
-    max-width: 90%;
-    width: 450px;
-    animation: floatIn 0.5s ease forwards;
-    position: relative;
-    overflow: hidden; /* Prevent overflow from causing layout issues */
-}
-
-@keyframes floatIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-#journal-title {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
-    border-radius: 5px;
-    border: 1px solid #f4f0f0;
-    color: #000000;
-    background-color: #f4f0f0;
-    font-size: 16px;
-}
-
-#journal-title:focus {
-    outline: none;
-    border-color: #000000;
-    border-width: 2px; /* Increase border width */
-    border-style: solid; /* Ensure solid border */
-}
-
-#journal-text {
-    width: 100%;
-    height: 200px;
-    border-radius: 10px;
-    border: 1px solid #f4f0f0;
-    padding: 10px;
-    font-size: 16px;
-    resize: none;
-    color: #000000;
-    background-color: #f4f0f0;
-}
-
-#journal-text:focus {
-    outline: none;
-    border-color: #000000;
-    border-width: 2px; /* Increase border width */
-    border-style: solid; /* Ensure solid border */
-}
-
-#save-journal, #close-journal {
-    background: linear-gradient(135deg, #28a745, #28a745);
-    color: white;
-    margin-top: 8px;
-    padding: 4px 12px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 16px;
-    margin-right: 8px;
-    transition: transform 0.3s ease;
-}
-
-#save-journal:hover, #close-journal:hover {
-    transform: scale(1.05);
-    background: linear-gradient(135deg, #f1c40f, #f1c40f);
-}
-
-/* Accordion Style for Saved Entries */
-.saved-entries {
-    margin-top: 15px;
-    border-top: 1px solid #b2b2b2;
-    padding-top: 10px;
-    max-height: 300px; /* Set a max height for scrolling */
-    overflow-y: auto; /* Enable vertical scrolling */
-}
-
-.entry {
-    background-color: #f4f0f0;
-    border-radius: 5px;
-    padding: 12px;
-    margin-bottom: 10px;
-    border-left: 3px solid #4CAF50;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.entry:hover {
-    background-color: #e6e5e5;
-}
-
-.entry-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.entry-title {
-    font-weight: bold;
-    color: #3a3a3a;
-    font-size: 16px;
-}
-
-.delete-entry {
-    background: #ff4b2b;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 12px;
-    padding: 4px 8px;
-    transition: transform 0.3s ease;
-}
-
-.delete-entry:hover {
-    transform: scale(1.1);
-    background: #ff2a1a;
-}
-
-.entry-details {
-    display: none;
-    margin-top: 5px;
-    color: #ccc;
-}
-
-.entry-details textarea {
-    width: 100%;
-    background-color: #ffffff;
-    border: 1px solid #ffffff;
-    border-radius: 5px;
-    color: #000000;
-    padding: 8px;
-    resize: none;
-    margin-top: 5px;
-    height: 100px;
-}
-
-/* Budget Button Styles */
-.budget-btn {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    width: 70px;
-    height: 70px;
-    background-color: #28a745; /* Green color */
-    border: none;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: white;
-    font-size: 24px;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
-    transition: all 0.3s ease;
-    z-index: 1001; /* Above the map but below the header */
-    outline: none;
-}
-
-.budget-btn:hover {
-    background-color: #f1c40f;
-    transform: scale(1.1);
-}
-
-.budget-btn:active {
-    transform: scale(0.95);
-}
-
-/* Embedded Travel Budget Calculator Styles */
-.travel-budget-calculator {
-    position: fixed;
-    bottom: 100px; /* Positioned above the button */
-    right: 30px;
-    width: 300px;
-    max-height: 400px;
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.4);
-    overflow-y: auto;
-    transition: transform 0.3s ease, opacity 0.3s ease;
-    transform: translateX(100%);
-    opacity: 0;
-    z-index: 1001;
-}
-
-.travel-budget-calculator.active {
-    transform: translateX(0);
-    opacity: 1;
-}
-
-.travel-budget-calculator h2 {
-    text-align: center;
-    color: #333;
-    margin-bottom: 20px;
-    font-weight: bold;
-}
-
-.travel-budget-calculator form {
-    display: flex;
-    flex-direction: column;
-}
-
-.travel-budget-calculator label {
-    margin: 10px 0 5px;
-    color: #555;
-}
-
-.travel-budget-calculator input {
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 14px;
-}
-
-.travel-budget-calculator button {
-    margin-top: 15px;
-    padding: 10px;
-    background-color: #28a745; /* Green color */
-    border: none;
-    border-radius: 5px;
-    color: white;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.travel-budget-calculator button:hover {
-    background-color: #f1c40f;
-}
-
-.travel-budget-calculator .result {
-    margin-top: 15px;
-    font-size: 16px;
-    color: #333;
-    text-align: center;
-    word-wrap: break-word;
-}
-
-/* Dark mode improvements for better contrast */
-.dark-mode {
-    --text-color: #f0f0f0;
-    --card-bg: #2d2d2d;
-    --card-back-bg: #3a3a3a;
-}
-
-/* Fix for text overflow issues */
-h1, h2, h3, p {
-    overflow-wrap: break-word;
-    word-wrap: break-word;
-    hyphens: auto;
-}
-
-/* Improve touch targets for better mobile experience */
-button, 
-input, 
-.toggle-btn label, 
-.language-selector select {
-    min-height: 44px; /* Apple HIG recommended minimum */
-}
-
-/* Ensure images are responsive */
-img {
-    max-width: 100%;
-    height: auto;
-}
-
-/* Responsive Layout */
-@media (max-width: 900px) {
-    .navbar-left, .navbar-right {
-        display: none !important;
-    }
-    .navbar .menu-icon {
-        display: flex;
-    }
-    .navbar.responsive .navbar-left,
-    .navbar.responsive .navbar-right {
-        display: flex !important;
-        flex-direction: column;
-        background: #202A44;
-        position: absolute;
-        top: 60px;
-        left: 0;
-        width: 100%;
-        z-index: 3000;
-    }
-    .navbar.responsive .navbar-left a,
-    .navbar.responsive .navbar-right form,
-    .navbar.responsive .profile-dropdown {
-        width: 100%;
-        text-align: left;
-        padding-left: 20px;
-    }
-    .navbar.responsive .profile-dropdown-list {
-        position: static;
-        width: 100%;
-        box-shadow: none;
-    }
-    .map-container, .calendar {
-        width: 100%;
-        max-width: 100vw;
-        margin: 10px 0 0 0;
-        padding: 0;
-    }
-    .map-container iframe, .calendar iframe {
-        height: 350px;
-    }
-    .famous-places {
-        grid-template-columns: 1fr;
-        gap: 10px;
-        width: 98vw;
-        margin: 10px auto;
-    }
-    #journal-container {
-        left: 0;
-        right: 0;
-        bottom: 10px;
-        width: 100vw;
-        align-items: stretch;
-    }
-    #journal-entry {
-        width: 98vw;
-        max-width: 98vw;
-        padding: 10px;
-    }
-}
-
-/* Further mobile tweaks */
-@media (max-width: 600px) {
-    .map-container, .calendar {
-        padding: 0;
-        margin: 0;
-    }
-    .map-container iframe, .calendar iframe {
-        height: 220px;
-    }
-    .section {
-        padding: 6px;
-        font-size: 1rem;
-    }
-    .style {
-        font-size: 32px;
-    }
-    .icons-bar {
-        padding: 4px 0;
-    }
-    .icons ion-icon {
-        font-size: 28px;
-        padding-left: 8px;
-    }
-    #journal-entry {
-        padding: 6px;
-        font-size: 1rem;
-    }
-}
-
-/* Responsive fix: If dropdown would overflow right, keep it inside viewport */
-@media (max-width: 600px) {
-    .profile-dropdown-list {
-        left: 0;
-        right: auto;
-        width: 95vw;
-        min-width: unset;
-        max-width: 95vw;
-    }
 }
