@@ -22,7 +22,7 @@
             position: fixed;
             left: 0;
             top: 0;
-            z-index: 100;
+            z-index: 1001; /* Make sure sidebar is above icons-bar */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -226,6 +226,272 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
+        .mode-toggle-container {
+            margin-top: auto;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            padding-bottom: 24px;
+        }
+        #mode-toggle {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: background 0.2s;
+            outline: none;
+        }
+        #mode-toggle:focus {
+            outline: 2px solid #91b5dd;
+        }
+        #mode-toggle:hover {
+            background: rgba(255,255,255,0.08);
+        }
+        .toggle-label {
+            font-size: 1rem;
+            user-select: none;
+            min-width: 80px;
+            text-align: left;
+            white-space: nowrap;
+        }
+        .toggle-switch {
+            position: relative;
+            width: 54px;
+            height: 28px;
+            display: inline-block;
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+        .toggle-bg {
+            position: absolute;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            border-radius: 16px;
+            background: linear-gradient(90deg, #e0eafc 0%, #cfdef3 100%);
+            transition: background 0.3s;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+        .toggle-icon {
+            position: absolute;
+            top: 4px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            transition: left 0.3s, background 0.3s, box-shadow 0.3s;
+            z-index: 2;
+        }
+        .toggle-icon.sun {
+            left: 4px;
+            background: #ffe066;
+            box-shadow: 0 0 6px 2px #ffe06688;
+            background-image: url('data:image/svg+xml;utf8,<svg width="20" height="20" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="7" fill="%23ffe066"/><g stroke="%23ffd700" stroke-width="2"><line x1="10" y1="1" x2="10" y2="4"/><line x1="10" y1="16" x2="10" y2="19"/><line x1="1" y1="10" x2="4" y2="10"/><line x1="16" y1="10" x2="19" y2="10"/><line x1="4" y1="4" x2="6" y2="6"/><line x1="16" y1="16" x2="14" y2="14"/><line x1="4" y1="16" x2="6" y2="14"/><line x1="16" y1="4" x2="14" y2="6"/></g></svg>');
+            background-size: 20px 20px;
+            background-repeat: no-repeat;
+        }
+        .toggle-icon.moon {
+            left: 30px;
+            background: #fffbe6;
+            box-shadow: 0 0 8px 2px #fffbe688;
+            background-image: url('data:image/svg+xml;utf8,<svg width="20" height="20" xmlns="http://www.w3.org/2000/svg"><circle cx="13" cy="10" r="7" fill="%23fffbe6"/><circle cx="15" cy="8" r="2" fill="%23e0e0e0"/><circle cx="11" cy="13" r="1.2" fill="%23e0e0e0"/></svg>');
+            background-size: 20px 20px;
+            background-repeat: no-repeat;
+            opacity: 0;
+            transition: left 0.3s, opacity 0.3s;
+        }
+        @media (max-width: 900px) {
+            .mode-toggle-container {
+                padding-bottom: 18px;
+                margin-bottom: 8px;
+                width: 100%;
+                justify-content: center;
+            }
+            #mode-toggle {
+                flex-direction: column;
+                align-items: center;
+                gap: 2px;
+                padding: 8px 0 0 0;
+                width: 54px;
+                min-width: 54px;
+                margin: 0 auto;
+                background: rgba(32,42,68,0.15);
+                border-radius: 12px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+            }
+            .toggle-label {
+                font-size: 0.9rem;
+                min-width: 0;
+                text-align: center;
+                white-space: normal;
+                color: #fff;
+                margin: 0;
+                margin-top: 2px;
+                width: 100%;
+                padding-bottom: 2px;
+                letter-spacing: 0.01em;
+            }
+            .toggle-switch {
+                margin-right: 0;
+            }
+        }
+        @media (max-width: 600px) {
+            .mode-toggle-container {
+                padding-bottom: 8px;
+                margin-bottom: 4px;
+            }
+            #mode-toggle {
+                font-size: 0.95rem;
+                padding: 4px 0 0 0;
+                width: 44px;
+                min-width: 44px;
+                border-radius: 10px;
+            }
+            .toggle-switch {
+                width: 44px;
+                height: 22px;
+            }
+            .toggle-bg {
+                border-radius: 12px;
+            }
+            .toggle-icon, .toggle-icon.sun, .toggle-icon.moon {
+                width: 16px;
+                height: 16px;
+                top: 3px;
+                background-size: 16px 16px;
+            }
+            .toggle-icon.sun { left: 3px; }
+            .toggle-icon.moon { left: 23px; }
+            .toggle-label {
+                font-size: 0.8rem;
+                padding-bottom: 0;
+            }
+        }
+        body.dark-mode .toggle-bg {
+            background: linear-gradient(90deg, #23283a 0%, #181c24 100%);
+        }
+        body.dark-mode .toggle-icon.sun {
+            left: 4px;
+            opacity: 0;
+        }
+        body.dark-mode .toggle-icon.moon {
+            left: 30px;
+            opacity: 1;
+        }
+        body:not(.dark-mode) .toggle-icon.sun {
+            left: 4px;
+            opacity: 1;
+        }
+        body:not(.dark-mode) .toggle-icon.moon {
+            left: 30px;
+            opacity: 0;
+        }
+        body.dark-mode .toggle-icon.sun {
+            left: 4px;
+            opacity: 0;
+        }
+        body.dark-mode .toggle-icon.moon {
+            left: 30px;
+            opacity: 1;
+        }
+        body.dark-mode #mode-toggle .toggle-label {
+            color: #ffe066;
+        }
+        body:not(.dark-mode) #mode-toggle .toggle-label {
+            color: white;
+        }
+        body.dark-mode,
+        .dark-mode .sidebar,
+        .dark-mode .main-content,
+        .dark-mode .delivery-panel,
+        .dark-mode .stats-dashboard,
+        .dark-mode .map-card,
+        .dark-mode .calendar,
+        .dark-mode .customer-section {
+            background: #181c24 !important;
+            color: #f5f5f5 !important;
+        }
+        .dark-mode .customer-section,
+        .dark-mode .main-content,
+        .dark-mode .order-item,
+        .dark-mode .form-buttons button,
+        .dark-mode .nav-link,
+        .dark-mode .nav-menu a,
+        .dark-mode .nav-menu i,
+        .dark-mode .sidebar .logo,
+        .dark-mode .sidebar .user-profile span,
+        .dark-mode .sidebar .user-profile i,
+        .dark-mode .sidebar .nav-menu span,
+        .dark-mode .sidebar .nav-menu i,
+        .dark-mode .sidebar .nav-menu a {
+            color: #f5f5f5 !important;
+        }
+        .dark-mode .customer-section h2,
+        .dark-mode .main-content h2 {
+            color: #ffe066 !important;
+        }
+        .dark-mode .main-content h1 {
+            color: #91b5dd !important;
+        }
+        .dark-mode .customer-section p,
+        .dark-mode .main-content p,
+        .dark-mode label,
+        .dark-mode .order-item b,
+        .dark-mode .order-item span {
+            color: #f5f5f5 !important;
+        }
+        .dark-mode .order-item span[style*="color:#888;"] {
+            color: #b0b0b0 !important;
+        }
+        .dark-mode .form-buttons button,
+        .dark-mode #new-order-btn {
+            color: #181c24 !important;
+            background: #ffe066 !important;
+        }
+        .dark-mode #new-order-btn:hover,
+        .dark-mode .form-buttons button[type="submit"]:hover {
+            background: #91b5dd !important;
+            color: #181c24 !important;
+        }
+        .dark-mode #cancel-order-btn {
+            background: #dc3545 !important;
+            color: #fff !important;
+        }
+        .dark-mode input,
+        .dark-mode select,
+        .dark-mode textarea {
+            background: #23283a !important;
+            color: #f5f5f5 !important;
+            border-color: #444 !important;
+        }
+        .dark-mode input::placeholder,
+        .dark-mode textarea::placeholder {
+            color: #b0b0b0 !important;
+            opacity: 1;
+        }
+        .dark-mode .order-item {
+            background: #23283a !important;
+            color: #f5f5f5 !important;
+            border-left: 5px solid #ffe066 !important;
+        }
+        .dark-mode .order-item b,
+        .dark-mode .order-item span {
+            color: #f5f5f5 !important;
+        }
+        .dark-mode .order-item span[style*="color:#888;"] {
+            color: #b0b0b0 !important;
+        }
+        .dark-mode .remove-order-btn {
+            background: #dc3545 !important;
+            color: #fff !important;
+        }
+        .dark-mode .remove-order-btn:hover {
+            background: #c82333 !important;
+        }
         /* Responsive Design */
         @media (max-width: 1200px) {
             .main-content {
@@ -287,6 +553,19 @@
                 padding: 5px;
             }
         }
+        .icons-bar {
+            background: #202A44;
+            padding: 15px 0;
+            text-align: center;
+            margin-top: 20px;
+            position: relative;
+            z-index: 10;
+        }
+        @media (max-width: 900px) {
+            .icons-bar {
+                position: static;
+            }
+        }
         body {
             margin: 0;
             padding: 0;
@@ -316,6 +595,16 @@
                 <li><a href="profile.html"><i class="fas fa-user"></i><span>Profile</span></a></li>
                 <li><a href="index.html" id="logout-link"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
             </ul>
+            <div class="mode-toggle-container">
+                <button id="mode-toggle" title="Toggle dark/light mode">
+                    <span class="toggle-switch">
+                        <span class="toggle-bg"></span>
+                        <span class="toggle-icon sun"></span>
+                        <span class="toggle-icon moon"></span>
+                    </span>
+                    <span class="toggle-label">Light mode</span>
+                </button>
+            </div>
         </nav>
         <div class="sidebar-overlay"></div>
         <div class="main-content">
@@ -591,7 +880,30 @@
         document.body.classList.remove('sidebar-open');
     });
 
-    window.onload = loadOrders;
+    // Dark/Light mode toggle
+    function setMode(dark) {
+        if (dark) {
+            document.body.classList.add('dark-mode');
+            localStorage.setItem('mode', 'dark');
+            document.querySelector('#mode-toggle .toggle-label').textContent = 'Dark mode';
+        } else {
+            document.body.classList.remove('dark-mode');
+            localStorage.setItem('mode', 'light');
+            document.querySelector('#mode-toggle .toggle-label').textContent = 'Light mode';
+        }
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        // Setup mode toggle
+        const modeBtn = document.getElementById('mode-toggle');
+        if (modeBtn) {
+            const saved = localStorage.getItem('mode');
+            setMode(saved === 'dark');
+            modeBtn.onclick = function() {
+                setMode(!document.body.classList.contains('dark-mode'));
+            };
+        }
+        window.onload = loadOrders;
+    });
     </script>
 </body>
 </html>

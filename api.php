@@ -341,6 +341,36 @@ switch ($endpoint) {
             }
         }
         break;
+    case 'driver_location':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $input = json_decode(file_get_contents('php://input'), true);
+            if (!$input || !isset($input['driver_id'], $input['lat'], $input['lng'])) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Missing fields']);
+                exit;
+            }
+            // Insert or update the driver's location
+            $stmt = $pdo->prepare("REPLACE INTO driver_locations (driver_id, lat, lng, updated_at) VALUES (?, ?, ?, NOW())");
+            $stmt->execute([$input['driver_id'], $input['lat'], $input['lng']]);
+            echo json_encode(['success' => true]);
+        } elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            $driver_id = $_GET['driver_id'] ?? '';
+            if (!$driver_id) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Missing driver_id']);
+                exit;
+            }
+            $stmt = $pdo->prepare("SELECT lat, lng, updated_at FROM driver_locations WHERE driver_id = ?");
+            $stmt->execute([$driver_id]);
+            $location = $stmt->fetch();
+            if ($location) {
+                echo json_encode(['location' => $location]);
+            } else {
+                http_response_code(404);
+                echo json_encode(['error' => 'Location not found']);
+            }
+        }
+        break;
     default:
         http_response_code(404);
         echo json_encode(['error' => 'Unknown endpoint']);
