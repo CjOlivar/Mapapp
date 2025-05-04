@@ -1,11 +1,10 @@
 <?php
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');  // Allow from any origin
+header('Access-Control-Allow-Origin: *'); 
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Accept, Origin');
-header('Access-Control-Max-Age: 86400'); // 24 hours cache
+header('Access-Control-Max-Age: 86400'); 
 
-// Handle preflight OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
@@ -31,7 +30,6 @@ try {
     exit;
 }
 
-// Routing
 $endpoint = $_GET['endpoint'] ?? '';
 
 switch ($endpoint) {
@@ -165,10 +163,9 @@ switch ($endpoint) {
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $type = $_GET['type'] ?? '';
             $id = $_GET['id'] ?? '';
-            error_log("Fetching deliveries for type: $type, id: $id"); // Debug log
+            error_log("Fetching deliveries for type: $type, id: $id");
 
             if ($type === 'driver') {
-                // Show both pending deliveries and this driver's active deliveries
                 $stmt = $pdo->prepare("
                     SELECT d.*, u.username as customer_name,
                         (SELECT COUNT(*) FROM deliveries WHERE driver_id = ? AND status = 'completed') as completed_count,
@@ -188,16 +185,15 @@ switch ($endpoint) {
                 
                 echo json_encode(['deliveries' => $rows, 'stats' => $stats]);
             } elseif ($type === 'customer') {
-                // Show all deliveries for this customer
                 $stmt = $pdo->prepare("SELECT * FROM deliveries WHERE customer_id = ? ORDER BY created_at DESC");
                 $stmt->execute([$id]);
                 $rows = $stmt->fetchAll();
                 
-                error_log("Found " . count($rows) . " deliveries for customer"); // Debug log
-                echo json_encode(['deliveries' => $rows]); // Always wrap in deliveries object
+                error_log("Found " . count($rows) . " deliveries for customer"); 
+                echo json_encode(['deliveries' => $rows]);
             }
         } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Customer creates a new delivery order
+        
             $input = json_decode(file_get_contents('php://input'), true);
             if (
                 !$input ||
@@ -207,7 +203,7 @@ switch ($endpoint) {
                 echo json_encode(['error' => 'Missing fields']);
                 exit;
             }
-            // Accept pickup_coords and delivery_coords if provided (from frontend geocoding)
+            
             $pickup_coords = isset($input['pickup_coords']) ? json_encode($input['pickup_coords']) : null;
             $delivery_coords = isset($input['delivery_coords']) ? json_encode($input['delivery_coords']) : null;
             $stmt = $pdo->prepare("INSERT INTO deliveries (customer_id, pickup_address, delivery_address, pickup_coords, delivery_coords, fee, package_info, priority, notes, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW(), NOW())");
@@ -224,7 +220,6 @@ switch ($endpoint) {
             ]);
             echo json_encode(['success' => true]);
         } elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
-            // Driver accepts/rejects/completes a delivery
             $id = $_GET['id'] ?? '';
             $input = json_decode(file_get_contents('php://input'), true);
             if (!$id || !$input || !isset($input['action'])) {
@@ -241,15 +236,12 @@ switch ($endpoint) {
                 $stmt->execute([$id, $input['driver_id']]);
                 echo json_encode(['success' => true]);
             } elseif ($input['action'] === 'complete' && isset($input['driver_id'])) {
-                // Mark as completed
                 $stmt = $pdo->prepare("UPDATE deliveries SET status = 'completed', updated_at = NOW() WHERE id = ? AND driver_id = ?");
                 $stmt->execute([$id, $input['driver_id']]);
-                // Get customer_id for notification
                 $stmt = $pdo->prepare("SELECT customer_id FROM deliveries WHERE id = ?");
                 $stmt->execute([$id]);
                 $row = $stmt->fetch();
                 if ($row && $row['customer_id']) {
-                    // Insert notification for customer
                     $stmt = $pdo->prepare("INSERT INTO notifications (user_id, message, created_at, is_read) VALUES (?, ?, NOW(), 0)");
                     $stmt->execute([$row['customer_id'], 'Your order has been completed by the driver.']);
                 }
@@ -259,7 +251,6 @@ switch ($endpoint) {
                 echo json_encode(['error' => 'Invalid action']);
             }
         } elseif ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
-            // Support removing a delivery order
             $id = $_GET['id'] ?? '';
             if (!$id) {
                 http_response_code(400);
@@ -309,7 +300,6 @@ switch ($endpoint) {
             $driver_id = $_GET['driver_id'] ?? null;
             
             try {
-                // Get today's stats
                 $stmt = $pdo->prepare("
                     SELECT 
                         COUNT(*) as totalDeliveries,
@@ -333,7 +323,7 @@ switch ($endpoint) {
                     'completedDeliveries' => (int)$stats['completedDeliveries'],
                     'earnings' => (float)$stats['earnings'],
                     'avgDeliveryTime' => round((float)$stats['avgDeliveryTime'] ?? 0),
-                    'rating' => 4.5 // Hardcoded for now, you can add a ratings table later
+                    'rating' => 4.5
                 ]);
             } catch (Exception $e) {
                 http_response_code(500);
@@ -349,7 +339,6 @@ switch ($endpoint) {
                 echo json_encode(['error' => 'Missing fields']);
                 exit;
             }
-            // Insert or update the driver's location
             $stmt = $pdo->prepare("REPLACE INTO driver_locations (driver_id, lat, lng, updated_at) VALUES (?, ?, ?, NOW())");
             $stmt->execute([$input['driver_id'], $input['lat'], $input['lng']]);
             echo json_encode(['success' => true]);

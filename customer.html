@@ -570,6 +570,150 @@
             margin: 0;
             padding: 0;
         }
+        .feedback-tab {
+            position: fixed;
+            right: 0;
+            top: 45%;
+            z-index: 3000;
+            background: #7d5fff;
+            color: #fff;
+            padding: 4px 5px;
+            border-radius: 6px 0 0 6px;
+            cursor: pointer;
+            font-weight: bold;
+            writing-mode: vertical-lr;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            transition: background 0.2s, padding 0.2s, font-size 0.2s;
+            font-size: 0.80rem;
+            min-width: 22px;
+            min-height: 80px;
+            letter-spacing: 0.02em;
+        }
+        .feedback-tab:hover {
+            background: #5f27cd;
+            padding-left: 14px;
+        }
+        @media (max-width: 600px) {
+            .feedback-tab {
+                top: 60%;
+                padding: 2px 6px;
+                font-size: 0.85rem;
+                min-width: 16px;
+                min-height: 60px;
+            }
+        }
+        .feedback-modal-bg {
+            display: none;
+            position: fixed;
+            z-index: 4000;
+            left: 0; top: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.35);
+        }
+        .feedback-modal-bg.active {
+            display: block;
+        }
+        .feedback-modal {
+            position: fixed;
+            z-index: 4100;
+            right: 40px;
+            top: 80px;
+            background: #f7f6fd;
+            color: #222;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            width: 320px;
+            max-width: 90vw;
+            padding: 28px 24px 20px 24px;
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            animation: fadeIn 0.2s;
+        }
+        .feedback-modal.active {
+            display: flex;
+        }
+        .feedback-modal .close-btn {
+            position: absolute;
+            top: 12px;
+            right: 16px;
+            background: none;
+            border: none;
+            font-size: 1.3rem;
+            color: #888;
+            cursor: pointer;
+        }
+        .feedback-modal h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.2rem;
+            color: #5f27cd;
+            font-weight: bold;
+        }
+        .feedback-modal .feedback-question {
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+        .feedback-modal .emoji-row {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        .feedback-modal .emoji-btn {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+        .feedback-modal .emoji-btn.selected,
+        .feedback-modal .emoji-btn:hover {
+            opacity: 1;
+            transform: scale(1.15);
+        }
+        .feedback-modal textarea {
+            width: 100%;
+            min-height: 60px;
+            border-radius: 8px;
+            border: 1.5px solid #ddd;
+            padding: 8px;
+            font-size: 1rem;
+            resize: vertical;
+            margin-bottom: 10px;
+        }
+        .feedback-modal button[type="submit"] {
+            background: #7d5fff;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 0;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .feedback-modal button[type="submit"]:hover {
+            background: #5f27cd;
+        }
+        @media (max-width: 600px) {
+            .feedback-modal {
+                right: 8px;
+                top: 16vw;
+                padding: 18px 8px 12px 8px;
+                width: 95vw;
+            }
+            .feedback-tab {
+                right: 0;
+                top: 60%;
+                padding: 8px 10px;
+                font-size: 0.95rem;
+            }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
     </style>
 </head>
 <body>
@@ -656,6 +800,7 @@
                     CalambaGO! is your GO-to guide for discovering the best that Calamba has to offer.
                 </p>
             </div>
+
             <div class="customer-section" id="contact">
                 <h2>Contact Us</h2>
                 <p>
@@ -664,6 +809,22 @@
             </div>
         </div>
     </div>
+    <div class="feedback-tab" id="feedback-tab">★ Feedback</div>
+    <div class="feedback-modal-bg" id="feedback-modal-bg"></div>
+    <form class="feedback-modal" id="feedback-modal">
+        <button type="button" class="close-btn" id="feedback-close-btn" title="Close">&times;</button>
+        <h3>Give us feedback</h3>
+        <div class="feedback-question">What do you think of our app?</div>
+        <div class="emoji-row" id="feedback-emoji-row">
+            <button type="button" class="emoji-btn" data-rating="1" title="Very Bad">😡</button>
+            <button type="button" class="emoji-btn" data-rating="2" title="Bad">😞</button>
+            <button type="button" class="emoji-btn" data-rating="3" title="Okay">😐</button>
+            <button type="button" class="emoji-btn" data-rating="4" title="Good">😊</button>
+            <button type="button" class="emoji-btn" data-rating="5" title="Excellent">😍</button>
+        </div>
+        <textarea id="feedback-comments" placeholder="Additional comments..."></textarea>
+        <button type="submit">Submit Feedback</button>
+    </form>
     <div class="icons-bar">
         <div class="icons">
             <a href="#"><ion-icon name="logo-facebook"></ion-icon></a>
@@ -904,6 +1065,54 @@
         }
         window.onload = loadOrders;
     });
+
+    // Feedback modal logic
+    const feedbackTab = document.getElementById('feedback-tab');
+    const feedbackModal = document.getElementById('feedback-modal');
+    const feedbackModalBg = document.getElementById('feedback-modal-bg');
+    const feedbackCloseBtn = document.getElementById('feedback-close-btn');
+    const emojiRow = document.getElementById('feedback-emoji-row');
+    let selectedRating = 0;
+
+    feedbackTab.onclick = function() {
+        feedbackModal.classList.add('active');
+        feedbackModalBg.classList.add('active');
+    };
+    feedbackCloseBtn.onclick = feedbackModalBg.onclick = function() {
+        feedbackModal.classList.remove('active');
+        feedbackModalBg.classList.remove('active');
+    };
+    emojiRow.querySelectorAll('.emoji-btn').forEach(btn => {
+        btn.onclick = function() {
+            emojiRow.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            selectedRating = parseInt(btn.getAttribute('data-rating'));
+        };
+    });
+    feedbackModal.onsubmit = async function(e) {
+        e.preventDefault();
+        if (!selectedRating) {
+            alert('Please select a rating.');
+            return;
+        }
+        const comments = document.getElementById('feedback-comments').value.trim();
+        // Optionally, you can get user info here
+        await fetch('api.php?endpoint=feedback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: (JSON.parse(localStorage.getItem('user')||'{}').username || 'Customer'),
+                email: (JSON.parse(localStorage.getItem('user')||'{}').email || ''),
+                message: `Rating: ${selectedRating}\nComments: ${comments}`
+            })
+        });
+        feedbackModal.classList.remove('active');
+        feedbackModalBg.classList.remove('active');
+        emojiRow.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('selected'));
+        selectedRating = 0;
+        feedbackModal.reset();
+        alert('Thank you for your feedback!');
+    };
     </script>
 </body>
 </html>
