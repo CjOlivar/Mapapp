@@ -714,6 +714,48 @@
             from { opacity: 0; transform: translateY(30px);}
             to { opacity: 1; transform: translateY(0);}
         }
+
+        /* --- Add dark mode support for feedback modal --- */
+        .dark-mode .feedback-modal {
+            background: #23283a !important;
+            color: #f5f5f5 !important;
+        }
+        .dark-mode .feedback-modal h3 {
+            color: #91b5dd !important;
+        }
+        .dark-mode .feedback-modal .feedback-question {
+            color: #ffe066 !important;
+        }
+        .dark-mode .feedback-modal textarea {
+            background: #181c24 !important;
+            color: #f5f5f5 !important;
+            border-color: #444 !important;
+        }
+        .dark-mode .feedback-modal textarea::placeholder {
+            color: #b0b0b0 !important;
+        }
+        .dark-mode .feedback-modal button[type="submit"] {
+            background: #91b5dd !important;
+            color: #181c24 !important;
+        }
+        .dark-mode .feedback-modal button[type="submit"]:hover {
+            background: #ffe066 !important;
+            color: #181c24 !important;
+        }
+        .dark-mode .feedback-modal .close-btn {
+            color: #b0b0b0 !important;
+        }
+        .dark-mode .feedback-modal .emoji-btn {
+            background: none !important;
+            color: #ffe066 !important;
+        }
+        .dark-mode .feedback-modal .emoji-btn.selected,
+        .dark-mode .feedback-modal .emoji-btn:hover {
+            opacity: 1;
+            transform: scale(1.15);
+            color: #fffbe6 !important;
+        }
+        /* --- End dark mode feedback modal --- */
     </style>
 </head>
 <body>
@@ -1054,17 +1096,22 @@
         }
     }
     document.addEventListener('DOMContentLoaded', function() {
-        // Setup mode toggle
-        const modeBtn = document.getElementById('mode-toggle');
-        if (modeBtn) {
-            const saved = localStorage.getItem('mode');
-            setMode(saved === 'dark');
-            modeBtn.onclick = function() {
-                setMode(!document.body.classList.contains('dark-mode'));
-            };
-        }
-        window.onload = loadOrders;
-    });
+    // Setup mode toggle
+    const modeBtn = document.getElementById('mode-toggle');
+    if (modeBtn) {
+        const saved = localStorage.getItem('mode');
+        setMode(saved === 'dark');
+        modeBtn.onclick = function() {
+            setMode(!document.body.classList.contains('dark-mode'));
+        };
+    }
+    // Load orders and notifications on page load
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (user.id) {
+        loadNotifications(user.id);
+    }
+    window.onload = loadOrders;
+});
 
     // Feedback modal logic
     const feedbackTab = document.getElementById('feedback-tab');
