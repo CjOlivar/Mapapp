@@ -188,6 +188,25 @@ body {
     transform: translateX(5px);
 }
 
+.delivery-item b:first-of-type {
+    font-size: 1.1em;
+    color: #202A44;
+    margin-bottom: 4px;
+    display: inline-block;
+}
+
+.delivery-item b:nth-of-type(2) {
+    color: #10468b;
+}
+
+.dark-mode .delivery-item b:first-of-type {
+    color: #91b5dd;
+}
+
+.dark-mode .delivery-item b:nth-of-type(2) {
+    color: #ffe066;
+}
+
 /* Stats Dashboard */
 .stats-dashboard {
     margin-top: 20px;
@@ -1155,58 +1174,134 @@ body.dark-mode,
         });
     }
 
+    // Add before startLocationTracking function
+const LocationCache = {
+    data: new Map(),
+    maxAge: 5 * 60 * 1000, // 5 minutes
+
+    set(address, coords) {
+        this.data.set(address, {
+            coords,
+            timestamp: Date.now()
+        });
+        // Also save to localStorage for persistence
+        try {
+            const cache = JSON.parse(localStorage.getItem('locationCache') || '{}');
+            cache[address] = { coords, timestamp: Date.now() };
+            localStorage.setItem('locationCache', JSON.stringify(cache));
+        } catch (e) {
+            console.warn('Failed to save to localStorage:', e);
+        }
+    },
+
+    get(address) {
+        // Try memory cache first
+        const memoryCache = this.data.get(address);
+        if (memoryCache && Date.now() - memoryCache.timestamp < this.maxAge) {
+            return memoryCache.coords;
+        }
+
+        // Try localStorage cache
+        try {
+            const cache = JSON.parse(localStorage.getItem('locationCache') || '{}');
+            if (cache[address] && Date.now() - cache[address].timestamp < this.maxAge) {
+                // Restore to memory cache
+                this.data.set(address, cache[address]);
+                return cache[address].coords;
+            }
+        } catch (e) {
+            console.warn('Failed to read from localStorage:', e);
+        }
+        return null;
+    }
+};
+
+    // Replace geocodeAddress function
     async function geocodeAddress(address) {
+        // Try cache first
+        const cached = LocationCache.get(address);
+        if (cached) return cached;
+
         const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
-        const res = await fetch(url);
-        const data = await res.json();
-        if (data && data.length > 0) {
-            return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data && data.length > 0) {
+                const coords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+                LocationCache.set(address, coords);
+                return coords;
+            }
+        } catch (e) {
+            console.error('Geocoding error:', e);
         }
         return null;
     }
 
     async function renderDashboard() {
-        const { deliveries, stats } = await fetchDeliveries();
-        let total = deliveries.length;
-        let completed = deliveries.filter(d => d.status === 'completed').length;
-        let pending = deliveries.filter(d => d.status === 'pending').length;
-        let earnings = stats.total_earnings || 0;
+        // Show loading indicator
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'loading-indicator';
+        loadingDiv.innerHTML = `
+            <div style="
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(0,0,0,0.8);
+                color: white;
+                padding: 20px;
+                border-radius: 10px;
+                z-index: 5000;
+            ">
+                <i class="fas fa-spinner fa-spin"></i> Loading...
+            </div>
+        `;
+        document.body.appendChild(loadingDiv);
 
-        document.getElementById('stat-total').textContent = total;
-        document.getElementById('stat-completed').textContent = completed;
-        document.getElementById('stat-pending').textContent = pending;
-        document.getElementById('stat-earnings').textContent = '₱' + (+earnings).toFixed(2);
-
-        const list = document.getElementById('delivery-list');
-        list.innerHTML = '';
-        const availableDeliveries = deliveries.filter(d =>
-            d.status !== 'completed' &&
-            d.status !== 'rejected'
-        );
-        if (availableDeliveries.length === 0) {
-            list.innerHTML = '<p>No deliveries yet.</p>';
-        } else {
-            availableDeliveries.forEach(delivery => {
-                const div = document.createElement('div');
-                div.className = 'delivery-item';
-                div.innerHTML = `
-                    <b>${delivery.package_info}</b><br>
-                    <span style="color:#888;">To:</span> ${delivery.delivery_address}<br>
-                    <span style="color:#888;">Status:</span> <b>${delivery.status}</b><br>
-                    <span style="color:#888;">Fee:</span> <b>₱${delivery.fee}</b>
-                    <div class="delivery-actions">
-                        <button class="accept-btn" ${delivery.status !== 'pending' ? 'disabled' : ''}>Accept</button>
-                        <button class="reject-btn" ${delivery.status !== 'active' ? 'disabled' : ''}>Reject</button>
-                        <button class="complete-btn" ${delivery.status !== 'active' ? 'disabled' : ''}>Complete</button>
-                    </div>
-                `;
-                div.querySelector('.accept-btn').addEventListener('click', () => acceptDelivery(delivery.id));
-                div.querySelector('.reject-btn').addEventListener('click', () => rejectDelivery(delivery.id));
-                div.querySelector('.complete-btn').addEventListener('click', () => completeDelivery(delivery.id));
-                list.appendChild(div);
-            });
+        try {
+            const { deliveries, stats } = await fetchDeliveries();
+            
+            // Calculate pending count for stats
+            let pendingCount = deliveries.filter(d => d.status === 'pending').length;
+            let completedCount = deliveries.filter(d => d.status === 'completed').length;
+            let statsObj = {
+                completed_count: completedCount,
+                pending_count: pendingCount,
+                total_earnings: stats.total_earnings || 0
+            };
+            updateStats(statsObj);
+            
+            // Create map only once
+            initializeMapIfNeeded();
+            
+            // Batch process markers
+            await updateMapMarkers(deliveries);
+            
+            // Update delivery list with optimized DOM operations
+            await updateDeliveryList(deliveries);
+            
+        } catch (error) {
+            console.error('Dashboard error:', error);
+        } finally {
+            // Remove loading indicator
+            loadingDiv.remove();
         }
+    }
 
+    // Add these helper functions
+    function updateStats(stats) {
+        // Ensure we have valid numbers before using toFixed
+        const completedCount = parseInt(stats.completed_count) || 0;
+        const pendingCount = parseInt(stats.pending_count) || 0;
+        const totalEarnings = parseFloat(stats.total_earnings) || 0;
+
+        document.getElementById('stat-total').textContent = completedCount + pendingCount;
+        document.getElementById('stat-completed').textContent = completedCount;
+        document.getElementById('stat-pending').textContent = pendingCount;
+        document.getElementById('stat-earnings').textContent = '₱' + totalEarnings.toFixed(2);
+    }
+
+    function initializeMapIfNeeded() {
         if (!dashboardMap) {
             const mapDiv = document.getElementById('map');
             if (mapDiv) {
@@ -1217,32 +1312,66 @@ body.dark-mode,
                 markerCluster = L.markerClusterGroup().addTo(dashboardMap);
             }
         }
-        if (markerCluster) markerCluster.clearLayers();
+    }
 
-        for (const delivery of deliveries) {
-            let deliveryCoords = null;
-            if (delivery.delivery_coords) {
-                try {
-                    deliveryCoords = typeof delivery.delivery_coords === 'string'
-                        ? JSON.parse(delivery.delivery_coords)
-                        : delivery.delivery_coords;
-                } catch (e) { deliveryCoords = null; }
-            }
-            if (!deliveryCoords && delivery.delivery_address) {
-                // Try to geocode address if coords missing
-                deliveryCoords = await geocodeAddress(delivery.delivery_address);
-            }
-            if (deliveryCoords && Array.isArray(deliveryCoords) && deliveryCoords.length === 2) {
-                const deliveryMarker = L.marker(deliveryCoords, {
-                    icon: getDeliveryIcon(delivery.status)
-                }).bindPopup(`
-                    <b>${delivery.package_info}</b><br>
-                    <span style="color:#888;">Delivery:</span> ${delivery.delivery_address}<br>
-                    <span style="color:#888;">Status:</span> ${delivery.status}
-                `);
-                markerCluster.addLayer(deliveryMarker);
-            }
+    async function updateMapMarkers(deliveries) {
+        if (!markerCluster) return;
+        
+        const newMarkers = [];
+        markerCluster.clearLayers();
+
+        // Process active deliveries first
+        const activeDeliveries = deliveries.filter(d => d.status === 'active');
+        const otherDeliveries = deliveries.filter(d => d.status !== 'active');
+        
+        // Update active deliveries immediately
+        for (const delivery of activeDeliveries) {
+            const marker = await createDeliveryMarker(delivery);
+            if (marker) newMarkers.push(marker);
         }
+        
+        // Process other deliveries in batches
+        const BATCH_SIZE = 5;
+        for (let i = 0; i < otherDeliveries.length; i += BATCH_SIZE) {
+            const batch = otherDeliveries.slice(i, i + BATCH_SIZE);
+            const markers = await Promise.all(
+                batch.map(delivery => createDeliveryMarker(delivery))
+            );
+            newMarkers.push(...markers.filter(Boolean));
+            
+            // Allow UI to update between batches
+            await new Promise(resolve => setTimeout(resolve, 0));
+        }
+        
+        markerCluster.addLayers(newMarkers);
+    }
+
+    async function createDeliveryMarker(delivery) {
+        let coords = null;
+        
+        if (delivery.delivery_coords) {
+            try {
+                coords = typeof delivery.delivery_coords === 'string'
+                    ? JSON.parse(delivery.delivery_coords)
+                    : delivery.delivery_coords;
+            } catch (e) { coords = null; }
+        }
+        
+        if (!coords && delivery.delivery_address) {
+            coords = await geocodeAddress(delivery.delivery_address);
+        }
+        
+        if (coords && Array.isArray(coords) && coords.length === 2) {
+            return L.marker(coords, {
+                icon: getDeliveryIcon(delivery.status)
+            }).bindPopup(`
+                <b>${delivery.package_info}</b><br>
+                <span style="color:#888;">From:</span> ${delivery.customer_name || 'Unknown'}<br>
+                <span style="color:#888;">To:</span> ${delivery.delivery_address}<br>
+                <span style="color:#888;">Status:</span> ${delivery.status}
+            `);
+        }
+        return null;
     }
 
     window.renderDashboard = renderDashboard;
@@ -1359,16 +1488,38 @@ body.dark-mode,
             let data;
             try {
                 data = JSON.parse(text);
+                if (!data.success) throw new Error(data.error || 'Failed to complete delivery');
+                
+                // Get fresh stats after completion
+                const { deliveries, stats } = await fetchDeliveries();
+                
+                // Calculate stats manually if backend doesn't provide them
+                const completedCount = deliveries.filter(d => d.status === 'completed').length;
+                const pendingCount = deliveries.filter(d => d.status === 'pending').length;
+                const totalEarnings = deliveries
+                    .filter(d => d.status === 'completed')
+                    .reduce((sum, d) => sum + (parseFloat(d.fee) || 0), 0);
+                
+                // Update stats with safe values
+                updateStats({
+                    completed_count: completedCount,
+                    pending_count: pendingCount,
+                    total_earnings: totalEarnings
+                });
+
+                // Update UI elements
+                await updateMapMarkers(deliveries);
+                await updateDeliveryList(deliveries);
+
+                if (routePolyline) {
+                    dashboardMap.removeLayer(routePolyline);
+                    routePolyline = null;
+                }
+
             } catch (err) {
-                console.error('API did not return JSON:', text);
-                alert('Server error: ' + text);
-                return;
-            }
-            if (!data.success) throw new Error(data.error || 'Failed to complete delivery');
-            await renderDashboard();
-            if (routePolyline) {
-                dashboardMap.removeLayer(routePolyline);
-                routePolyline = null;
+                console.error('Stats update error:', err);
+                console.error('Server response:', text);
+                throw err;
             }
         } catch (e) {
             alert('Failed to complete delivery. Please try again.');
@@ -1618,6 +1769,83 @@ body.dark-mode,
         feedbackModal.reset();
         alert('Thank you for your feedback!');
     };
+
+    async function updateDeliveryList(deliveries) {
+        const list = document.getElementById('delivery-list');
+        if (!list) return;
+        
+        // Cache the current scroll position
+        const scrollPos = list.scrollTop;
+        
+        // Create document fragment for better performance
+        const fragment = document.createDocumentFragment();
+        
+        if (!deliveries || deliveries.length === 0) {
+            const div = document.createElement('div');
+            div.innerHTML = '<p>No orders available.</p>';
+            fragment.appendChild(div);
+        } else {
+            // Filter active and pending deliveries first
+            const activeDeliveries = deliveries.filter(d => 
+                d.status === 'active' || d.status === 'pending'
+            );
+
+            if (activeDeliveries.length === 0) {
+                const div = document.createElement('div');
+                div.innerHTML = '<p>No active or pending orders.</p>';
+                fragment.appendChild(div);
+            } else {
+                // Sort deliveries: active first, then pending
+                activeDeliveries.sort((a, b) => {
+                    if (a.status === 'active' && b.status !== 'active') return -1;
+                    if (b.status === 'active' && a.status !== 'active') return 1;
+                    return new Date(b.created_at) - new Date(a.created_at);
+                });
+
+                activeDeliveries.forEach(delivery => {
+                    const div = document.createElement('div');
+                    div.className = 'delivery-item';
+                    div.innerHTML = `
+                        <b>${delivery.package_info}</b><br>
+                        <span style="color:#888;">From:</span> <b>${delivery.customer_name || 'Unknown Customer'}</b><br>
+                        <span style="color:#888;">To:</span> ${delivery.delivery_address}<br>
+                        <span style="color:#888;">Status:</span> <b>${delivery.status}</b><br>
+                        <span style="color:#888;">Fee:</span> <b>₱${delivery.fee}</b><br>
+                        <span style="color:#888;">Priority:</span> <b>${delivery.priority || 'Normal'}</b>
+                        <div class="delivery-actions">
+                            <button class="accept-btn" ${delivery.status !== 'pending' ? 'disabled' : ''}>Accept</button>
+                            <button class="reject-btn" ${delivery.status !== 'active' ? 'disabled' : ''}>Reject</button>
+                            <button class="complete-btn" ${delivery.status !== 'active' ? 'disabled' : ''}>Complete</button>
+                        </div>
+                    `;
+
+                    // Add event listeners
+                    const acceptBtn = div.querySelector('.accept-btn');
+                    const rejectBtn = div.querySelector('.reject-btn');
+                    const completeBtn = div.querySelector('.complete-btn');
+
+                    if (acceptBtn) {
+                        acceptBtn.addEventListener('click', () => acceptDelivery(delivery.id));
+                    }
+                    if (rejectBtn) {
+                        rejectBtn.addEventListener('click', () => rejectDelivery(delivery.id));
+                    }
+                    if (completeBtn) {
+                        completeBtn.addEventListener('click', () => completeDelivery(delivery.id));
+                    }
+
+                    fragment.appendChild(div);
+                });
+            }
+        }
+
+        // Clear and update the list
+        list.innerHTML = '';
+        list.appendChild(fragment);
+        
+        // Restore scroll position
+        list.scrollTop = scrollPos;
+    }
     </script>
 </body>
 </html>

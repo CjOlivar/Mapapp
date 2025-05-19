@@ -142,13 +142,13 @@ switch ($endpoint) {
     case 'login':
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $input = json_decode(file_get_contents('php://input'), true);
-            if (!$input || !isset($input['email'], $input['password'], $input['type'])) {
+            if (!$input || !isset($input['email'], $input['password'])) {
                 http_response_code(400);
                 echo json_encode(['error' => 'Missing fields']);
                 exit;
             }
-            $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? AND type = ?");
-            $stmt->execute([$input['email'], $input['type']]);
+            $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
+            $stmt->execute([$input['email']]);
             $user = $stmt->fetch();
             if ($user && password_verify($input['password'], $user['password'])) {
                 unset($user['password']);

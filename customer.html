@@ -1494,15 +1494,23 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initial load
     loadOrders();
     
-    // Poll for updates every 5 seconds
-    setInterval(pollUpdates, 5000);
+    // Poll for updates every 5 seconds and store the interval ID
+    const pollInterval = setInterval(pollUpdates, 5000);
     
-    // ...existing initialization code...
+    // Store interval ID in window object for cleanup
+    window._intervals = {
+        ...window._intervals,
+        pollUpdates: pollInterval
+    };
+
 });
 
 // Add cleanup on page unload
 window.addEventListener('beforeunload', function() {
-    // Clear any intervals or timeouts here if needed
+    // Clear polling interval
+    if (window._intervals?.pollUpdates) {
+        clearInterval(window._intervals.pollUpdates);
+    }
 });
     </script>
 </body>

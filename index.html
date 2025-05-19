@@ -41,10 +41,6 @@
             <div class="form">
                 <input type="email" id="login-email" placeholder="Enter Email Here">
                 <input type="password" id="login-password" placeholder="Enter Password Here">
-                <select id="login-type">
-                    <option value="customer">Customer</option>
-                    <option value="driver">Driver</option>
-                </select>
                 <button class="btnn" id="login-btn">Login</button>
                 <p class="link">Don't have an account<br>
                 <a href="#" id="show-signup">Sign up </a> here</p>
@@ -100,7 +96,6 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const email = document.getElementById('login-email').value.trim();
             const password = document.getElementById('login-password').value.trim();
-            const type = document.getElementById('login-type').value;
 
             if (!email || !password) {
                 alert('Please fill in all fields');
@@ -115,8 +110,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: JSON.stringify({
                     email: email,
-                    password: password,
-                    type: type
+                    password: password
                 })
             });
 
@@ -124,6 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.success) {
                 // Store user info in localStorage
                 localStorage.setItem('user', JSON.stringify(data.user));
+                // Redirect based on user type from response
                 if (data.user.type === 'driver') {
                     window.location.href = '/driver.html';
                 } else {
