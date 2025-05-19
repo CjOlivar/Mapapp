@@ -164,7 +164,7 @@
             margin-bottom: 12px;
             border-left: 5px solid #91b5dd;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            transition: transform 0.2s ease;
+            transition: transform 0.2s ease, background-color 0.5s ease;
         }
         .order-item:hover {
             transform: translateX(5px);
@@ -1382,6 +1382,128 @@
         feedbackModal.reset();
         alert('Thank you for your feedback!');
     };
+
+    // Add polling function for real-time updates
+async function pollUpdates() {
+    if (!user.id) return;
+
+    try {
+        // Fetch orders and notifications concurrently
+        const [ordersRes, notificationsRes] = await Promise.all([
+            fetch('api.php?endpoint=deliveries&type=customer&id=' + user.id),
+            fetch('api.php?endpoint=notifications&user_id=' + user.id)
+        ]);
+
+        // Handle orders update
+        const ordersData = await ordersRes.json();
+        const orders = (ordersData.deliveries || []).filter(order => 
+            order.status !== 'completed' && order.status !== 'rejected'
+        );
+
+        const list = document.getElementById('customer-orders-list');
+        if (!list) return;
+        
+        // Compare with existing orders to avoid unnecessary updates
+        const currentOrders = list.querySelectorAll('.order-item');
+        if (currentOrders.length !== orders.length) {
+            await loadOrders();
+            return;
+        }
+
+        // Update order status and fees if changed
+        orders.forEach((order, index) => {
+            const existingOrder = currentOrders[index];
+            const statusSpan = existingOrder.querySelector('span[style*="color:#888;"]+b');
+            const feeSpan = existingOrder.querySelector('span:nth-of-type(3)+b');
+            
+            if (statusSpan && statusSpan.textContent !== order.status) {
+                statusSpan.textContent = order.status;
+                // Flash animation when status changes
+                existingOrder.style.transition = 'background-color 0.5s';
+                existingOrder.style.backgroundColor = '#fff3cd';
+                setTimeout(() => {
+                    existingOrder.style.backgroundColor = '';
+                }, 1000);
+            }
+            if (feeSpan && feeSpan.textContent !== `₱${order.fee}`) {
+                feeSpan.textContent = `₱${order.fee}`;
+            }
+        });
+
+        // Handle notifications update
+        const notificationsData = await notificationsRes.json();
+        if (notificationsData.notifications && notificationsData.notifications.length > 0) {
+            const unread = notificationsData.notifications.filter(n => n.is_read == 0);
+            if (unread.length > 0) {
+                // Create custom notification element instead of using alert
+                const notification = document.createElement('div');
+                notification.className = 'custom-notification';
+                notification.innerHTML = `
+                    <div style="
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        background: #202A44;
+                        color: white;
+                        padding: 15px 20px;
+                        border-radius: 8px;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                        z-index: 5000;
+                        animation: slideIn 0.3s ease-out;
+                    ">
+                        <div style="font-weight: bold; margin-bottom: 5px;">New Update</div>
+                        <div>${unread[0].message}</div>
+                    </div>
+                `;
+                document.body.appendChild(notification);
+
+                // Remove notification after 5 seconds
+                setTimeout(() => {
+                    notification.style.animation = 'slideOut 0.3s ease-in';
+                    setTimeout(() => notification.remove(), 300);
+                }, 5000);
+
+                // Mark as read
+                await fetch('api.php?endpoint=notifications&id=' + unread[0].id, {
+                    method: 'PUT'
+                });
+            }
+        }
+
+    } catch (error) {
+        console.error('Error polling updates:', error);
+    }
+}
+
+// Add CSS for notification animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
+
+// Update the DOMContentLoaded event listener
+document.addEventListener('DOMContentLoaded', function() {
+    // Initial load
+    loadOrders();
+    
+    // Poll for updates every 5 seconds
+    setInterval(pollUpdates, 5000);
+    
+    // ...existing initialization code...
+});
+
+// Add cleanup on page unload
+window.addEventListener('beforeunload', function() {
+    // Clear any intervals or timeouts here if needed
+});
     </script>
 </body>
 </html>
