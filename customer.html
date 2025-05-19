@@ -944,11 +944,14 @@
                         <label for="delivery-fee">Delivery Fee (₱):</label>
                         <input type="number" id="delivery-fee" placeholder="Auto-calculated" min="0" step="0.01" required readonly>
                         
-                        <label for="priority">Delivery Priority:</label>
-                        <select id="priority">
-                            <option value="High">High Priority</option>
-                            <option value="Medium" selected>Medium Priority</option>
-                            <option value="Low">Low Priority</option>
+                        <label for="priority" style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>Delivery Priority:</span>
+                            <div class="fee-info" id="priority-fee" style="font-size: 0.9em; color: #666;">Additional fee: ₱0.00</div>
+                        </label>
+                        <select id="priority" class="fee-dropdown" style="margin-bottom: 5px;">
+                            <option value="High" data-fee="5.20">Priority • &lt; 35 mins (+₱5.20)</option>
+                            <option value="Medium" data-fee="2.70" selected>Standard • 35 mins (+₱2.70)</option>
+                            <option value="Low" data-fee="1.30">Saver • 55 mins (+₱1.30)</option>
                         </select>
                         
                         <label for="notes">Additional Notes:</label>
@@ -1125,6 +1128,17 @@
         return Math.ceil(40 + 10 * distanceKm);
     }
 
+    // Calculate fee with priority
+    function calculatePriorityFee(baseFee, priority) {
+        const priorityFees = {
+            'High': 5.20,
+            'Medium': 2.70,
+            'Low': 1.30
+        };
+        const fee = priorityFees[priority] || 0;
+        return Math.ceil(baseFee + fee);
+    }
+
     // Get the first available driver's location from backend
     async function getFirstDriverLocation() {
         try {
@@ -1157,57 +1171,80 @@
         return null;
     }
 
-    // Auto-calculate fee when delivery address changes
+    // Handle all fee updates in one place
     async function updateDeliveryFee() {
-        const delivery = document.getElementById('delivery-address').value.trim();
-        const feeInput = document.getElementById('delivery-fee');
-        if (!delivery) {
-            feeInput.value = '';
-            return;
+        try {
+            const delivery = document.getElementById('delivery-address').value.trim();
+            const feeInput = document.getElementById('delivery-fee');
+            const priority = document.getElementById('priority').value;
+            const prioritySelect = document.getElementById('priority');
+            const selectedOption = prioritySelect.options[prioritySelect.selectedIndex];
+            const priorityFee = parseFloat(selectedOption.dataset.fee);
+            
+            // Update priority fee display immediately
+            document.getElementById('priority-fee').textContent = 
+                `Additional fee: ₱${priorityFee.toFixed(2)}`;
+
+            if (!delivery) {
+                feeInput.value = '';
+                return;
+            }
+            
+            // Get coordinates
+            const deliveryCoords = await geocodeAddress(delivery);
+            if (!deliveryCoords) {
+                feeInput.value = '';
+                return;
+            }
+            
+            const driverCoords = await getFirstDriverLocation();
+            if (!driverCoords) {
+                feeInput.value = '';
+                return;
+            }
+            
+            // Calculate total fee
+            const distance = haversineDistance(driverCoords, deliveryCoords);
+            const baseFee = calculateFee(distance);
+            const totalFee = calculatePriorityFee(baseFee, priority);
+            
+            // Update fee input
+            feeInput.value = totalFee;
+
+        } catch (error) {
+            console.error('Error updating delivery fee:', error);
+            document.getElementById('delivery-fee').value = '';
+            document.getElementById('priority-fee').textContent = 'Error calculating fee';
         }
-        // Get delivery address coordinates
-        const deliveryCoords = await geocodeAddress(delivery);
-        if (!deliveryCoords) {
-            feeInput.value = '';
-            return;
-        }
-        // Get first available driver's location
-        const driverCoords = await getFirstDriverLocation();
-        if (!driverCoords) {
-            feeInput.value = '';
-            return;
-        }
-        // Calculate distance and fee
-        const distance = haversineDistance(driverCoords, deliveryCoords);
-        feeInput.value = calculateFee(distance);
     }
 
+    // Update event listeners
     document.getElementById('delivery-address').addEventListener('blur', updateDeliveryFee);
+    document.getElementById('priority').addEventListener('change', updateDeliveryFee);
 
     document.getElementById('orderForm').onsubmit = async function(e) {
         e.preventDefault();
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         const delivery_address = document.getElementById('delivery-address').value.trim();
-        const packageInfo = document.getElementById('package-info').value.trim().toLowerCase();
+        const packageInfo = document.getElementById('package-info').value.trim();
+        const priority = document.getElementById('priority').value;
 
-        // Validate delivery address
         if (!delivery_address) {
             alert('Delivery address is required.');
             document.getElementById('delivery-address').focus();
             return;
         }
 
-        // Use the calculated fee from the input
+        // Get the final fee including priority
         const fee = parseFloat(document.getElementById('delivery-fee').value) || 40;
-
+        
         const data = {
             customer_id: user.id,
             delivery_address: delivery_address,
-            package_info: document.getElementById('package-info').value,
+            package_info: packageInfo,
             fee: fee,
-            priority: document.getElementById('priority').value,
+            priority: priority,
             notes: document.getElementById('notes').value
-            // order_type removed
         };
 
         try {
