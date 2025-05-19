@@ -938,6 +938,18 @@
                         <label for="delivery-address">Delivery Address:</label>
                         <input type="text" id="delivery-address" placeholder="Enter delivery location" required>
                         
+                        <label for="delivery-type">Delivery Type:</label>
+                        <select id="delivery-type" required>
+                            <option value="">Select delivery type</option>
+                            <option value="food">Food Delivery</option>
+                            <option value="grocery">Grocery</option>
+                            <option value="document">Documents</option>
+                            <option value="electronics">Electronics</option>
+                            <option value="clothing">Clothing & Accessories</option>
+                            <option value="fragile">Fragile Items</option>
+                            <option value="other">Other</option>
+                        </select>
+                        
                         <label for="package-info">Package Description:</label>
                         <input type="text" id="package-info" placeholder="What are you sending?" required>
                         
@@ -1226,12 +1238,12 @@
         e.preventDefault();
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         const delivery_address = document.getElementById('delivery-address').value.trim();
+        const delivery_type = document.getElementById('delivery-type').value;
         const packageInfo = document.getElementById('package-info').value.trim();
         const priority = document.getElementById('priority').value;
 
-        if (!delivery_address) {
-            alert('Delivery address is required.');
-            document.getElementById('delivery-address').focus();
+        if (!delivery_address || !delivery_type) {
+            alert('Please fill in all required fields.');
             return;
         }
 
@@ -1241,6 +1253,7 @@
         const data = {
             customer_id: user.id,
             delivery_address: delivery_address,
+            delivery_type: delivery_type,
             package_info: packageInfo,
             fee: fee,
             priority: priority,

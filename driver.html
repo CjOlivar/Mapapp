@@ -1807,6 +1807,7 @@ const LocationCache = {
                     div.className = 'delivery-item';
                     div.innerHTML = `
                         <b>${delivery.package_info}</b><br>
+                        <span style="color:#888;">Type:</span> <b>${formatDeliveryType(delivery.delivery_type)}</b><br>
                         <span style="color:#888;">From:</span> <b>${delivery.customer_name || 'Unknown Customer'}</b><br>
                         <span style="color:#888;">To:</span> ${delivery.delivery_address}<br>
                         <span style="color:#888;">Status:</span> <b>${delivery.status}</b><br>
@@ -1845,6 +1846,20 @@ const LocationCache = {
         
         // Restore scroll position
         list.scrollTop = scrollPos;
+    }
+
+    // Add helper function to format delivery type
+    function formatDeliveryType(type) {
+        const types = {
+            food: 'Food Delivery',
+            grocery: 'Grocery',
+            document: 'Documents',
+            electronics: 'Electronics',
+            clothing: 'Clothing & Accessories',
+            fragile: 'Fragile Items',
+            other: 'Other'
+        };
+        return types[type] || type;
     }
     </script>
 </body>

@@ -198,22 +198,26 @@ switch ($endpoint) {
                 echo json_encode(['deliveries' => $rows]);
             }
         } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        
             $input = json_decode(file_get_contents('php://input'), true);
             if (
                 !$input ||
-                !isset($input['customer_id'], $input['delivery_address'], $input['fee'], $input['package_info'], $input['priority'])
-                // order_type fully removed
+                !isset($input['customer_id'], $input['delivery_address'], 
+                       $input['delivery_type'], $input['fee'], 
+                       $input['package_info'], $input['priority'])
             ) {
                 http_response_code(400);
                 echo json_encode(['error' => 'Missing fields']);
                 exit;
             }
-            // Remove order_type from SQL and values
-            $stmt = $pdo->prepare("INSERT INTO deliveries (customer_id, delivery_address, fee, package_info, priority, notes, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW(), NOW())");
+            
+            $stmt = $pdo->prepare("INSERT INTO deliveries 
+                (customer_id, delivery_address, delivery_type, fee, package_info, 
+                 priority, notes, status, created_at, updated_at) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', NOW(), NOW())");
             $stmt->execute([
                 $input['customer_id'],
                 $input['delivery_address'],
+                $input['delivery_type'],
                 $input['fee'],
                 $input['package_info'],
                 $input['priority'],
