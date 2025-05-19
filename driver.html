@@ -1229,6 +1229,7 @@ body.dark-mode,
                 } catch (e) { deliveryCoords = null; }
             }
             if (!deliveryCoords && delivery.delivery_address) {
+                // Try to geocode address if coords missing
                 deliveryCoords = await geocodeAddress(delivery.delivery_address);
             }
             if (deliveryCoords && Array.isArray(deliveryCoords) && deliveryCoords.length === 2) {
@@ -1251,151 +1252,372 @@ body.dark-mode,
         setInterval(renderDashboard, 30000);
     });
 
-    // 1. Always use the latest driver's location for routing and marker
-function updateDriverLocationOnMap(lat, lng) {
-    driverCoords = [lat, lng];
-    if (dashboardMap) {
-        if (!driverMarker) {
-            driverMarker = L.marker([lat, lng], {
-                icon: L.divIcon({
-                    className: 'driver-marker',
-                    html: '<div style="background:#28a745;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;border:2px solid #fff;"><i class="fas fa-location-arrow"></i></div>',
-                    iconSize: [28, 28],
-                    iconAnchor: [14, 14]
-                })
-            }).addTo(dashboardMap).bindPopup('Your Location');
+    // Draw route on map between driver's current location and delivery destination
+    let routePolyline = null;
+    async function drawRouteToDelivery(deliveryCoords, isUpdate = false) {
+        if (!dashboardMap || !driverCoords || !deliveryCoords) return;
+        // Remove previous route if exists
+        if (routePolyline) {
+            dashboardMap.removeLayer(routePolyline);
+            routePolyline = null;
+        }
+        // Use OSRM public API for routing (or Mapbox Directions if you have a key)
+        const url = `https://router.project-osrm.org/route/v1/driving/${driverCoords[1]},${driverCoords[0]};${deliveryCoords[1]},${deliveryCoords[0]}?overview=full&geometries=geojson`;
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data.routes && data.routes.length > 0) {
+                const coords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+                routePolyline = L.polyline(coords, { color: 'blue', weight: 5 }).addTo(dashboardMap);
+                dashboardMap.fitBounds(routePolyline.getBounds(), { padding: [30, 30] });
+            }
+        } catch (e) {
+            // Optionally handle error
+        }
+    }
+
+    async function acceptDelivery(id) {
+        try {
+            const res = await fetch(`api.php?endpoint=deliveries&id=${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'accept', driver_id: user.id })
+            });
+            const text = await res.text();
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (err) {
+                console.error('API did not return JSON:', text);
+                alert('Server error: ' + text);
+                return;
+            }
+            if (!data.success) throw new Error(data.error || 'Failed to accept delivery');
+            await renderDashboard();
+
+            // Find the delivery object for this id
+            const { deliveries } = await fetchDeliveries();
+            const delivery = deliveries.find(d => d.id == id);
+            let deliveryCoords = null;
+            if (delivery) {
+                if (delivery.delivery_coords) {
+                    try {
+                        deliveryCoords = typeof delivery.delivery_coords === 'string'
+                            ? JSON.parse(delivery.delivery_coords)
+                            : delivery.delivery_coords;
+                    } catch (e) { deliveryCoords = null; }
+                }
+                if (!deliveryCoords && delivery.delivery_address) {
+                    deliveryCoords = await geocodeAddress(delivery.delivery_address);
+                }
+                if (deliveryCoords && Array.isArray(deliveryCoords) && deliveryCoords.length === 2) {
+                    await drawRouteToDelivery(deliveryCoords);
+                }
+            }
+        } catch (e) {
+            alert('Failed to accept delivery. Please try again.');
+            console.error(e);
+        }
+    }
+
+    async function rejectDelivery(id) {
+        try {
+            const res = await fetch(`api.php?endpoint=deliveries&id=${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'reject', driver_id: user.id })
+            });
+            const text = await res.text();
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (err) {
+                console.error('API did not return JSON:', text);
+                alert('Server error: ' + text);
+                return;
+            }
+            if (!data.success) throw new Error(data.error || 'Failed to reject delivery');
+            await renderDashboard();
+            if (routePolyline) {
+                dashboardMap.removeLayer(routePolyline);
+                routePolyline = null;
+            }
+        } catch (e) {
+            alert('Failed to reject delivery. Please try again.');
+            console.error(e);
+        }
+    }
+
+    async function completeDelivery(id) {
+        try {
+            const res = await fetch(`api.php?endpoint=deliveries&id=${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'complete', driver_id: user.id })
+            });
+            const text = await res.text();
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (err) {
+                console.error('API did not return JSON:', text);
+                alert('Server error: ' + text);
+                return;
+            }
+            if (!data.success) throw new Error(data.error || 'Failed to complete delivery');
+            await renderDashboard();
+            if (routePolyline) {
+                dashboardMap.removeLayer(routePolyline);
+                routePolyline = null;
+            }
+        } catch (e) {
+            alert('Failed to complete delivery. Please try again.');
+            console.error(e);
+        }
+    }
+
+        window.acceptDelivery = acceptDelivery;
+        window.rejectDelivery = rejectDelivery;
+        window.completeDelivery = completeDelivery;
+
+    // Hamburger menu toggle for sidebar (responsive)
+    document.querySelector('.hamburger').addEventListener('click', function() {
+        const sidebar = document.querySelector('.sidebar');
+        const mainContent = document.querySelector('.main-content');
+        sidebar.classList.toggle('open');
+        mainContent.classList.toggle('sidebar-open');
+        document.body.classList.toggle('sidebar-open');
+    });
+    document.querySelector('.sidebar-overlay').addEventListener('click', function() {
+        const sidebar = document.querySelector('.sidebar');
+        const mainContent = document.querySelector('.main-content');
+        sidebar.classList.remove('open');
+        mainContent.classList.remove('sidebar-open');
+        document.body.classList.remove('sidebar-open');
+    });
+
+    // Dark/Light mode toggle
+    function setMode(dark) {
+        if (dark) {
+            document.body.classList.add('dark-mode');
+            localStorage.setItem('mode', 'dark');
+            document.querySelector('#mode-toggle .toggle-label').textContent = 'Dark mode';
         } else {
-            driverMarker.setLatLng([lat, lng]);
+            document.body.classList.remove('dark-mode');
+            localStorage.setItem('mode', 'light');
+            document.querySelector('#mode-toggle .toggle-label').textContent = 'Light mode';
         }
-        // Optionally, only center if no route is being shown
-        if (!routePolyline) dashboardMap.setView([lat, lng]);
     }
-    sendDriverLocationToServer(lat, lng);
-}
-
-// 2. When drawing route, always use the latest driverCoords and deliveryCoords
-async function drawRouteToDelivery(deliveryCoords) {
-    if (!dashboardMap || !driverCoords || !deliveryCoords) return;
-    if (routePolyline) {
-        dashboardMap.removeLayer(routePolyline);
-        routePolyline = null;
-    }
-    // Use OSRM API for accurate routing
-    const url = `https://router.project-osrm.org/route/v1/driving/${driverCoords[1]},${driverCoords[0]};${deliveryCoords[1]},${deliveryCoords[0]}?overview=full&geometries=geojson`;
-    try {
-        const res = await fetch(url);
-        const data = await res.json();
-        if (data.routes && data.routes.length > 0) {
-            const coords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
-            routePolyline = L.polyline(coords, { color: 'blue', weight: 5 }).addTo(dashboardMap);
-            dashboardMap.fitBounds(routePolyline.getBounds(), { padding: [30, 30] });
+    document.addEventListener('DOMContentLoaded', function() {
+        // Setup mode toggle
+        const modeBtn = document.getElementById('mode-toggle');
+        if (modeBtn) {
+            const saved = localStorage.getItem('mode');
+            setMode(saved === 'dark');
+            modeBtn.onclick = function() {
+                setMode(!document.body.classList.contains('dark-mode'));
+            };
         }
-    } catch (e) {
-        // Optionally handle error
-    }
-}
+    });
 
-// 3. Always use geocoded delivery address for marker and routing
-async function renderDashboard() {
-    const { deliveries, stats } = await fetchDeliveries();
-    let total = deliveries.length;
-    let completed = deliveries.filter(d => d.status === 'completed').length;
-    let pending = deliveries.filter(d => d.status === 'pending').length;
-    let earnings = stats.total_earnings || 0;
+    // Track driver's location and update marker on map
+    let driverMarker = null;
+    let driverCoords = null;
+    let routeUpdateTimer = null;
+    let lastKnownHeading = 0;
 
-    document.getElementById('stat-total').textContent = total;
-    document.getElementById('stat-completed').textContent = completed;
-    document.getElementById('stat-pending').textContent = pending;
-    document.getElementById('stat-earnings').textContent = '₱' + (+earnings).toFixed(2);
-
-    const list = document.getElementById('delivery-list');
-    list.innerHTML = '';
-    const availableDeliveries = deliveries.filter(d =>
-        d.status !== 'completed' &&
-        d.status !== 'rejected'
-    );
-    if (availableDeliveries.length === 0) {
-        list.innerHTML = '<p>No deliveries yet.</p>';
-    } else {
-        availableDeliveries.forEach(delivery => {
-            const div = document.createElement('div');
-            div.className = 'delivery-item';
-            div.innerHTML = `
-                <b>${delivery.package_info}</b><br>
-                <span style="color:#888;">To:</span> ${delivery.delivery_address}<br>
-                <span style="color:#888;">Status:</span> <b>${delivery.status}</b><br>
-                <span style="color:#888;">Fee:</span> <b>₱${delivery.fee}</b>
-                <div class="delivery-actions">
-                    <button class="accept-btn" ${delivery.status !== 'pending' ? 'disabled' : ''}>Accept</button>
-                    <button class="reject-btn" ${delivery.status !== 'active' ? 'disabled' : ''}>Reject</button>
-                    <button class="complete-btn" ${delivery.status !== 'active' ? 'disabled' : ''}>Complete</button>
-                </div>
-            `;
-            div.querySelector('.accept-btn').addEventListener('click', () => acceptDelivery(delivery.id));
-            div.querySelector('.reject-btn').addEventListener('click', () => rejectDelivery(delivery.id));
-            div.querySelector('.complete-btn').addEventListener('click', () => completeDelivery(delivery.id));
-            list.appendChild(div);
+    function sendDriverLocationToServer(lat, lng) {
+        if (!user.id) return Promise.resolve();
+        
+        return fetch('api.php?endpoint=driver_location', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                driver_id: user.id, 
+                lat: lat, 
+                lng: lng,
+                timestamp: Date.now()
+            })
+        })
+        .then(res => {
+            if (!res.ok) {
+                return res.json().then(err => Promise.reject(err));
+            }
+            return res.json();
+        })
+        .catch(err => {
+            console.warn('Failed to update location:', err);
+            // Don't throw error to prevent breaking the location update chain
         });
     }
 
-    if (!dashboardMap) {
-        const mapDiv = document.getElementById('map');
-        if (mapDiv) {
-            dashboardMap = L.map(mapDiv).setView([14.2184, 121.0583], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(dashboardMap);
-            markerCluster = L.markerClusterGroup().addTo(dashboardMap);
+    // Update the tracking function to handle errors better
+    function updateDriverLocationOnMap(position) {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        const accuracy = position.coords.accuracy;
+        const heading = position.coords.heading;
+        
+        // Only update if accuracy is good enough
+        if (accuracy > 100) {
+            console.warn('Location accuracy too low:', accuracy);
+            return;
         }
+
+        driverCoords = [lat, lng];
+        lastKnownHeading = heading || lastKnownHeading;
+
+        if (dashboardMap) {
+            if (!driverMarker) {
+                driverMarker = L.marker([lat, lng], {
+                    icon: L.divIcon({
+                        className: 'driver-marker',
+                        html: `<div style="background:#28a745;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;border:2px solid #fff;transform:rotate(${lastKnownHeading}deg)">
+                                <i class="fas fa-location-arrow"></i>
+                              </div>`,
+                        iconSize: [28, 28],
+                        iconAnchor: [14, 14]
+                    })
+                }).addTo(dashboardMap);
+            } else {
+                driverMarker.setLatLng([lat, lng]);
+                // Update marker rotation based on heading
+                const markerElement = driverMarker.getElement();
+                if (markerElement) {
+                    const iconDiv = markerElement.querySelector('div');
+                    if (iconDiv) {
+                        iconDiv.style.transform = `rotate(${lastKnownHeading}deg)`;
+                    }
+                }
+            }
+
+            // Update route if active delivery
+            if (window._activeDeliveryCoords) {
+                drawRouteToDelivery(window._activeDeliveryCoords, true);
+            }
+        }
+
+        // Cache position and send to server
+        localStorage.setItem('lastKnownPosition', JSON.stringify({
+            lat, lng, heading: lastKnownHeading,
+            timestamp: Date.now()
+        }));
+
+        // Send to server and handle any errors
+        sendDriverLocationToServer(lat, lng).catch(err => {
+            console.warn('Failed to update server location:', err);
+        });
     }
-    if (markerCluster) markerCluster.clearLayers();
 
-    for (const delivery of deliveries) {
-        let deliveryCoords = null;
-        if (delivery.delivery_coords) {
-            try {
-                deliveryCoords = typeof delivery.delivery_coords === 'string'
-                    ? JSON.parse(delivery.delivery_coords)
-                    : delivery.delivery_coords;
-            } catch (e) { deliveryCoords = null; }
+    function startLocationTracking() {
+        if (!navigator.geolocation) {
+            console.error('Geolocation not supported');
+            return;
         }
-        if (!deliveryCoords && delivery.delivery_address) {
-            deliveryCoords = await geocodeAddress(delivery.delivery_address);
+
+        // Try to restore last known position while waiting for update
+        const cached = localStorage.getItem('lastKnownPosition');
+        if (cached) {
+            const pos = JSON.parse(cached);
+            if (Date.now() - pos.timestamp < 300000) { // Less than 5 minutes old
+                updateDriverLocationOnMap({
+                    coords: {
+                        latitude: pos.lat,
+                        longitude: pos.lng,
+                        heading: pos.heading,
+                        accuracy: 50 // Assume moderate accuracy for cached position
+                    }
+                });
+            }
         }
-        if (deliveryCoords && Array.isArray(deliveryCoords) && deliveryCoords.length === 2) {
-            const deliveryMarker = L.marker(deliveryCoords, {
-                icon: getDeliveryIcon(delivery.status)
-            }).bindPopup(`
-                <b>${delivery.package_info}</b><br>
-                <span style="color:#888;">Delivery:</span> ${delivery.delivery_address}<br>
-                <span style="color:#888;">Status:</span> ${delivery.status}
-            `);
-            markerCluster.addLayer(deliveryMarker);
-        }
+
+        // High accuracy tracking
+        const watchId = navigator.geolocation.watchPosition(
+            updateDriverLocationOnMap,
+            (err) => {
+                console.error('Location error:', err);
+                alert('Please enable location services for accurate tracking.');
+            },
+            {
+                enableHighAccuracy: true,
+                maximumAge: 5000,        // Accept positions up to 5 seconds old
+                timeout: 10000           // Wait up to 10 seconds for position
+            }
+        );
+
+        // Backup interval for manual position update
+        const backupInterval = setInterval(() => {
+            navigator.geolocation.getCurrentPosition(
+                updateDriverLocationOnMap,
+                null,
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        }, 30000);
+
+        // Store IDs for cleanup
+        window._locationTrackingIds = {
+            watch: watchId,
+            interval: backupInterval
+        };
     }
-    // ...existing code...
-}
 
-// 4. (Optional) Add a "Track" button for each active delivery to let driver manually track any order
-// ...existing code for delivery list...
-    // In the delivery-item innerHTML, add:
-    // <button class="track-btn" ${delivery.status !== 'active' ? 'disabled' : ''}>Track</button>
-// ...and after creating the element:
-    // div.querySelector('.track-btn').addEventListener('click', async () => {
-    //     let deliveryCoords = ... // as above
-    //     if (deliveryCoords && Array.isArray(deliveryCoords) && deliveryCoords.length === 2) {
-    //         await drawRouteToDelivery(deliveryCoords);
-    //     }
-    // });
+    // Call on page load
+    document.addEventListener('DOMContentLoaded', startLocationTracking);
 
-/*
-Summary of best practices for map accuracy:
-- Always geocode delivery addresses and store/use their coordinates.
-- Always use the latest driver's location (from browser geolocation) for marker and routing.
-- Use a routing API (like OSRM) for accurate route lines.
-- Optionally, let the driver manually trigger tracking for any active order.
-- Optionally, store geocoded delivery_coords in the DB at order creation to avoid repeated geocoding.
-*/
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+        if (window._locationTrackingIds) {
+            navigator.geolocation.clearWatch(window._locationTrackingIds.watch);
+            clearInterval(window._locationTrackingIds.interval);
+        }
+    });
+
+    // Feedback modal logic
+    const feedbackTab = document.getElementById('feedback-tab');
+    const feedbackModal = document.getElementById('feedback-modal');
+    const feedbackModalBg = document.getElementById('feedback-modal-bg');
+    const feedbackCloseBtn = document.getElementById('feedback-close-btn');
+    const emojiRow = document.getElementById('feedback-emoji-row');
+    let selectedRating = 0;
+
+    feedbackTab.onclick = function() {
+        feedbackModal.classList.add('active');
+        feedbackModalBg.classList.add('active');
+    };
+    feedbackCloseBtn.onclick = feedbackModalBg.onclick = function() {
+        feedbackModal.classList.remove('active');
+        feedbackModalBg.classList.remove('active');
+    };
+    emojiRow.querySelectorAll('.emoji-btn').forEach(btn => {
+        btn.onclick = function() {
+            emojiRow.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            selectedRating = parseInt(btn.getAttribute('data-rating'));
+        };
+    });
+    feedbackModal.onsubmit = async function(e) {
+        e.preventDefault();
+        if (!selectedRating) {
+            alert('Please select a rating.');
+            return;
+        }
+        const comments = document.getElementById('feedback-comments').value.trim();
+        await fetch('api.php?endpoint=feedback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: (JSON.parse(localStorage.getItem('user')||'{}').username || 'Driver'),
+                email: (JSON.parse(localStorage.getItem('user')||'{}').email || ''),
+                message: `Rating: ${selectedRating}\nComments: ${comments}`
+            })
+        });
+        feedbackModal.classList.remove('active');
+        feedbackModalBg.classList.remove('active');
+        emojiRow.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('selected'));
+        selectedRating = 0;
+        feedbackModal.reset();
+        alert('Thank you for your feedback!');
+    };
     </script>
 </body>
 </html>

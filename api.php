@@ -339,30 +339,69 @@ switch ($endpoint) {
         break;
     case 'driver_location':
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $input = json_decode(file_get_contents('php://input'), true);
-            if (!$input || !isset($input['driver_id'], $input['lat'], $input['lng'])) {
+            try {
+                $input = json_decode(file_get_contents('php://input'), true);
+                if (!$input || !isset($input['driver_id'], $input['lat'], $input['lng'])) {
+                    throw new Exception('Missing required fields');
+                }
+                
+                // Validate coordinates
+                $lat = floatval($input['lat']);
+                $lng = floatval($input['lng']);
+                if ($lat < -90 || $lat > 90 || $lng < -180 || $lng > 180) {
+                    throw new Exception('Invalid coordinates');
+                }
+
+                $stmt = $pdo->prepare("
+                    INSERT INTO driver_locations (driver_id, lat, lng, updated_at) 
+                    VALUES (?, ?, ?, NOW())
+                    ON DUPLICATE KEY UPDATE 
+                        lat = VALUES(lat),
+                        lng = VALUES(lng),
+                        updated_at = VALUES(updated_at)
+                ");
+                
+                if (!$stmt->execute([$input['driver_id'], $lat, $lng])) {
+                    throw new Exception('Failed to update location');
+                }
+                
+                echo json_encode(['success' => true]);
+                
+            } catch (Exception $e) {
                 http_response_code(400);
-                echo json_encode(['error' => 'Missing fields']);
+                echo json_encode(['error' => $e->getMessage()]);
                 exit;
             }
-            $stmt = $pdo->prepare("REPLACE INTO driver_locations (driver_id, lat, lng, updated_at) VALUES (?, ?, ?, NOW())");
-            $stmt->execute([$input['driver_id'], $input['lat'], $input['lng']]);
-            echo json_encode(['success' => true]);
         } elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
-            $driver_id = $_GET['driver_id'] ?? '';
-            if (!$driver_id) {
+            try {
+                $driver_id = $_GET['driver_id'] ?? '';
+                if (!$driver_id) {
+                    throw new Exception('Missing driver_id');
+                }
+                
+                $stmt = $pdo->prepare("
+                    SELECT lat, lng, updated_at 
+                    FROM driver_locations 
+                    WHERE driver_id = ? 
+                    AND updated_at >= NOW() - INTERVAL 5 MINUTE
+                ");
+                
+                if (!$stmt->execute([$driver_id])) {
+                    throw new Exception('Failed to fetch location');
+                }
+                
+                $location = $stmt->fetch();
+                if ($location) {
+                    echo json_encode(['location' => $location]);
+                } else {
+                    http_response_code(404);
+                    echo json_encode(['error' => 'Location not found or too old']);
+                }
+                
+            } catch (Exception $e) {
                 http_response_code(400);
-                echo json_encode(['error' => 'Missing driver_id']);
+                echo json_encode(['error' => $e->getMessage()]);
                 exit;
-            }
-            $stmt = $pdo->prepare("SELECT lat, lng, updated_at FROM driver_locations WHERE driver_id = ?");
-            $stmt->execute([$driver_id]);
-            $location = $stmt->fetch();
-            if ($location) {
-                echo json_encode(['location' => $location]);
-            } else {
-                http_response_code(404);
-                echo json_encode(['error' => 'Location not found']);
             }
         }
         break;
