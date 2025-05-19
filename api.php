@@ -173,15 +173,20 @@ switch ($endpoint) {
                     FROM deliveries d 
                     LEFT JOIN users u ON d.customer_id = u.id 
                     WHERE d.status = 'pending' 
-                       OR (d.driver_id = ? AND d.status IN ('active','completed'))
+                       OR (d.driver_id = ? AND d.status IN ('active','picked_up','completed'))
                     ORDER BY d.created_at DESC
                 ");
                 $stmt->execute([$id, $id, $id]);
                 $rows = $stmt->fetchAll();
+                // --- FIX: Always set stats, even if $rows is empty ---
                 $stats = [
-                    'completed_count' => $rows[0]['completed_count'] ?? 0,
-                    'total_earnings' => $rows[0]['total_earnings'] ?? 0
+                    'completed_count' => 0,
+                    'total_earnings' => 0
                 ];
+                if (!empty($rows)) {
+                    $stats['completed_count'] = $rows[0]['completed_count'] ?? 0;
+                    $stats['total_earnings'] = $rows[0]['total_earnings'] ?? 0;
+                }
                 
                 echo json_encode(['deliveries' => $rows, 'stats' => $stats]);
             } elseif ($type === 'customer') {
@@ -197,22 +202,18 @@ switch ($endpoint) {
             $input = json_decode(file_get_contents('php://input'), true);
             if (
                 !$input ||
-                !isset($input['customer_id'], $input['pickup_address'], $input['delivery_address'], $input['fee'], $input['package_info'], $input['priority'])
+                !isset($input['customer_id'], $input['delivery_address'], $input['fee'], $input['package_info'], $input['priority'])
+                // order_type fully removed
             ) {
                 http_response_code(400);
                 echo json_encode(['error' => 'Missing fields']);
                 exit;
             }
-            
-            $pickup_coords = isset($input['pickup_coords']) ? json_encode($input['pickup_coords']) : null;
-            $delivery_coords = isset($input['delivery_coords']) ? json_encode($input['delivery_coords']) : null;
-            $stmt = $pdo->prepare("INSERT INTO deliveries (customer_id, pickup_address, delivery_address, pickup_coords, delivery_coords, fee, package_info, priority, notes, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW(), NOW())");
+            // Remove order_type from SQL and values
+            $stmt = $pdo->prepare("INSERT INTO deliveries (customer_id, delivery_address, fee, package_info, priority, notes, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW(), NOW())");
             $stmt->execute([
                 $input['customer_id'],
-                $input['pickup_address'],
                 $input['delivery_address'],
-                $pickup_coords,
-                $delivery_coords,
                 $input['fee'],
                 $input['package_info'],
                 $input['priority'],
@@ -233,6 +234,11 @@ switch ($endpoint) {
                 echo json_encode(['success' => true]);
             } elseif ($input['action'] === 'reject' && isset($input['driver_id'])) {
                 $stmt = $pdo->prepare("UPDATE deliveries SET status = 'rejected', updated_at = NOW() WHERE id = ? AND driver_id = ?");
+                $stmt->execute([$id, $input['driver_id']]);
+                echo json_encode(['success' => true]);
+            } elseif ($input['action'] === 'picked_up' && isset($input['driver_id'])) {
+                // --- Handle picked up action ---
+                $stmt = $pdo->prepare("UPDATE deliveries SET status = 'picked_up', updated_at = NOW() WHERE id = ? AND driver_id = ?");
                 $stmt->execute([$id, $input['driver_id']]);
                 echo json_encode(['success' => true]);
             } elseif ($input['action'] === 'complete' && isset($input['driver_id'])) {
@@ -364,5 +370,3 @@ switch ($endpoint) {
         http_response_code(404);
         echo json_encode(['error' => 'Unknown endpoint']);
 }
-
-#

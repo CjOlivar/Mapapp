@@ -1,1478 +1,1401 @@
 <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>CalambaGO! Driver Dashboard</title>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-        <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-        <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
-        <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
-        <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="style.css"/>
-        <style>
-            html {
-        scroll-behavior: smooth; /* Enables smooth scrolling */
-    }
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CalambaGO! Driver Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css"/>
+    <style>
+        html {
+    scroll-behavior: smooth; /* Enables smooth scrolling */
+}
 
-    body {
-        background-color: #f5f5f5;
-        margin: 0;
-        padding: 0;
-        font-family: "Poppins", sans-serif;
-    }
+body {
+    background-color: #f5f5f5;
+    margin: 0;
+    padding: 0;
+    font-family: "Poppins", sans-serif;
+}
 
-    * {
-        font-family: "Poppins", sans-serif;
-        box-sizing: border-box;
-    }
+* {
+    font-family: "Poppins", sans-serif;
+    box-sizing: border-box;
+}
 
-    /* Google Maps Embed */
-    .map-container {
-        width: 100%;
-        height: 700px;
-        position: relative;
-    }
+/* Google Maps Embed */
+.map-container {
+    width: 100%;
+    height: 700px;
+    position: relative;
+}
 
-    #map {
-        width: 100%;
-        border-radius: 10px;
-    }
+#map {
+    width: 100%;
+    border-radius: 10px;
+}
 
-    /* Calendar Styles */
-    .calendar {
-        width: 100%;
-        max-width: 1200px;
-        margin: 45px auto 0 auto;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.10);
-        border-radius: 15px;
-        padding: 12px;
-        background: #f0f0f0;
-        position: relative;
-        z-index: 1;
-        margin-top: 0 !important; /* Remove if you use the spacer div in HTML */
-    }
+/* Calendar Styles */
+.calendar {
+    width: 100%;
+    max-width: 1200px;
+    margin: 45px auto 0 auto;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.10);
+    border-radius: 15px;
+    padding: 12px;
+    background: #f0f0f0;
+    position: relative;
+    z-index: 1;
+    margin-top: 0 !important; /* Remove if you use the spacer div in HTML */
+}
 
-    .calendar iframe {
-        width: 100%;
-        height: 620px;
-        border: none;
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06);
-    }
+.calendar iframe {
+    width: 100%;
+    height: 620px;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06);
+}
 
-    .logo {
-        font-family: 'Dancing Script', cursive;
-        font-size: 2.2rem;
-        color: #91b5dd;
-        margin-bottom: 30px;
-        font-weight: bold;
-        letter-spacing: 1px;
-        text-align: center;
-        width: 100%;
-        transition: opacity 0.3s;
-    }
+.logo {
+    font-family: 'Dancing Script', cursive;
+    font-size: 2.2rem;
+    color: #91b5dd;
+    margin-bottom: 30px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-align: center;
+    width: 100%;
+    transition: opacity 0.3s;
+}
 
-    /* Navigation Bar */
-    .navbar {
-        width: 100%;
-        background-color: #202A44;
-        position: fixed;
-        top: 0;
-        z-index: 2000; /* Increased z-index to ensure navbar is above all content */
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 8px 20px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.7);
-    }
+/* Navigation Bar */
+.navbar {
+    width: 100%;
+    background-color: #202A44;
+    position: fixed;
+    top: 0;
+    z-index: 2000; /* Increased z-index to ensure navbar is above all content */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.7);
+}
 
+.menu {
+    display: flex;
+    align-items: center;
+}
+
+.navbar-links {
+    display: flex;
+    align-items: center;
+}
+
+.navbar-links a {
+    color: #fff;
+    text-decoration: none;
+    padding: 14px 20px;
+    font-size: 17px;
+    transition: background-color 0.3s;
+}
+
+.navbar-links a:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.navbar-spacer {
+    height: 70px;
+}
+
+/* Profile Dropdown */
+.profile-dropdown {
+    position: relative;
+    margin-left: auto;
+}
+
+.profile-dropdown-btn {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    color: white;
+    cursor: pointer;
+}
+
+.profile-img {
+    width: 35px;
+    height: 35px;
+    margin-right: 10px;
+}
+
+.profile-dropdown-list {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    width: 200px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: none;
+    z-index: 1000;
+}
+
+.profile-dropdown-list.active {
+    display: block;
+}
+
+.profile-dropdown-list-item {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.profile-dropdown-list-item:last-child {
+    border-bottom: none;
+}
+
+.profile-dropdown-list-item a {
+    color: #333;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Delivery Panel */
+.delivery-panel {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    margin-top: 20px;
+}
+
+.delivery-item {
+    background: #f7f9fc;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    border-left: 5px solid #91b5dd;
+    transition: transform 0.2s;
+}
+
+.delivery-item:hover {
+    transform: translateX(5px);
+}
+
+/* Stats Dashboard */
+.stats-dashboard {
+    margin-top: 20px;
+    padding: 20px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.stat-card {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+/* --- DRIVER DASHBOARD SIDEBAR & LAYOUT --- */
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+    background: #f4f6f9;
+}
+.sidebar {
+    background: #202A44;
+    color: white;
+    width: 230px;
+    min-width: 60px;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 1001; /* Make sure sidebar is above icons-bar */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 30px;
+    transition: width 0.3s;
+}
+.sidebar .user-profile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 30px;
+    transition: margin-top 0.3s;
+}
+.sidebar .user-profile i {
+    font-size: 2.2rem;
+    margin-bottom: 8px;
+}
+.sidebar .user-profile span {
+    font-size: 1rem;
+    color: #fff;
+    transition: opacity 0.3s;
+}
+.sidebar .nav-menu {
+    list-style: none;
+    padding: 0;
+    width: 100%;
+}
+.sidebar .nav-menu li {
+    width: 100%;
+}
+.sidebar .nav-menu a {
+    color: white;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    padding: 14px 30px;
+    border-radius: 5px;
+    transition: background 0.3s, color 0.3s;
+    font-size: 1rem;
+    width: 100%;
+}
+.sidebar .nav-menu a.active, .sidebar .nav-menu a:focus, .sidebar .nav-menu a:hover {
+    background: #10468b;
+    color: #f1c40f;
+}
+.sidebar .nav-menu i {
+    margin-right: 12px;
+    width: 22px;
+    text-align: center;
+}
+.sidebar .nav-menu span {
+    display: inline;
+    transition: opacity 0.3s;
+}
+.hamburger {
+    display: none;
+    position: fixed;
+    top: 18px;
+    left: 18px;
+    font-size: 2rem;
+    cursor: pointer;
+    z-index: 4000;
+    background: transparent;
+    border: none;
+}
+.hamburger i {
+    color: #fff !important;
+    font-size: 2rem;
+}
+/* Hamburger sidebar collapsed */
+.sidebar.collapsed {
+    left: -230px;
+}
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.3);
+    z-index: 1999;
+}
+.sidebar-open .sidebar-overlay {
+    display: block;
+}
+.main-content {
+    margin-left: 230px;
+    padding: 40px 20px 20px 20px;
+    width: 100%;
+    max-width: 1200px;
+    min-height: 100vh;
+    transition: margin-left 0.3s, padding 0.3s;
+}
+.sidebar.collapsed ~ .main-content {
+    margin-left: 0;
+}
+@media (max-width: 900px) {
+    .sidebar {
+        width: 60px;
+        min-width: 60px;
+        padding-top: 10px;
+        align-items: stretch;
+    }
+    .main-content {
+        margin-left: 60px;
+        padding: 10px;
+    }
+    .sidebar .logo {
+        display: none;
+        margin-top: 0;
+        width: auto;
+    }
+    .sidebar .user-profile span,
+    .sidebar .nav-menu span {
+        display: none;
+    }
+    .hamburger {
+        display: block;
+    }
+    .sidebar .user-profile {
+        margin-top: 80px; /* Space below hamburger */
+    }
+    .sidebar.open .logo {
+        display: block;
+        margin-top: 60px;
+    }
+    .sidebar.open .user-profile {
+        margin-top: 20px;
+    }
+    .sidebar.open .user-profile span,
+    .sidebar.open .nav-menu span {
+        display: inline;
+    }
+    .sidebar.open {
+        width: 230px;
+        min-width: 230px;
+        transition: width 0.3s;
+    }
+    .main-content.sidebar-open {
+        margin-left: 230px;
+        transition: margin-left 0.3s;
+    }
+}
+@media (max-width: 600px) {
+    .sidebar {
+        width: 50px;
+        min-width: 50px;
+        padding-top: 5px;
+    }
+    .main-content {
+        margin-left: 50px;
+        padding: 5px;
+    }
+}
+/* --- END DRIVER DASHBOARD SIDEBAR & LAYOUT --- */
+
+/* Responsive Design */
+@media (max-width: 900px) {
     .menu {
+        display: none;
+    }
+
+    .menu.active {
         display: flex;
-        align-items: center;
+        flex-direction: column;
+        position: absolute;
+        top: 60px;
+        left: 0;
+        width: 100%;
+        background: #202A44;
     }
 
     .navbar-links {
-        display: flex;
-        align-items: center;
+        flex-direction: column;
     }
 
     .navbar-links a {
-        color: #fff;
-        text-decoration: none;
-        padding: 14px 20px;
-        font-size: 17px;
-        transition: background-color 0.3s;
+        width: 100%;
+        padding: 15px 20px;
     }
 
-    .navbar-links a:hover {
-        background-color: rgba(255, 255, 255, 0.1);
-    }
-
-    .navbar-spacer {
-        height: 70px;
-    }
-
-    /* Profile Dropdown */
     .profile-dropdown {
-        position: relative;
-        margin-left: auto;
-    }
-
-    .profile-dropdown-btn {
-        display: flex;
-        align-items: center;
-        padding: 8px;
-        color: white;
-        cursor: pointer;
-    }
-
-    .profile-img {
-        width: 35px;
-        height: 35px;
-        margin-right: 10px;
+        position: static;
     }
 
     .profile-dropdown-list {
-        position: absolute;
-        top: 100%;
-        right: 0;
-        background: white;
-        width: 200px;
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        display: none;
-        z-index: 1000;
-    }
-
-    .profile-dropdown-list.active {
-        display: block;
-    }
-
-    .profile-dropdown-list-item {
-        padding: 10px;
-        border-bottom: 1px solid #eee;
-    }
-
-    .profile-dropdown-list-item:last-child {
-        border-bottom: none;
-    }
-
-    .profile-dropdown-list-item a {
-        color: #333;
-        text-decoration: none;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    /* Delivery Panel */
-    .delivery-panel {
-        background: white;
-        border-radius: 10px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        padding: 15px;
-        margin-top: 20px;
-    }
-
-    .delivery-item {
-        background: #f7f9fc;
-        border-radius: 8px;
-        padding: 16px;
-        margin-bottom: 12px;
-        border-left: 5px solid #91b5dd;
-        transition: transform 0.2s;
-    }
-
-    .delivery-item:hover {
-        transform: translateX(5px);
-    }
-
-    /* Stats Dashboard */
-    .stats-dashboard {
-        margin-top: 20px;
-        padding: 20px;
-        background: white;
-        border-radius: 10px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 20px;
-    }
-
-    .stat-card {
-        background: #f8f9fa;
-        padding: 20px;
-        border-radius: 8px;
-        text-align: center;
-    }
-
-    /* --- DRIVER DASHBOARD SIDEBAR & LAYOUT --- */
-    .dashboard-container {
-        display: flex;
-        min-height: 100vh;
-        background: #f4f6f9;
-    }
-    .sidebar {
-        background: #202A44;
-        color: white;
-        width: 230px;
-        min-width: 60px;
-        height: 100vh;
+        width: 100%;
         position: fixed;
-        left: 0;
-        top: 0;
-        z-index: 1001; /* Make sure sidebar is above icons-bar */
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding-top: 30px;
-        transition: width 0.3s;
+        top: auto;
+        bottom: 0;
     }
-    .sidebar .user-profile {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        margin-bottom: 30px;
-        transition: margin-top 0.3s;
-    }
-    .sidebar .user-profile i {
-        font-size: 2.2rem;
-        margin-bottom: 8px;
-    }
-    .sidebar .user-profile span {
-        font-size: 1rem;
-        color: #fff;
-        transition: opacity 0.3s;
-    }
-    .sidebar .nav-menu {
-        list-style: none;
+
+    .map-container, .calendar {
+        width: 100%;
+        max-width: 100vw;
+        margin: 10px 0 0 0;
         padding: 0;
-        width: 100%;
-    }
-    .sidebar .nav-menu li {
-        width: 100%;
-    }
-    .sidebar .nav-menu a {
-        color: white;
-        text-decoration: none;
-        display: flex;
-        align-items: center;
-        padding: 14px 30px;
-        border-radius: 5px;
-        transition: background 0.3s, color 0.3s;
-        font-size: 1rem;
-        width: 100%;
-    }
-    .sidebar .nav-menu a.active, .sidebar .nav-menu a:focus, .sidebar .nav-menu a:hover {
-        background: #10468b;
-        color: #f1c40f;
-    }
-    .sidebar .nav-menu i {
-        margin-right: 12px;
-        width: 22px;
-        text-align: center;
-    }
-    .sidebar .nav-menu span {
-        display: inline;
-        transition: opacity 0.3s;
-    }
-    .hamburger {
-        display: none;
-        position: fixed;
-        top: 18px;
-        left: 18px;
-        font-size: 2rem;
-        cursor: pointer;
-        z-index: 4000;
-        background: transparent;
-        border: none;
-    }
-    .hamburger i {
-        color: #fff !important;
-        font-size: 2rem;
-    }
-    /* Hamburger sidebar collapsed */
-    .sidebar.collapsed {
-        left: -230px;
-    }
-    .sidebar-overlay {
-        display: none;
-        position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(0,0,0,0.3);
-        z-index: 1999;
-    }
-    .sidebar-open .sidebar-overlay {
-        display: block;
-    }
-    .main-content {
-        margin-left: 230px;
-        padding: 40px 20px 20px 20px;
-        width: 100%;
-        max-width: 1200px;
-        min-height: 100vh;
-        transition: margin-left 0.3s, padding 0.3s;
-    }
-    .sidebar.collapsed ~ .main-content {
-        margin-left: 0;
-    }
-    @media (max-width: 900px) {
-        .sidebar {
-            width: 60px;
-            min-width: 60px;
-            padding-top: 10px;
-            align-items: stretch;
-        }
-        .main-content {
-            margin-left: 60px;
-            padding: 10px;
-        }
-        .sidebar .logo {
-            display: none;
-            margin-top: 0;
-            width: auto;
-        }
-        .sidebar .user-profile span,
-        .sidebar .nav-menu span {
-            display: none;
-        }
-        .hamburger {
-            display: block;
-        }
-        .sidebar .user-profile {
-            margin-top: 80px; /* Space below hamburger */
-        }
-        .sidebar.open .logo {
-            display: block;
-            margin-top: 60px;
-        }
-        .sidebar.open .user-profile {
-            margin-top: 20px;
-        }
-        .sidebar.open .user-profile span,
-        .sidebar.open .nav-menu span {
-            display: inline;
-        }
-        .sidebar.open {
-            width: 230px;
-            min-width: 230px;
-            transition: width 0.3s;
-        }
-        .main-content.sidebar-open {
-            margin-left: 230px;
-            transition: margin-left 0.3s;
-        }
-    }
-    @media (max-width: 600px) {
-        .sidebar {
-            width: 50px;
-            min-width: 50px;
-            padding-top: 5px;
-        }
-        .main-content {
-            margin-left: 50px;
-            padding: 5px;
-        }
-    }
-    /* --- END DRIVER DASHBOARD SIDEBAR & LAYOUT --- */
-
-    /* Responsive Design */
-    @media (max-width: 900px) {
-        .menu {
-            display: none;
-        }
-
-        .menu.active {
-            display: flex;
-            flex-direction: column;
-            position: absolute;
-            top: 60px;
-            left: 0;
-            width: 100%;
-            background: #202A44;
-        }
-
-        .navbar-links {
-            flex-direction: column;
-        }
-
-        .navbar-links a {
-            width: 100%;
-            padding: 15px 20px;
-        }
-
-        .profile-dropdown {
-            position: static;
-        }
-
-        .profile-dropdown-list {
-            width: 100%;
-            position: fixed;
-            top: auto;
-            bottom: 0;
-        }
-
-        .map-container, .calendar {
-            width: 100%;
-            max-width: 100vw;
-            margin: 10px 0 0 0;
-            padding: 0;
-        }
-
-        .map-container iframe, .calendar iframe {
-            height: 350px;
-        }
     }
 
-    /* Icons Bar */
+    .map-container iframe, .calendar iframe {
+        height: 350px;
+    }
+}
+
+/* Icons Bar */
+.icons-bar {
+    background: #202A44;
+    padding: 15px 0;
+    text-align: center;
+    margin-top: 20px;
+    position: relative;
+    z-index: 10;
+}
+
+@media (max-width: 900px) {
     .icons-bar {
-        background: #202A44;
-        padding: 15px 0;
-        text-align: center;
-        margin-top: 20px;
-        position: relative;
-        z-index: 10;
+        position: static;
     }
+}
 
-    @media (max-width: 900px) {
-        .icons-bar {
-            position: static;
-        }
+/* Responsive override for map container */
+.map-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(32,42,68,0.08);
+    padding: 12px;
+    margin: 0 auto 24px auto;
+    max-width: 100%;
+    position: relative;
+    border: 1px solid #91b5dd;
+}
+.driver-map-frame {
+    width: 100%;
+    height: 350px;
+    border-radius: 10px;
+    border: 2px solid #202A44;
+    box-shadow: 0 2px 12px rgba(32,42,68,0.12);
+    background: #eaf1fa;
+    margin: 0 auto;
+}
+@media (max-width: 900px) {
+    .driver-map-frame {
+        height: 250px;
     }
-
-    /* Responsive override for map container */
-    .map-card {
-        background: #fff;
-        border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(32,42,68,0.08);
-        padding: 12px;
-        margin: 0 auto 24px auto;
-        max-width: 100%;
-        position: relative;
-        border: 1px solid #91b5dd;
+}
+@media (max-width: 600px) {
+    .main-content {
+        padding: 8px;
     }
     .driver-map-frame {
-        width: 100%;
-        height: 350px;
-        border-radius: 10px;
-        border: 2px solid #202A44;
-        box-shadow: 0 2px 12px rgba(32,42,68,0.12);
-        background: #eaf1fa;
-        margin: 0 auto;
+        height: 180px;
     }
-    @media (max-width: 900px) {
-        .driver-map-frame {
-            height: 250px;
-        }
+    .map-card {
+        padding: 4px;
     }
-    @media (max-width: 600px) {
-        .main-content {
-            padding: 8px;
-        }
-        .driver-map-frame {
-            height: 180px;
-        }
-        .map-card {
-            padding: 4px;
-        }
-    }
+}
 
+.mode-toggle-container {
+    margin-top: auto;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding-bottom: 24px;
+}
+#mode-toggle {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    transition: background 0.2s;
+    outline: none;
+}
+#mode-toggle:focus {
+    outline: 2px solid #91b5dd;
+}
+#mode-toggle:hover {
+    background: rgba(255,255,255,0.08);
+}
+.toggle-label {
+    font-size: 1rem;
+    user-select: none;
+    min-width: 80px;
+    text-align: left;
+    white-space: nowrap;
+}
+.toggle-switch {
+    position: relative;
+    width: 54px;
+    height: 28px;
+    display: inline-block;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+.toggle-bg {
+    position: absolute;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    border-radius: 16px;
+    background: linear-gradient(90deg, #e0eafc 0%, #cfdef3 100%);
+    transition: background 0.3s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.toggle-icon {
+    position: absolute;
+    top: 4px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    transition: left 0.3s, background 0.3s, box-shadow 0.3s;
+    z-index: 2;
+}
+.toggle-icon.sun {
+    left: 4px;
+    background: #ffe066;
+    box-shadow: 0 0 6px 2px #ffe06688;
+    background-image: url('data:image/svg+xml;utf8,<svg width="20" height="20" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="7" fill="%23ffe066"/><g stroke="%23ffd700" stroke-width="2"><line x1="10" y1="1" x2="10" y2="4"/><line x1="10" y1="16" x2="10" y2="19"/><line x1="1" y1="10" x2="4" y2="10"/><line x1="16" y1="10" x2="19" y2="10"/><line x1="4" y1="4" x2="6" y2="6"/><line x1="16" y1="16" x2="14" y2="14"/><line x1="4" y1="16" x2="6" y2="14"/><line x1="16" y1="4" x2="14" y2="6"/></g></svg>');
+    background-size: 20px 20px;
+    background-repeat: no-repeat;
+}
+.toggle-icon.moon {
+    left: 30px;
+    background: #fffbe6;
+    box-shadow: 0 0 8px 2px #fffbe688;
+    background-image: url('data:image/svg+xml;utf8,<svg width="20" height="20" xmlns="http://www.w3.org/2000/svg"><circle cx="13" cy="10" r="7" fill="%23fffbe6"/><circle cx="15" cy="8" r="2" fill="%23e0e0e0"/><circle cx="11" cy="13" r="1.2" fill="%23e0e0e0"/></svg>');
+    background-size: 20px 20px;
+    background-repeat: no-repeat;
+    opacity: 0;
+    transition: left 0.3s, opacity 0.3s;
+}
+@media (max-width: 900px) {
     .mode-toggle-container {
-        margin-top: auto;
+        padding-bottom: 18px;
+        margin-bottom: 8px;
         width: 100%;
-        display: flex;
         justify-content: center;
-        padding-bottom: 24px;
     }
     #mode-toggle {
-        background: none;
-        border: none;
-        color: #fff;
-        font-size: 1.1rem;
-        cursor: pointer;
-        display: flex;
+        flex-direction: column;
         align-items: center;
-        gap: 12px;
-        padding: 8px 16px;
-        border-radius: 6px;
-        transition: background 0.2s;
-        outline: none;
-    }
-    #mode-toggle:focus {
-        outline: 2px solid #91b5dd;
-    }
-    #mode-toggle:hover {
-        background: rgba(255,255,255,0.08);
+        gap: 2px;
+        padding: 8px 0 0 0;
+        width: 54px;
+        min-width: 54px;
+        margin: 0 auto;
+        background: rgba(32,42,68,0.15);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.10);
     }
     .toggle-label {
-        font-size: 1rem;
-        user-select: none;
-        min-width: 80px;
-        text-align: left;
-        white-space: nowrap;
+        font-size: 0.9rem;
+        min-width: 0;
+        text-align: center;
+        white-space: normal;
+        color: #fff;
+        margin: 0;
+        margin-top: 2px;
+        width: 100%;
+        padding-bottom: 2px;
+        letter-spacing: 0.01em;
     }
     .toggle-switch {
-        position: relative;
-        width: 54px;
-        height: 28px;
-        display: inline-block;
-        margin-right: 8px;
-        flex-shrink: 0;
+        margin-right: 0;
+    }
+}
+@media (max-width: 600px) {
+    .mode-toggle-container {
+        padding-bottom: 8px;
+        margin-bottom: 4px;
+    }
+    #mode-toggle {
+        font-size: 0.95rem;
+        padding: 4px 0 0 0;
+        width: 44px;
+        min-width: 44px;
+        border-radius: 10px;
+    }
+    .toggle-switch {
+        width: 44px;
+        height: 22px;
     }
     .toggle-bg {
-        position: absolute;
-        left: 0; top: 0;
-        width: 100%; height: 100%;
-        border-radius: 16px;
-        background: linear-gradient(90deg, #e0eafc 0%, #cfdef3 100%);
-        transition: background 0.3s;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        border-radius: 12px;
     }
-    .toggle-icon {
-        position: absolute;
-        top: 4px;
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        transition: left 0.3s, background 0.3s, box-shadow 0.3s;
-        z-index: 2;
+    .toggle-icon, .toggle-icon.sun, .toggle-icon.moon {
+        width: 16px;
+        height: 16px;
+        top: 3px;
+        background-size: 16px 16px;
     }
-    .toggle-icon.sun {
-        left: 4px;
-        background: #ffe066;
-        box-shadow: 0 0 6px 2px #ffe06688;
-        background-image: url('data:image/svg+xml;utf8,<svg width="20" height="20" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="7" fill="%23ffe066"/><g stroke="%23ffd700" stroke-width="2"><line x1="10" y1="1" x2="10" y2="4"/><line x1="10" y1="16" x2="10" y2="19"/><line x1="1" y1="10" x2="4" y2="10"/><line x1="16" y1="10" x2="19" y2="10"/><line x1="4" y1="4" x2="6" y2="6"/><line x1="16" y1="16" x2="14" y2="14"/><line x1="4" y1="16" x2="6" y2="14"/><line x1="16" y1="4" x2="14" y2="6"/></g></svg>');
-        background-size: 20px 20px;
-        background-repeat: no-repeat;
+    .toggle-icon.sun { left: 3px; }
+    .toggle-icon.moon { left: 23px; }
+    .toggle-label {
+        font-size: 0.8rem;
+        padding-bottom: 0;
     }
-    .toggle-icon.moon {
-        left: 30px;
-        background: #fffbe6;
-        box-shadow: 0 0 8px 2px #fffbe688;
-        background-image: url('data:image/svg+xml;utf8,<svg width="20" height="20" xmlns="http://www.w3.org/2000/svg"><circle cx="13" cy="10" r="7" fill="%23fffbe6"/><circle cx="15" cy="8" r="2" fill="%23e0e0e0"/><circle cx="11" cy="13" r="1.2" fill="%23e0e0e0"/></svg>');
-        background-size: 20px 20px;
-        background-repeat: no-repeat;
-        opacity: 0;
-        transition: left 0.3s, opacity 0.3s;
-    }
-    @media (max-width: 900px) {
-        .mode-toggle-container {
-            padding-bottom: 18px;
-            margin-bottom: 8px;
-            width: 100%;
-            justify-content: center;
-        }
-        #mode-toggle {
-            flex-direction: column;
-            align-items: center;
-            gap: 2px;
-            padding: 8px 0 0 0;
-            width: 54px;
-            min-width: 54px;
-            margin: 0 auto;
-            background: rgba(32,42,68,0.15);
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.10);
-        }
-        .toggle-label {
-            font-size: 0.9rem;
-            min-width: 0;
-            text-align: center;
-            white-space: normal;
-            color: #fff;
-            margin: 0;
-            margin-top: 2px;
-            width: 100%;
-            padding-bottom: 2px;
-            letter-spacing: 0.01em;
-        }
-        .toggle-switch {
-            margin-right: 0;
-        }
-    }
-    @media (max-width: 600px) {
-        .mode-toggle-container {
-            padding-bottom: 8px;
-            margin-bottom: 4px;
-        }
-        #mode-toggle {
-            font-size: 0.95rem;
-            padding: 4px 0 0 0;
-            width: 44px;
-            min-width: 44px;
-            border-radius: 10px;
-        }
-        .toggle-switch {
-            width: 44px;
-            height: 22px;
-        }
-        .toggle-bg {
-            border-radius: 12px;
-        }
-        .toggle-icon, .toggle-icon.sun, .toggle-icon.moon {
-            width: 16px;
-            height: 16px;
-            top: 3px;
-            background-size: 16px 16px;
-        }
-        .toggle-icon.sun { left: 3px; }
-        .toggle-icon.moon { left: 23px; }
-        .toggle-label {
-            font-size: 0.8rem;
-            padding-bottom: 0;
-        }
-    }
-    body.dark-mode .toggle-bg {
-        background: linear-gradient(90deg, #23283a 0%, #181c24 100%);
-    }
-    body.dark-mode .toggle-icon.sun {
-        left: 4px;
-        opacity: 0;
-    }
-    body.dark-mode .toggle-icon.moon {
-        left: 30px;
-        opacity: 1;
-    }
-    body:not(.dark-mode) .toggle-icon.sun {
-        left: 4px;
-        opacity: 1;
-    }
-    body:not(.dark-mode) .toggle-icon.moon {
-        left: 30px;
-        opacity: 0;
-    }
-    body.dark-mode .toggle-icon.sun {
-        left: 4px;
-        opacity: 0;
-    }
-    body.dark-mode .toggle-icon.moon {
-        left: 30px;
-        opacity: 1;
-    }
-    body.dark-mode #mode-toggle .toggle-label {
-        color: #ffe066;
-    }
-    body:not(.dark-mode) #mode-toggle .toggle-label {
-        color: white;
-    }
-    body.dark-mode,
-    .dark-mode .sidebar,
-    .dark-mode .main-content,
-    .dark-mode .delivery-panel,
-    .dark-mode .stats-dashboard,
-    .dark-mode .map-card,
-    .dark-mode .calendar,
-    .dark-mode .customer-section
-    .dark-mode .feedback-modal{
-        background: #181c24 !important;
-        color: #e0e0e0 !important;
-    }
-    .dark-mode .sidebar {
-        background: #181c24 !important;
-        color: #e0e0e0 !important;
-    }
-    .dark-mode .sidebar .logo {
-        color: #91b5dd !important;
-    }
-    .dark-mode .sidebar .nav-menu a {
-        color: #e0e0e0 !important;
-    }
-    .dark-mode .sidebar .nav-menu a.active,
-    .dark-mode .sidebar .nav-menu a:focus,
-    .dark-mode .sidebar .nav-menu a:hover {
-        background: #23283a !important;
-        color: #f1c40f !important;
-    }
-    .dark-mode .sidebar .user-profile i {
-        color: #e0e0e0 !important;
-    }
-    .dark-mode .icons-bar {
-        background: #181c24 !important;
-    }
-    .dark-mode .icons a {
-        color: #e0e0e0 !important;
-    }
-    .dark-mode .delivery-item,
-    .dark-mode .stat-card,
-    .dark-mode .map-card,
-    .dark-mode .calendar,
-    .dark-mode .customer-section {
-        background: #23283a !important;
-        color: #f5f5f5 !important;
-    }
-    .dark-mode .order-item {
-        background: #23283a !important;
-        color: #f5f5f5 !important;
-    }
-    .dark-mode input,
-    .dark-mode select,
-    .dark-mode textarea {
-        background: #23283a !important;
-        color: #f5f5f5 !important;
-        border-color: #444 !important;
-    }
-    .dark-mode #mode-toggle {
-        color: #f1c40f !important;
-    }
-    .dark-mode .sidebar,
-    .dark-mode .sidebar .logo,
-    .dark-mode .sidebar .user-profile span,
-    .dark-mode .sidebar .user-profile i,
-    .dark-mode .sidebar .nav-menu span,
-    .dark-mode .sidebar .nav-menu i,
-    .dark-mode .sidebar .nav-menu a {
-        color: #f5f5f5 !important;
-    }
-    .dark-mode .sidebar .logo {
-        color: #91b5dd !important;
-    }
-    .dark-mode .sidebar .nav-menu a.active,
-    .dark-mode .sidebar .nav-menu a:focus,
-    .dark-mode .sidebar .nav-menu a:hover {
-        background: #23283a !important;
-        color: #f1c40f !important;
-    }
-    .dark-mode .icons-bar {
-        background: #181c24 !important;
-    }
-    .dark-mode .icons a {
-        color: #e0e0e0 !important;
-    }
-    .dark-mode .delivery-item,
-    .dark-mode .stat-card,
-    .dark-mode .map-card,
-    .dark-mode .calendar {
-        background: #23283a !important;
-        color: #f5f5f5 !important;
-    }
-    .dark-mode .stat-card i,
-    .dark-mode .stat-label,
-    .dark-mode .stat-value {
-        color: #f5f5f5 !important;
-    }
-    .dark-mode .main-content h2,
-    .dark-mode .stats-dashboard h2,
-    .dark-mode .delivery-panel h2 {
-        color: #ffe066 !important;
-    }
-    .dark-mode .main-content h1 {
-        color: #91b5dd !important;
-    }
-    .dark-mode .delivery-item b,
-    .dark-mode .delivery-item span,
-    .dark-mode .delivery-item {
-        color: #f5f5f5 !important;
-    }
-    .dark-mode .delivery-item span[style*="color:#888;"] {
-        color: #b0b0b0 !important;
-    }
-    .dark-mode .delivery-actions button,
-    .dark-mode .delivery-actions .accept-btn,
-    .dark-mode .delivery-actions .reject-btn,
-    .dark-mode .delivery-actions .complete-btn {
-        color: #181c24 !important;
-        background: #ffe066 !important;
-    }
-    .dark-mode .delivery-actions .accept-btn[disabled],
-    .dark-mode .delivery-actions .reject-btn[disabled],
-    .dark-mode .delivery-actions .complete-btn[disabled] {
-        background: #444 !important;
-        color: #aaa !important;
-    }
-    .dark-mode input,
-    .dark-mode select,
-    .dark-mode textarea {
-        background: #23283a !important;
-        color: #f5f5f5 !important;
-        border-color: #444 !important;
-    }
-    .dark-mode input::placeholder,
-    .dark-mode textarea::placeholder {
-        color: #b0b0b0 !important;
-        opacity: 1;
-    }
-    .dark-mode #mode-toggle {
-        color: #f1c40f !important;
-    }
+}
+body.dark-mode .toggle-bg {
+    background: linear-gradient(90deg, #23283a 0%, #181c24 100%);
+}
+body.dark-mode .toggle-icon.sun {
+    left: 4px;
+    opacity: 0;
+}
+body.dark-mode .toggle-icon.moon {
+    left: 30px;
+    opacity: 1;
+}
+body:not(.dark-mode) .toggle-icon.sun {
+    left: 4px;
+    opacity: 1;
+}
+body:not(.dark-mode) .toggle-icon.moon {
+    left: 30px;
+    opacity: 0;
+}
+body.dark-mode .toggle-icon.sun {
+    left: 4px;
+    opacity: 0;
+}
+body.dark-mode .toggle-icon.moon {
+    left: 30px;
+    opacity: 1;
+}
+body.dark-mode #mode-toggle .toggle-label {
+    color: #ffe066;
+}
+body:not(.dark-mode) #mode-toggle .toggle-label {
+    color: white;
+}
+body.dark-mode,
+.dark-mode .sidebar,
+.dark-mode .main-content,
+.dark-mode .delivery-panel,
+.dark-mode .stats-dashboard,
+.dark-mode .map-card,
+.dark-mode .calendar,
+.dark-mode .customer-section
+.dark-mode .feedback-modal{
+    background: #181c24 !important;
+    color: #e0e0e0 !important;
+}
+.dark-mode .sidebar {
+    background: #181c24 !important;
+    color: #e0e0e0 !important;
+}
+.dark-mode .sidebar .logo {
+    color: #91b5dd !important;
+}
+.dark-mode .sidebar .nav-menu a {
+    color: #e0e0e0 !important;
+}
+.dark-mode .sidebar .nav-menu a.active,
+.dark-mode .sidebar .nav-menu a:focus,
+.dark-mode .sidebar .nav-menu a:hover {
+    background: #23283a !important;
+    color: #f1c40f !important;
+}
+.dark-mode .sidebar .user-profile i {
+    color: #e0e0e0 !important;
+}
+.dark-mode .icons-bar {
+    background: #181c24 !important;
+}
+.dark-mode .icons a {
+    color: #e0e0e0 !important;
+}
+.dark-mode .delivery-item,
+.dark-mode .stat-card,
+.dark-mode .map-card,
+.dark-mode .calendar,
+.dark-mode .customer-section {
+    background: #23283a !important;
+    color: #f5f5f5 !important;
+}
+.dark-mode .order-item {
+    background: #23283a !important;
+    color: #f5f5f5 !important;
+}
+.dark-mode input,
+.dark-mode select,
+.dark-mode textarea {
+    background: #23283a !important;
+    color: #f5f5f5 !important;
+    border-color: #444 !important;
+}
+.dark-mode #mode-toggle {
+    color: #f1c40f !important;
+}
+.dark-mode .sidebar,
+.dark-mode .sidebar .logo,
+.dark-mode .sidebar .user-profile span,
+.dark-mode .sidebar .user-profile i,
+.dark-mode .sidebar .nav-menu span,
+.dark-mode .sidebar .nav-menu i,
+.dark-mode .sidebar .nav-menu a {
+    color: #f5f5f5 !important;
+}
+.dark-mode .sidebar .logo {
+    color: #91b5dd !important;
+}
+.dark-mode .sidebar .nav-menu a.active,
+.dark-mode .sidebar .nav-menu a:focus,
+.dark-mode .sidebar .nav-menu a:hover {
+    background: #23283a !important;
+    color: #f1c40f !important;
+}
+.dark-mode .icons-bar {
+    background: #181c24 !important;
+}
+.dark-mode .icons a {
+    color: #e0e0e0 !important;
+}
+.dark-mode .delivery-item,
+.dark-mode .stat-card,
+.dark-mode .map-card,
+.dark-mode .calendar {
+    background: #23283a !important;
+    color: #f5f5f5 !important;
+}
+.dark-mode .stat-card i,
+.dark-mode .stat-label,
+.dark-mode .stat-value {
+    color: #f5f5f5 !important;
+}
+.dark-mode .main-content h2,
+.dark-mode .stats-dashboard h2,
+.dark-mode .delivery-panel h2 {
+    color: #ffe066 !important;
+}
+.dark-mode .main-content h1 {
+    color: #91b5dd !important;
+}
+.dark-mode .delivery-item b,
+.dark-mode .delivery-item span,
+.dark-mode .delivery-item {
+    color: #f5f5f5 !important;
+}
+.dark-mode .delivery-item span[style*="color:#888;"] {
+    color: #b0b0b0 !important;
+}
+.dark-mode .delivery-actions button,
+.dark-mode .delivery-actions .accept-btn,
+.dark-mode .delivery-actions .reject-btn,
+.dark-mode .delivery-actions .complete-btn {
+    color: #181c24 !important;
+    background: #ffe066 !important;
+}
+.dark-mode .delivery-actions .accept-btn[disabled],
+.dark-mode .delivery-actions .reject-btn[disabled],
+.dark-mode .delivery-actions .complete-btn[disabled] {
+    background: #444 !important;
+    color: #aaa !important;
+}
+.dark-mode input,
+.dark-mode select,
+.dark-mode textarea {
+    background: #23283a !important;
+    color: #f5f5f5 !important;
+    border-color: #444 !important;
+}
+.dark-mode input::placeholder,
+.dark-mode textarea::placeholder {
+    color: #b0b0b0 !important;
+    opacity: 1;
+}
+.dark-mode #mode-toggle {
+    color: #f1c40f !important;
+}
 
+.feedback-tab {
+    position: fixed;
+    right: 0;
+    top: 45%;
+    z-index: 3000;
+    background: #7d5fff;
+    color: #fff;
+    padding: 4px 5px;
+    border-radius: 6px 0 0 6px;
+    cursor: pointer;
+    font-weight: bold;
+    writing-mode: vertical-lr;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    transition: background 0.2s, padding 0.2s, font-size 0.2s;
+    font-size: 0.80rem;
+    min-width: 22px;
+    min-height: 80px;
+    letter-spacing: 0.02em;
+}
+.feedback-tab:hover {
+    background: #5f27cd;
+    padding-left: 14px;
+}
+@media (max-width: 600px) {
     .feedback-tab {
-        position: fixed;
-        right: 0;
-        top: 45%;
-        z-index: 3000;
-        background: #7d5fff;
-        color: #fff;
-        padding: 4px 5px;
-        border-radius: 6px 0 0 6px;
-        cursor: pointer;
-        font-weight: bold;
-        writing-mode: vertical-lr;
-        text-align: center;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-        transition: background 0.2s, padding 0.2s, font-size 0.2s;
-        font-size: 0.80rem;
-        min-width: 22px;
-        min-height: 80px;
-        letter-spacing: 0.02em;
-    }
-    .feedback-tab:hover {
-        background: #5f27cd;
-        padding-left: 14px;
-    }
-    @media (max-width: 600px) {
-        .feedback-tab {
-            top: 60%;
-            padding: 2px 6px;
-            font-size: 0.85rem;
-            min-width: 16px;
-            min-height: 60px;
-        }
-    }
-    .feedback-modal-bg {
-        display: none;
-        position: fixed;
-        z-index: 4000;
-        left: 0; top: 0; right: 0; bottom: 0;
-        background: rgba(0,0,0,0.35);
-    }
-    .feedback-modal-bg.active {
-        display: block;
-    }
-    .feedback-modal {
-        position: fixed;
-        z-index: 4100;
-        right: 40px;
-        top: 80px;
-        background: #f7f6fd;
-        color: #222;
-        border-radius: 16px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-        width: 320px;
-        max-width: 90vw;
-        padding: 28px 24px 20px 24px;
-        display: none;
-        flex-direction: column;
-        gap: 12px;
-        animation: fadeIn 0.2s;
-    }
-    .feedback-modal.active {
-        display: flex;
-    }
-    .feedback-modal .close-btn {
-        position: absolute;
-        top: 12px;
-        right: 16px;
-        background: none;
-        border: none;
-        font-size: 1.3rem;
-        color: #888;
-        cursor: pointer;
-    }
-    .feedback-modal h3 {
-        margin: 0 0 10px 0;
-        font-size: 1.2rem;
-        color: #5f27cd;
-        font-weight: bold;
-    }
-    .feedback-modal .feedback-question {
-        margin-bottom: 10px;
-        font-size: 1rem;
-    }
-    .feedback-modal .emoji-row {
-        display: flex;
-        gap: 10px;
-        justify-content: center;
-        margin-bottom: 10px;
-    }
-    .feedback-modal .emoji-btn {
-        background: none;
-        border: none;
-        font-size: 2rem;
-        cursor: pointer;
-        opacity: 0.6;
-        transition: opacity 0.2s, transform 0.2s;
-    }
-    .feedback-modal .emoji-btn.selected,
-    .feedback-modal .emoji-btn:hover {
-        opacity: 1;
-        transform: scale(1.15);
-    }
-    .feedback-modal textarea {
-        width: 100%;
+        top: 60%;
+        padding: 2px 6px;
+        font-size: 0.85rem;
+        min-width: 16px;
         min-height: 60px;
-        border-radius: 8px;
-        border: 1.5px solid #ddd;
-        padding: 8px;
-        font-size: 1rem;
-        resize: vertical;
-        margin-bottom: 10px;
     }
-    .feedback-modal button[type="submit"] {
-        background: #7d5fff;
-        color: #fff;
-        border: none;
-        border-radius: 8px;
-        padding: 10px 0;
-        font-size: 1rem;
-        font-weight: bold;
-        cursor: pointer;
-        transition: background 0.2s;
+}
+.feedback-modal-bg {
+    display: none;
+    position: fixed;
+    z-index: 4000;
+    left: 0; top: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.35);
+}
+.feedback-modal-bg.active {
+    display: block;
+}
+.feedback-modal {
+    position: fixed;
+    z-index: 4100;
+    right: 40px;
+    top: 80px;
+    background: #f7f6fd;
+    color: #222;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    width: 320px;
+    max-width: 90vw;
+    padding: 28px 24px 20px 24px;
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+    animation: fadeIn 0.2s;
+}
+.feedback-modal.active {
+    display: flex;
+}
+.feedback-modal .close-btn {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    color: #888;
+    cursor: pointer;
+}
+.feedback-modal h3 {
+    margin: 0 0 10px 0;
+    font-size: 1.2rem;
+    color: #5f27cd;
+    font-weight: bold;
+}
+.feedback-modal .feedback-question {
+    margin-bottom: 10px;
+    font-size: 1rem;
+}
+.feedback-modal .emoji-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+.feedback-modal .emoji-btn {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s, transform 0.2s;
+}
+.feedback-modal .emoji-btn.selected,
+.feedback-modal .emoji-btn:hover {
+    opacity: 1;
+    transform: scale(1.15);
+}
+.feedback-modal textarea {
+    width: 100%;
+    min-height: 60px;
+    border-radius: 8px;
+    border: 1.5px solid #ddd;
+    padding: 8px;
+    font-size: 1rem;
+    resize: vertical;
+    margin-bottom: 10px;
+}
+.feedback-modal button[type="submit"] {
+    background: #7d5fff;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 0;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.feedback-modal button[type="submit"]:hover {
+    background: #5f27cd;
+}
+@media (max-width: 600px) {
+    .feedback-modal {
+        right: 8px;
+        top: 16vw;
+        padding: 18px 8px 12px 8px;
+        width: 95vw;
     }
-    .feedback-modal button[type="submit"]:hover {
-        background: #5f27cd;
+    .feedback-tab {
+        right: 0;
+        top: 60%;
+        padding: 8px 10px;
+        font-size: 0.95rem;
     }
-    @media (max-width: 600px) {
-        .feedback-modal {
-            right: 8px;
-            top: 16vw;
-            padding: 18px 8px 12px 8px;
-            width: 95vw;
-        }
-        .feedback-tab {
-            right: 0;
-            top: 60%;
-            padding: 8px 10px;
-            font-size: 0.95rem;
-        }
-    }
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(30px);}
-        to { opacity: 1; transform: translateY(0);}
-    }
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(30px);}
+    to { opacity: 1; transform: translateY(0);}
+}
 
-    /* --- Add dark mode support for feedback modal --- */
-    .dark-mode .feedback-modal {
-        background: #23283a !important;
-        color: #f5f5f5 !important;
-    }
-    .dark-mode .feedback-modal h3 {
-        color: #91b5dd !important;
-    }
-    .dark-mode .feedback-modal .feedback-question {
-        color: #ffe066 !important;
-    }
-    .dark-mode .feedback-modal textarea {
-        background: #181c24 !important;
-        color: #f5f5f5 !important;
-        border-color: #444 !important;
-    }
-    .dark-mode .feedback-modal textarea::placeholder {
-        color: #b0b0b0 !important;
-    }
-    .dark-mode .feedback-modal button[type="submit"] {
-        background: #91b5dd !important;
-        color: #181c24 !important;
-    }
-    .dark-mode .feedback-modal button[type="submit"]:hover {
-        background: #ffe066 !important;
-        color: #181c24 !important;
-    }
-    .dark-mode .feedback-modal .close-btn {
-        color: #b0b0b0 !important;
-    }
-    .dark-mode .feedback-modal .emoji-btn {
-        background: none !important;
-        color: #ffe066 !important;
-    }
-    .dark-mode .feedback-modal .emoji-btn.selected,
-    .dark-mode .feedback-modal .emoji-btn:hover {
-        opacity: 1;
-        transform: scale(1.15);
-        color: #fffbe6 !important;
-    }
-    /* --- End dark mode feedback modal --- */
+/* --- Add dark mode support for feedback modal --- */
+.dark-mode .feedback-modal {
+    background: #23283a !important;
+    color: #f5f5f5 !important;
+}
+.dark-mode .feedback-modal h3 {
+    color: #91b5dd !important;
+}
+.dark-mode .feedback-modal .feedback-question {
+    color: #ffe066 !important;
+}
+.dark-mode .feedback-modal textarea {
+    background: #181c24 !important;
+    color: #f5f5f5 !important;
+    border-color: #444 !important;
+}
+.dark-mode .feedback-modal textarea::placeholder {
+    color: #b0b0b0 !important;
+}
+.dark-mode .feedback-modal button[type="submit"] {
+    background: #91b5dd !important;
+    color: #181c24 !important;
+}
+.dark-mode .feedback-modal button[type="submit"]:hover {
+    background: #ffe066 !important;
+    color: #181c24 !important;
+}
+.dark-mode .feedback-modal .close-btn {
+    color: #b0b0b0 !important;
+}
+.dark-mode .feedback-modal .emoji-btn {
+    background: none !important;
+    color: #ffe066 !important;
+}
+.dark-mode .feedback-modal .emoji-btn.selected,
+.dark-mode .feedback-modal .emoji-btn:hover {
+    opacity: 1;
+    transform: scale(1.15);
+    color: #fffbe6 !important;
+}
+/* --- End dark mode feedback modal --- */
+
+.pickedup-btn {
+    background: #f1c40f;
+    color: #202A44;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 14px;
+    margin-left: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.pickedup-btn:disabled {
+    background: #ccc;
+    color: #888;
+    cursor: not-allowed;
+}
     </style>
-    </head>
-    <body>
-        <div class="dashboard-container">
-            <div class="hamburger"><i class="fas fa-bars"></i></div>
-            <nav class="sidebar">
-                <div class="logo">CalambaGO!</div>
-                <div class="user-profile">
-                    <i class="fas fa-user-circle"></i>
-                    <span id="driver-username">Driver</span>
-                </div>
-                <ul class="nav-menu">
-                    <li><a href="#" class="active"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a></li>
-                    <li><a href="#deliveries"><i class="fas fa-box"></i><span>Deliveries</span></a></li>
-                    <li><a href="#map"><i class="fas fa-map-marked-alt"></i><span>Map</span></a></li>
-                    <li><a href="profile.html"><i class="fas fa-user"></i><span>Profile</span></a></li>
-                    <li><a href="index.html" id="logout-link"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
-                </ul>
-                <div class="mode-toggle-container">
-                    <button id="mode-toggle" title="Toggle dark/light mode">
-                        <span class="toggle-switch">
-                            <span class="toggle-bg"></span>
-                            <span class="toggle-icon sun"></span>
-                            <span class="toggle-icon moon"></span>
-                        </span>
-                        <span class="toggle-label">Light mode</span>
-                    </button>
-                </div>
-            </nav>
-            <div class="sidebar-overlay"></div>
-            <main class="main-content">
-                <h1 style="font-family: 'Dancing Script', cursive; color: #202A44; margin-bottom: 24px;">Welcome, <span id="main-driver-name">Driver</span>!</h1>
-                <section class="stats-dashboard">
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <i class="fas fa-box" style="color:#10468b;"></i>
-                            <div class="stat-value" id="stat-total">0</div>
-                            <div class="stat-label">Total Deliveries</div>
-                        </div>
-                        <div class="stat-card">
-                            <i class="fas fa-check-circle" style="color:#28a745;"></i>
-                            <div class="stat-value" id="stat-completed">0</div>
-                            <div class="stat-label">Completed</div>
-                        </div>
-                        <div class="stat-card">
-                            <i class="fas fa-clock" style="color:#f1c40f;"></i>
-                            <div class="stat-value" id="stat-pending">0</div>
-                            <div class="stat-label">Pending</div>
-                        </div>
-                        <div class="stat-card">
-                            <i class="fas fa-money-bill-wave" style="color:#91b5dd;"></i>
-                            <div class="stat-value" id="stat-earnings">₱0.00</div>
-                            <div class="stat-label">Earnings</div>
-                        </div>
-                    </div>
-                </section>
-                <section id="deliveries" class="delivery-panel">
-                    <h2 style="color:#202A44;">Orders Available</h2>
-                    <div id="delivery-list"></div>
-                </section>
-                <section id="map-section" style="margin-top:32px;">
-                    <h2 style="color:#202A44;">Delivery Map</h2>
-                    <div class="map-card">
-                        <div id="map" style="width:100%;height:350px;border-radius:10px;"></div>
-                    </div>
-                </section>
-        <div class="feedback-tab" id="feedback-tab">★ Feedback</div>
-        <div class="feedback-modal-bg" id="feedback-modal-bg"></div>
-        <form class="feedback-modal" id="feedback-modal">
-            <button type="button" class="close-btn" id="feedback-close-btn" title="Close">&times;</button>
-            <h3>Give us feedback</h3>
-            <div class="feedback-question">What do you think of our app?</div>
-            <div class="emoji-row" id="feedback-emoji-row">
-                <button type="button" class="emoji-btn" data-rating="1" title="Very Bad">😡</button>
-                <button type="button" class="emoji-btn" data-rating="2" title="Bad">😞</button>
-                <button type="button" class="emoji-btn" data-rating="3" title="Okay">😐</button>
-                <button type="button" class="emoji-btn" data-rating="4" title="Good">😊</button>
-                <button type="button" class="emoji-btn" data-rating="5" title="Excellent">😍</button>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="hamburger"><i class="fas fa-bars"></i></div>
+        <nav class="sidebar">
+            <div class="logo">CalambaGO!</div>
+            <div class="user-profile">
+                <i class="fas fa-user-circle"></i>
+                <span id="driver-username">Driver</span>
             </div>
-            <textarea id="feedback-comments" placeholder="Additional comments..."></textarea>
-            <button type="submit">Submit Feedback</button>
-        </form>
-        </main>
-        </div> <!-- closes .dashboard-container -->
-        <div class="icons-bar" style="width:100%;background:#202A44;padding:15px 0;text-align:center;margin-top:0;">
-            <div class="icons" style="display:flex;justify-content:center;gap:40px;align-items:center;">
-                <a href="#"><ion-icon name="logo-facebook" style="font-size:2rem;color:#fff;"></ion-icon></a>
-                <a href="#"><ion-icon name="logo-instagram" style="font-size:2rem;color:#fff;"></ion-icon></a>
-                <a href="#"><ion-icon name="logo-twitter" style="font-size:2rem;color:#fff;"></ion-icon></a>
-                <a href="#"><ion-icon name="logo-google" style="font-size:2rem;color:#fff;"></ion-icon></a>
-                <a href="#"><ion-icon name="logo-skype" style="font-size:2rem;color:#fff;"></ion-icon></a>
+            <ul class="nav-menu">
+                <li><a href="#" class="active"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a></li>
+                <li><a href="#deliveries"><i class="fas fa-box"></i><span>Deliveries</span></a></li>
+                <li><a href="#map"><i class="fas fa-map-marked-alt"></i><span>Map</span></a></li>
+                <li><a href="profile.html"><i class="fas fa-user"></i><span>Profile</span></a></li>
+                <li><a href="index.html" id="logout-link"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+            </ul>
+            <div class="mode-toggle-container">
+                <button id="mode-toggle" title="Toggle dark/light mode">
+                    <span class="toggle-switch">
+                        <span class="toggle-bg"></span>
+                        <span class="toggle-icon sun"></span>
+                        <span class="toggle-icon moon"></span>
+                    </span>
+                    <span class="toggle-label">Light mode</span>
+                </button>
             </div>
+        </nav>
+        <div class="sidebar-overlay"></div>
+        <main class="main-content">
+            <h1 style="font-family: 'Dancing Script', cursive; color: #202A44; margin-bottom: 24px;">Welcome, <span id="main-driver-name">Driver</span>!</h1>
+            <section class="stats-dashboard">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <i class="fas fa-box" style="color:#10468b;"></i>
+                        <div class="stat-value" id="stat-total">0</div>
+                        <div class="stat-label">Total Deliveries</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-check-circle" style="color:#28a745;"></i>
+                        <div class="stat-value" id="stat-completed">0</div>
+                        <div class="stat-label">Completed</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-clock" style="color:#f1c40f;"></i>
+                        <div class="stat-value" id="stat-pending">0</div>
+                        <div class="stat-label">Pending</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-money-bill-wave" style="color:#91b5dd;"></i>
+                        <div class="stat-value" id="stat-earnings">₱0.00</div>
+                        <div class="stat-label">Earnings</div>
+                    </div>
+                </div>
+            </section>
+            <section id="deliveries" class="delivery-panel">
+                <h2 style="color:#202A44;">Orders Available</h2>
+                <div id="delivery-list"></div>
+            </section>
+            <section id="map-section" style="margin-top:32px;">
+                <h2 style="color:#202A44;">Delivery Map</h2>
+                <div class="map-card">
+                    <div id="map" style="width:100%;height:350px;border-radius:10px;"></div>
+                </div>
+            </section>
+    <div class="feedback-tab" id="feedback-tab">★ Feedback</div>
+    <div class="feedback-modal-bg" id="feedback-modal-bg"></div>
+    <form class="feedback-modal" id="feedback-modal">
+        <button type="button" class="close-btn" id="feedback-close-btn" title="Close">&times;</button>
+        <h3>Give us feedback</h3>
+        <div class="feedback-question">What do you think of our app?</div>
+        <div class="emoji-row" id="feedback-emoji-row">
+            <button type="button" class="emoji-btn" data-rating="1" title="Very Bad">😡</button>
+            <button type="button" class="emoji-btn" data-rating="2" title="Bad">😞</button>
+            <button type="button" class="emoji-btn" data-rating="3" title="Okay">😐</button>
+            <button type="button" class="emoji-btn" data-rating="4" title="Good">😊</button>
+            <button type="button" class="emoji-btn" data-rating="5" title="Excellent">😍</button>
         </div>
-        <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-        <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
-        <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
-        <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
-        <script>
-        // Set driver name
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        document.getElementById('driver-username').textContent = user.username || 'Driver';
-        document.getElementById('main-driver-name').textContent = user.username || 'Driver';
+        <textarea id="feedback-comments" placeholder="Additional comments..."></textarea>
+        <button type="submit">Submit Feedback</button>
+    </form>
+    </main>
+    </div> <!-- closes .dashboard-container -->
+    <div class="icons-bar" style="width:100%;background:#202A44;padding:15px 0;text-align:center;margin-top:0;">
+        <div class="icons" style="display:flex;justify-content:center;gap:40px;align-items:center;">
+            <a href="#"><ion-icon name="logo-facebook" style="font-size:2rem;color:#fff;"></ion-icon></a>
+            <a href="#"><ion-icon name="logo-instagram" style="font-size:2rem;color:#fff;"></ion-icon></a>
+            <a href="#"><ion-icon name="logo-twitter" style="font-size:2rem;color:#fff;"></ion-icon></a>
+            <a href="#"><ion-icon name="logo-google" style="font-size:2rem;color:#fff;"></ion-icon></a>
+            <a href="#"><ion-icon name="logo-skype" style="font-size:2rem;color:#fff;"></ion-icon></a>
+        </div>
+    </div>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+    <script>
+    // Set driver name
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    document.getElementById('driver-username').textContent = user.username || 'Driver';
+    document.getElementById('main-driver-name').textContent = user.username || 'Driver';
 
-        // Logout
-        document.getElementById('logout-link').onclick = function() {
-            localStorage.removeItem('user');
-        };
+    // Logout
+    document.getElementById('logout-link').onclick = function() {
+        localStorage.removeItem('user');
+    };
 
-        // Stats and deliveries
-        let dashboardMap, markerCluster;
-        let fetchErrorShown = false; // Add this flag
+    // Stats and deliveries
+    let dashboardMap, markerCluster;
+    let fetchErrorShown = false; // Add this flag
 
-        async function fetchDeliveries() {
-            try {
-                const res = await fetch('api.php?endpoint=deliveries&type=driver&id=' + (user.id || ''));
-                if (!res.ok) {
-                    const text = await res.text();
-                    console.error('API error:', res.status, text);
-                    throw new Error('API error: ' + res.status);
-                }
-                const data = await res.json();
-                fetchErrorShown = false; // Reset flag on success
-                return {
-                    deliveries: data.deliveries || [],
-                    stats: data.stats || {}
-                };
-            } catch (e) {
-                if (!fetchErrorShown) {
-                    alert('Failed to fetch deliveries. Please check your connection or try again later.');
-                    fetchErrorShown = true;
-                }
-                console.error('Fetch error:', e);
-                return { deliveries: [], stats: {} };
-            }
-        }
-
-        function getDeliveryIcon(status) {
-            let iconHtml, color;
-            switch (status) {
-                case 'pending': iconHtml = '<i class="fas fa-clock"></i>'; color = '#F44336'; break;
-                case 'active': iconHtml = '<i class="fas fa-motorcycle"></i>'; color = '#2196F3'; break;
-                case 'completed': iconHtml = '<i class="fas fa-check-circle"></i>'; color = '#4CAF50'; break;
-                case 'rejected': iconHtml = '<i class="fas fa-times-circle"></i>'; color = '#757575'; break;
-                default: iconHtml = '<i class="fas fa-box"></i>'; color = '#9C27B0';
-            }
-            return L.divIcon({
-                className: 'custom-marker',
-                html: `<div style="background:${color};border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;border:2px solid #fff;">${iconHtml}</div>`,
-                iconSize: [28, 28],
-                iconAnchor: [14, 14]
-            });
-        }
-
-        async function renderDashboard() {
-            const { deliveries, stats } = await fetchDeliveries();
-            let total = deliveries.length;
-            let completed = deliveries.filter(d => d.status === 'completed').length;
-            let pending = deliveries.filter(d => d.status === 'pending').length;
-            let earnings = stats.total_earnings || 0;
-
-            document.getElementById('stat-total').textContent = total;
-            document.getElementById('stat-completed').textContent = completed;
-            document.getElementById('stat-pending').textContent = pending;
-            document.getElementById('stat-earnings').textContent = '₱' + (+earnings).toFixed(2);
-
-            const list = document.getElementById('delivery-list');
-            list.innerHTML = '';
-            // Only show deliveries that are not completed or rejected
-            const availableDeliveries = deliveries.filter(d => d.status !== 'completed' && d.status !== 'rejected');
-            if (availableDeliveries.length === 0) {
-                list.innerHTML = '<p>No deliveries yet.</p>';
-            } else {
-                availableDeliveries.forEach(delivery => {
-                    const div = document.createElement('div');
-                    div.className = 'delivery-item';
-                    div.innerHTML = `
-                        <b>${delivery.package_info}</b><br>
-                        <span style="color:#888;">From:</span> ${delivery.pickup_address}<br>
-                        <span style="color:#888;">To:</span> ${delivery.delivery_address}<br>
-                        <span style="color:#888;">Status:</span> <b>${delivery.status}</b><br>
-                        <span style="color:#888;">Fee:</span> <b>₱${delivery.fee}</b>
-                        <div class="delivery-actions">
-                            <button class="accept-btn" ${delivery.status !== 'pending' ? 'disabled' : ''}>Accept</button>
-                            <button class="reject-btn" ${delivery.status !== 'active' ? 'disabled' : ''}>Reject</button>
-                            <button class="complete-btn" ${delivery.status !== 'active' ? 'disabled' : ''}>Complete</button>
-                        </div>
-                    `;
-                    div.querySelector('.accept-btn').addEventListener('click', () => acceptDelivery(delivery.id));
-                    div.querySelector('.reject-btn').addEventListener('click', () => rejectDelivery(delivery.id));
-                    div.querySelector('.complete-btn').addEventListener('click', () => completeDelivery(delivery.id));
-                    list.appendChild(div);
-                });
-            }
-
-            if (!dashboardMap) {
-                const mapDiv = document.getElementById('map');
-                if (mapDiv) {
-                    dashboardMap = L.map(mapDiv).setView([14.2184, 121.0583], 13);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '&copy; OpenStreetMap contributors'
-                    }).addTo(dashboardMap);
-                    markerCluster = L.markerClusterGroup().addTo(dashboardMap);
-                }
-            }
-            if (markerCluster) markerCluster.clearLayers();
-
-            deliveries.forEach(delivery => {
-                if (delivery.delivery_coords) {
-                    try {
-                        const coords = JSON.parse(delivery.delivery_coords);
-                        const marker = L.marker(coords, {
-                            icon: getDeliveryIcon(delivery.status)
-                        }).bindPopup(`
-                            <b>${delivery.package_info}</b><br>
-                            Delivery to: ${delivery.delivery_address}<br>
-                            Status: ${delivery.status}
-                        `);
-                        markerCluster.addLayer(marker);
-                    } catch (e) {}
-                }
-            });
-        }
-
-        window.renderDashboard = renderDashboard;
-
-        document.addEventListener('DOMContentLoaded', function() {
-            renderDashboard();
-            setInterval(renderDashboard, 30000);
-        });
-
-        // Draw route on map between driver's current location and delivery destination
-        let routePolyline = null;
-        async function drawRouteToDelivery(deliveryCoords) {
-            if (!dashboardMap || !driverCoords || !deliveryCoords) return;
-            // Remove previous route if exists
-            if (routePolyline) {
-                dashboardMap.removeLayer(routePolyline);
-                routePolyline = null;
-            }
-            // Use OSRM public API for routing (or Mapbox Directions if you have a key)
-            const url = `https://router.project-osrm.org/route/v1/driving/${driverCoords[1]},${driverCoords[0]};${deliveryCoords[1]},${deliveryCoords[0]}?overview=full&geometries=geojson`;
-            try {
-                const res = await fetch(url);
-                const data = await res.json();
-                if (data.routes && data.routes.length > 0) {
-                    const coords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
-                    routePolyline = L.polyline(coords, { color: 'blue', weight: 5 }).addTo(dashboardMap);
-                    dashboardMap.fitBounds(routePolyline.getBounds(), { padding: [30, 30] });
-                }
-            } catch (e) {
-                // Optionally handle error
-            }
-        }
-
-        async function acceptDelivery(id) {
-            try {
-                const res = await fetch(`api.php?endpoint=deliveries&id=${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'accept', driver_id: user.id })
-                });
+    async function fetchDeliveries() {
+        try {
+            const res = await fetch('api.php?endpoint=deliveries&type=driver&id=' + (user.id || ''));
+            if (!res.ok) {
                 const text = await res.text();
-                let data;
-                try {
-                    data = JSON.parse(text);
-                } catch (err) {
-                    console.error('API did not return JSON:', text);
-                    alert('Server error: ' + text);
-                    return;
-                }
-                if (!data.success) throw new Error(data.error || 'Failed to accept delivery');
-                await renderDashboard();
-
-                // After accepting, find the delivery and draw the route
-                const deliveriesRes = await fetch('api.php?endpoint=deliveries&type=driver&id=' + (user.id || ''));
-                const deliveriesData = await deliveriesRes.json();
-                const accepted = (deliveriesData.deliveries || []).find(d => d.id == id);
-                if (accepted && accepted.delivery_coords) {
-                    let coords = accepted.delivery_coords;
-                    if (typeof coords === 'string') coords = JSON.parse(coords);
-                    drawRouteToDelivery(coords);
-                }
-            } catch (e) {
-                alert('Failed to accept delivery. Please try again.');
-                console.error(e);
+                console.error('API error:', res.status, text);
+                throw new Error('API error: ' + res.status);
             }
-        }
-
-        async function rejectDelivery(id) {
-            try {
-                const res = await fetch(`api.php?endpoint=deliveries&id=${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'reject', driver_id: user.id })
-                });
-                const text = await res.text();
-                let data;
-                try {
-                    data = JSON.parse(text);
-                } catch (err) {
-                    console.error('API did not return JSON:', text);
-                    alert('Server error: ' + text);
-                    return;
-                }
-                if (!data.success) throw new Error(data.error || 'Failed to reject delivery');
-                await renderDashboard();
-                if (routePolyline) {
-                    dashboardMap.removeLayer(routePolyline);
-                    routePolyline = null;
-                }
-            } catch (e) {
-                alert('Failed to reject delivery. Please try again.');
-                console.error(e);
-            }
-        }
-
-        async function completeDelivery(id) {
-            try {
-                const res = await fetch(`api.php?endpoint=deliveries&id=${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'complete', driver_id: user.id })
-                });
-                const text = await res.text();
-                let data;
-                try {
-                    data = JSON.parse(text);
-                } catch (err) {
-                    console.error('API did not return JSON:', text);
-                    alert('Server error: ' + text);
-                    return;
-                }
-                if (!data.success) throw new Error(data.error || 'Failed to complete delivery');
-                await renderDashboard();
-                if (routePolyline) {
-                    dashboardMap.removeLayer(routePolyline);
-                    routePolyline = null;
-                }
-            } catch (e) {
-                alert('Failed to complete delivery. Please try again.');
-                console.error(e);
-            }
-        }
-
-        window.acceptDelivery = acceptDelivery;
-        window.rejectDelivery = rejectDelivery;
-        window.completeDelivery = completeDelivery;
-
-        // Hamburger menu toggle for sidebar (responsive)
-        document.querySelector('.hamburger').addEventListener('click', function() {
-            const sidebar = document.querySelector('.sidebar');
-            const mainContent = document.querySelector('.main-content');
-            sidebar.classList.toggle('open');
-            mainContent.classList.toggle('sidebar-open');
-            document.body.classList.toggle('sidebar-open');
-        });
-        document.querySelector('.sidebar-overlay').addEventListener('click', function() {
-            const sidebar = document.querySelector('.sidebar');
-            const mainContent = document.querySelector('.main-content');
-            sidebar.classList.remove('open');
-            mainContent.classList.remove('sidebar-open');
-            document.body.classList.remove('sidebar-open');
-        });
-
-        // Dark/Light mode toggle
-        function setMode(dark) {
-            if (dark) {
-                document.body.classList.add('dark-mode');
-                localStorage.setItem('mode', 'dark');
-                document.querySelector('#mode-toggle .toggle-label').textContent = 'Dark mode';
-            } else {
-                document.body.classList.remove('dark-mode');
-                localStorage.setItem('mode', 'light');
-                document.querySelector('#mode-toggle .toggle-label').textContent = 'Light mode';
-            }
-        }
-        document.addEventListener('DOMContentLoaded', function() {
-            // Setup mode toggle
-            const modeBtn = document.getElementById('mode-toggle');
-            if (modeBtn) {
-                const saved = localStorage.getItem('mode');
-                setMode(saved === 'dark');
-                modeBtn.onclick = function() {
-                    setMode(!document.body.classList.contains('dark-mode'));
-                };
-            }
-        });
-
-        // Track driver's location and update on map
-        let driverMarker = null;
-        let driverCoords = null;
-
-        function updateDriverLocationOnMap(lat, lng) {
-            driverCoords = [lat, lng];
-            if (dashboardMap) {
-                if (!driverMarker) {
-                    driverMarker = L.marker([lat, lng], {
-                        icon: L.divIcon({
-                            className: 'driver-marker',
-                            html: '<div style="background:#28a745;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;border:2px solid #fff;"><i class="fas fa-location-arrow"></i></div>',
-                            iconSize: [28, 28],
-                            iconAnchor: [14, 14]
-                        })
-                    }).addTo(dashboardMap).bindPopup('Your Location');
-                } else {
-                    driverMarker.setLatLng([lat, lng]);
-                }
-                // Optionally center map on driver
-                // dashboardMap.setView([lat, lng]);
-            }
-            // Send location to backend for real-time tracking
-            sendDriverLocationToServer(lat, lng);
-        }
-
-        // Request browser geolocation and update marker
-        function trackDriverLocation() {
-            if (!navigator.geolocation) return;
-            navigator.geolocation.watchPosition(
-                pos => {
-                    updateDriverLocationOnMap(pos.coords.latitude, pos.coords.longitude);
-                },
-                err => {
-                    // Optionally handle error
-                },
-                { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 }
-            );
-        }
-
-        // Send driver's location to backend for real-time tracking
-        function sendDriverLocationToServer(lat, lng) {
-            if (!user.id) return;
-            fetch('api.php?endpoint=driver_location', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ driver_id: user.id, lat, lng })
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            trackDriverLocation();
-        });
-
-        // Feedback modal logic
-        const feedbackTab = document.getElementById('feedback-tab');
-        const feedbackModal = document.getElementById('feedback-modal');
-        const feedbackModalBg = document.getElementById('feedback-modal-bg');
-        const feedbackCloseBtn = document.getElementById('feedback-close-btn');
-        const emojiRow = document.getElementById('feedback-emoji-row');
-        let selectedRating = 0;
-
-        feedbackTab.onclick = function() {
-            feedbackModal.classList.add('active');
-            feedbackModalBg.classList.add('active');
-        };
-        feedbackCloseBtn.onclick = feedbackModalBg.onclick = function() {
-            feedbackModal.classList.remove('active');
-            feedbackModalBg.classList.remove('active');
-        };
-        emojiRow.querySelectorAll('.emoji-btn').forEach(btn => {
-            btn.onclick = function() {
-                emojiRow.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('selected'));
-                btn.classList.add('selected');
-                selectedRating = parseInt(btn.getAttribute('data-rating'));
+            const data = await res.json();
+            fetchErrorShown = false; // Reset flag on success
+            return {
+                deliveries: data.deliveries || [],
+                stats: data.stats || {}
             };
-        });
-        feedbackModal.onsubmit = async function(e) {
-            e.preventDefault();
-            if (!selectedRating) {
-                alert('Please select a rating.');
-                return;
+        } catch (e) {
+            if (!fetchErrorShown) {
+                alert('Failed to fetch deliveries. Please check your connection or try again later.');
+                fetchErrorShown = true;
             }
-            const comments = document.getElementById('feedback-comments').value.trim();
-            await fetch('api.php?endpoint=feedback', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: (JSON.parse(localStorage.getItem('user')||'{}').username || 'Driver'),
-                    email: (JSON.parse(localStorage.getItem('user')||'{}').email || ''),
-                    message: `Rating: ${selectedRating}\nComments: ${comments}`
-                })
+            console.error('Fetch error:', e);
+            return { deliveries: [], stats: {} };
+        }
+    }
+
+    function getDeliveryIcon(status) {
+        let iconHtml, color;
+        switch (status) {
+            case 'pending': iconHtml = '<i class="fas fa-clock"></i>'; color = '#F44336'; break;
+            case 'active': iconHtml = '<i class="fas fa-motorcycle"></i>'; color = '#2196F3'; break;
+            case 'completed': iconHtml = '<i class="fas fa-check-circle"></i>'; color = '#4CAF50'; break;
+            case 'rejected': iconHtml = '<i class="fas fa-times-circle"></i>'; color = '#757575'; break;
+            default: iconHtml = '<i class="fas fa-box"></i>'; color = '#9C27B0';
+        }
+        return L.divIcon({
+            className: 'custom-marker',
+            html: `<div style="background:${color};border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;border:2px solid #fff;">${iconHtml}</div>`,
+            iconSize: [28, 28],
+            iconAnchor: [14, 14]
+        });
+    }
+
+    async function geocodeAddress(address) {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data && data.length > 0) {
+            return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+        }
+        return null;
+    }
+
+    async function renderDashboard() {
+        const { deliveries, stats } = await fetchDeliveries();
+        let total = deliveries.length;
+        let completed = deliveries.filter(d => d.status === 'completed').length;
+        let pending = deliveries.filter(d => d.status === 'pending').length;
+        let earnings = stats.total_earnings || 0;
+
+        document.getElementById('stat-total').textContent = total;
+        document.getElementById('stat-completed').textContent = completed;
+        document.getElementById('stat-pending').textContent = pending;
+        document.getElementById('stat-earnings').textContent = '₱' + (+earnings).toFixed(2);
+
+        const list = document.getElementById('delivery-list');
+        list.innerHTML = '';
+        const availableDeliveries = deliveries.filter(d =>
+            d.status !== 'completed' &&
+            d.status !== 'rejected'
+        );
+        if (availableDeliveries.length === 0) {
+            list.innerHTML = '<p>No deliveries yet.</p>';
+        } else {
+            availableDeliveries.forEach(delivery => {
+                const div = document.createElement('div');
+                div.className = 'delivery-item';
+                div.innerHTML = `
+                    <b>${delivery.package_info}</b><br>
+                    <span style="color:#888;">To:</span> ${delivery.delivery_address}<br>
+                    <span style="color:#888;">Status:</span> <b>${delivery.status}</b><br>
+                    <span style="color:#888;">Fee:</span> <b>₱${delivery.fee}</b>
+                    <div class="delivery-actions">
+                        <button class="accept-btn" ${delivery.status !== 'pending' ? 'disabled' : ''}>Accept</button>
+                        <button class="reject-btn" ${delivery.status !== 'active' ? 'disabled' : ''}>Reject</button>
+                        <button class="complete-btn" ${delivery.status !== 'active' ? 'disabled' : ''}>Complete</button>
+                    </div>
+                `;
+                div.querySelector('.accept-btn').addEventListener('click', () => acceptDelivery(delivery.id));
+                div.querySelector('.reject-btn').addEventListener('click', () => rejectDelivery(delivery.id));
+                div.querySelector('.complete-btn').addEventListener('click', () => completeDelivery(delivery.id));
+                list.appendChild(div);
             });
-            feedbackModal.classList.remove('active');
-            feedbackModalBg.classList.remove('active');
-            emojiRow.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('selected'));
-            selectedRating = 0;
-            feedbackModal.reset();
-            alert('Thank you for your feedback!');
-        };
-        </script>
-    </body>
-    </html>
+        }
+
+        if (!dashboardMap) {
+            const mapDiv = document.getElementById('map');
+            if (mapDiv) {
+                dashboardMap = L.map(mapDiv).setView([14.2184, 121.0583], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors'
+                }).addTo(dashboardMap);
+                markerCluster = L.markerClusterGroup().addTo(dashboardMap);
+            }
+        }
+        if (markerCluster) markerCluster.clearLayers();
+
+        for (const delivery of deliveries) {
+            let deliveryCoords = null;
+            if (delivery.delivery_coords) {
+                try {
+                    deliveryCoords = typeof delivery.delivery_coords === 'string'
+                        ? JSON.parse(delivery.delivery_coords)
+                        : delivery.delivery_coords;
+                } catch (e) { deliveryCoords = null; }
+            }
+            if (!deliveryCoords && delivery.delivery_address) {
+                deliveryCoords = await geocodeAddress(delivery.delivery_address);
+            }
+            if (deliveryCoords && Array.isArray(deliveryCoords) && deliveryCoords.length === 2) {
+                const deliveryMarker = L.marker(deliveryCoords, {
+                    icon: getDeliveryIcon(delivery.status)
+                }).bindPopup(`
+                    <b>${delivery.package_info}</b><br>
+                    <span style="color:#888;">Delivery:</span> ${delivery.delivery_address}<br>
+                    <span style="color:#888;">Status:</span> ${delivery.status}
+                `);
+                markerCluster.addLayer(deliveryMarker);
+            }
+        }
+    }
+
+    window.renderDashboard = renderDashboard;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        renderDashboard();
+        setInterval(renderDashboard, 30000);
+    });
+
+    // 1. Always use the latest driver's location for routing and marker
+function updateDriverLocationOnMap(lat, lng) {
+    driverCoords = [lat, lng];
+    if (dashboardMap) {
+        if (!driverMarker) {
+            driverMarker = L.marker([lat, lng], {
+                icon: L.divIcon({
+                    className: 'driver-marker',
+                    html: '<div style="background:#28a745;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;border:2px solid #fff;"><i class="fas fa-location-arrow"></i></div>',
+                    iconSize: [28, 28],
+                    iconAnchor: [14, 14]
+                })
+            }).addTo(dashboardMap).bindPopup('Your Location');
+        } else {
+            driverMarker.setLatLng([lat, lng]);
+        }
+        // Optionally, only center if no route is being shown
+        if (!routePolyline) dashboardMap.setView([lat, lng]);
+    }
+    sendDriverLocationToServer(lat, lng);
+}
+
+// 2. When drawing route, always use the latest driverCoords and deliveryCoords
+async function drawRouteToDelivery(deliveryCoords) {
+    if (!dashboardMap || !driverCoords || !deliveryCoords) return;
+    if (routePolyline) {
+        dashboardMap.removeLayer(routePolyline);
+        routePolyline = null;
+    }
+    // Use OSRM API for accurate routing
+    const url = `https://router.project-osrm.org/route/v1/driving/${driverCoords[1]},${driverCoords[0]};${deliveryCoords[1]},${deliveryCoords[0]}?overview=full&geometries=geojson`;
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.routes && data.routes.length > 0) {
+            const coords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+            routePolyline = L.polyline(coords, { color: 'blue', weight: 5 }).addTo(dashboardMap);
+            dashboardMap.fitBounds(routePolyline.getBounds(), { padding: [30, 30] });
+        }
+    } catch (e) {
+        // Optionally handle error
+    }
+}
+
+// 3. Always use geocoded delivery address for marker and routing
+async function renderDashboard() {
+    const { deliveries, stats } = await fetchDeliveries();
+    let total = deliveries.length;
+    let completed = deliveries.filter(d => d.status === 'completed').length;
+    let pending = deliveries.filter(d => d.status === 'pending').length;
+    let earnings = stats.total_earnings || 0;
+
+    document.getElementById('stat-total').textContent = total;
+    document.getElementById('stat-completed').textContent = completed;
+    document.getElementById('stat-pending').textContent = pending;
+    document.getElementById('stat-earnings').textContent = '₱' + (+earnings).toFixed(2);
+
+    const list = document.getElementById('delivery-list');
+    list.innerHTML = '';
+    const availableDeliveries = deliveries.filter(d =>
+        d.status !== 'completed' &&
+        d.status !== 'rejected'
+    );
+    if (availableDeliveries.length === 0) {
+        list.innerHTML = '<p>No deliveries yet.</p>';
+    } else {
+        availableDeliveries.forEach(delivery => {
+            const div = document.createElement('div');
+            div.className = 'delivery-item';
+            div.innerHTML = `
+                <b>${delivery.package_info}</b><br>
+                <span style="color:#888;">To:</span> ${delivery.delivery_address}<br>
+                <span style="color:#888;">Status:</span> <b>${delivery.status}</b><br>
+                <span style="color:#888;">Fee:</span> <b>₱${delivery.fee}</b>
+                <div class="delivery-actions">
+                    <button class="accept-btn" ${delivery.status !== 'pending' ? 'disabled' : ''}>Accept</button>
+                    <button class="reject-btn" ${delivery.status !== 'active' ? 'disabled' : ''}>Reject</button>
+                    <button class="complete-btn" ${delivery.status !== 'active' ? 'disabled' : ''}>Complete</button>
+                </div>
+            `;
+            div.querySelector('.accept-btn').addEventListener('click', () => acceptDelivery(delivery.id));
+            div.querySelector('.reject-btn').addEventListener('click', () => rejectDelivery(delivery.id));
+            div.querySelector('.complete-btn').addEventListener('click', () => completeDelivery(delivery.id));
+            list.appendChild(div);
+        });
+    }
+
+    if (!dashboardMap) {
+        const mapDiv = document.getElementById('map');
+        if (mapDiv) {
+            dashboardMap = L.map(mapDiv).setView([14.2184, 121.0583], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(dashboardMap);
+            markerCluster = L.markerClusterGroup().addTo(dashboardMap);
+        }
+    }
+    if (markerCluster) markerCluster.clearLayers();
+
+    for (const delivery of deliveries) {
+        let deliveryCoords = null;
+        if (delivery.delivery_coords) {
+            try {
+                deliveryCoords = typeof delivery.delivery_coords === 'string'
+                    ? JSON.parse(delivery.delivery_coords)
+                    : delivery.delivery_coords;
+            } catch (e) { deliveryCoords = null; }
+        }
+        if (!deliveryCoords && delivery.delivery_address) {
+            deliveryCoords = await geocodeAddress(delivery.delivery_address);
+        }
+        if (deliveryCoords && Array.isArray(deliveryCoords) && deliveryCoords.length === 2) {
+            const deliveryMarker = L.marker(deliveryCoords, {
+                icon: getDeliveryIcon(delivery.status)
+            }).bindPopup(`
+                <b>${delivery.package_info}</b><br>
+                <span style="color:#888;">Delivery:</span> ${delivery.delivery_address}<br>
+                <span style="color:#888;">Status:</span> ${delivery.status}
+            `);
+            markerCluster.addLayer(deliveryMarker);
+        }
+    }
+    // ...existing code...
+}
+
+// 4. (Optional) Add a "Track" button for each active delivery to let driver manually track any order
+// ...existing code for delivery list...
+    // In the delivery-item innerHTML, add:
+    // <button class="track-btn" ${delivery.status !== 'active' ? 'disabled' : ''}>Track</button>
+// ...and after creating the element:
+    // div.querySelector('.track-btn').addEventListener('click', async () => {
+    //     let deliveryCoords = ... // as above
+    //     if (deliveryCoords && Array.isArray(deliveryCoords) && deliveryCoords.length === 2) {
+    //         await drawRouteToDelivery(deliveryCoords);
+    //     }
+    // });
+
+/*
+Summary of best practices for map accuracy:
+- Always geocode delivery addresses and store/use their coordinates.
+- Always use the latest driver's location (from browser geolocation) for marker and routing.
+- Use a routing API (like OSRM) for accurate route lines.
+- Optionally, let the driver manually trigger tracking for any active order.
+- Optionally, store geocoded delivery_coords in the DB at order creation to avoid repeated geocoding.
+*/
+    </script>
+</body>
+</html>

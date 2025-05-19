@@ -756,6 +756,133 @@
             color: #fffbe6 !important;
         }
         /* --- End dark mode feedback modal --- */
+        #address-suggestions {
+    display: none;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px #0001;
+    position: relative;
+    z-index: 10;
+    max-width: 100%;
+    margin-bottom: 10px;
+    padding: 8px 0 8px 0;
+    /* Remove horizontal scroll and slider styles */
+    overflow-x: hidden;
+    overflow-y: auto;
+    white-space: normal;
+}
+.suggestion-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+    min-height: 0;
+    padding: 0 12px;
+    position: relative;
+}
+.suggestion-card {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    min-width: 0;
+    max-width: 100%;
+    background: #f7f9fc;
+    border-radius: 10px;
+    box-shadow: 0 1px 4px #e0e0e0;
+    padding: 8px 10px;
+    cursor: pointer;
+    transition: box-shadow 0.18s, background 0.18s;
+    border: 2px solid #e0e0e0;
+    user-select: none;
+    gap: 12px;
+}
+.suggestion-card:hover {
+    background: #e8f5e9;
+    border-color: #43a047;
+    box-shadow: 0 0 0 3px #c8e6c9;
+}
+.suggestion-card img {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: #fff;
+    border: 1px solid #eee;
+    margin-right: 10px;
+}
+.suggestion-card span {
+    font-size: 0.98rem;
+    color: #222;
+    text-align: left;
+    margin-top: 0;
+    word-break: break-word;
+}
+.suggestion-see-more {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: transparent;
+    color: #222;
+    border: none;
+    border-radius: 0;
+    padding: 4px 0 4px 0;
+    margin: 4px 0 0 0;
+    font-size: 1.05rem;
+    font-weight: 500;
+    cursor: pointer;
+    min-width: 0;
+    box-shadow: none;
+    transition: background 0.15s, color 0.15s;
+    outline: none;
+    position: relative;
+}
+.suggestion-see-more .see-more-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    margin-right: 6px;
+    font-size: 1.1em;
+    color: #222;
+    transition: background 0.15s, color 0.15s;
+}
+.suggestion-see-more .see-more-icon svg {
+    width: 18px;
+    height: 18px;
+    display: block;
+}
+.suggestion-see-more:focus,
+.suggestion-see-more:hover {
+    background: #f5f6f9;
+    color: #101d8b;
+}
+.suggestion-see-more:focus .see-more-icon,
+.suggestion-see-more:hover .see-more-icon {
+    color: #101d8b;
+    background: #e4e4ef;
+}
+.suggestion-see-more:active {
+    background: #e4e4ef;
+    color: #101d8b;
+}
+@media (max-width: 600px) {
+    .suggestion-see-more {
+        font-size: 0.98rem;
+        padding: 3px 0 3px 0;
+        min-width: 0;
+    }
+    .suggestion-see-more .see-more-icon {
+        width: 18px;
+        height: 18px;
+        font-size: 1em;
+        margin-right: 4px;
+    }
+}
     </style>
 </head>
 <body>
@@ -808,9 +935,6 @@
                 <button id="new-order-btn">Place New Order</button>
                 <div id="new-order-form" style="display:none;">
                     <form id="orderForm">
-                        <label for="pickup-address">Pickup Address:</label>
-                        <input type="text" id="pickup-address" placeholder="Enter pickup location" required>
-                        
                         <label for="delivery-address">Delivery Address:</label>
                         <input type="text" id="delivery-address" placeholder="Enter delivery location" required>
                         
@@ -818,7 +942,7 @@
                         <input type="text" id="package-info" placeholder="What are you sending?" required>
                         
                         <label for="delivery-fee">Delivery Fee (₱):</label>
-                        <input type="number" id="delivery-fee" placeholder="Enter amount" min="0" step="0.01" required>
+                        <input type="number" id="delivery-fee" placeholder="Auto-calculated" min="0" step="0.01" required readonly>
                         
                         <label for="priority">Delivery Priority:</label>
                         <select id="priority">
@@ -915,7 +1039,6 @@
                 div.className = 'order-item';
                 div.innerHTML = `
                     <b>${order.package_info || 'No package info'}</b><br>
-                    <span style="color:#888;">From:</span> ${order.pickup_address || 'No pickup address'}<br>
                     <span style="color:#888;">To:</span> ${order.delivery_address || 'No delivery address'}<br>
                     <span style="color:#888;">Status:</span> <b>${order.status || 'Pending'}</b><br>
                     <span style="color:#888;">Fee:</span> <b>₱${order.fee || '0'}</b><br>
@@ -982,6 +1105,48 @@
         }
     }
 
+    // Helper: Calculate distance in kilometers between two [lat, lon] points
+    function haversineDistance(coords1, coords2) {
+        const toRad = deg => deg * Math.PI / 180;
+        const [lat1, lon1] = coords1;
+        const [lat2, lon2] = coords2;
+        const R = 6371; // Earth radius in km
+        const dLat = toRad(lat2 - lat1);
+        const dLon = toRad(lon2 - lon1);
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    }
+
+    // Fee calculation: ₱40 base + ₱10 per km (rounded up to nearest peso)
+    function calculateFee(distanceKm) {
+        return Math.ceil(40 + 10 * distanceKm);
+    }
+
+    // Get the first available driver's location from backend
+    async function getFirstDriverLocation() {
+        try {
+            // Get all drivers
+            const res = await fetch('api.php?endpoint=users');
+            const users = await res.json();
+            const drivers = users.filter(u => u.type === 'driver');
+            for (const driver of drivers) {
+                // Try to get driver's location
+                const locRes = await fetch('api.php?endpoint=driver_location&driver_id=' + driver.id);
+                if (locRes.ok) {
+                    const locData = await locRes.json();
+                    if (locData.location && locData.location.lat && locData.location.lng) {
+                        return [parseFloat(locData.location.lat), parseFloat(locData.location.lng)];
+                    }
+                }
+            }
+        } catch (e) {}
+        return null;
+    }
+
+    // Geocode address to [lat, lon]
     async function geocodeAddress(address) {
         const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
         const res = await fetch(url);
@@ -992,38 +1157,57 @@
         return null;
     }
 
+    // Auto-calculate fee when delivery address changes
+    async function updateDeliveryFee() {
+        const delivery = document.getElementById('delivery-address').value.trim();
+        const feeInput = document.getElementById('delivery-fee');
+        if (!delivery) {
+            feeInput.value = '';
+            return;
+        }
+        // Get delivery address coordinates
+        const deliveryCoords = await geocodeAddress(delivery);
+        if (!deliveryCoords) {
+            feeInput.value = '';
+            return;
+        }
+        // Get first available driver's location
+        const driverCoords = await getFirstDriverLocation();
+        if (!driverCoords) {
+            feeInput.value = '';
+            return;
+        }
+        // Calculate distance and fee
+        const distance = haversineDistance(driverCoords, deliveryCoords);
+        feeInput.value = calculateFee(distance);
+    }
+
+    document.getElementById('delivery-address').addEventListener('blur', updateDeliveryFee);
+
     document.getElementById('orderForm').onsubmit = async function(e) {
         e.preventDefault();
         const user = JSON.parse(localStorage.getItem('user') || '{}');
-        const pickup_address = document.getElementById('pickup-address').value;
-        const delivery_address = document.getElementById('delivery-address').value;
-
-        // Validate pickup address
-        const pickup_coords = await geocodeAddress(pickup_address);
-        if (!pickup_coords) {
-            alert('Pickup address is not a valid/existing place. Please enter a real location.');
-            document.getElementById('pickup-address').focus();
-            return;
-        }
+        const delivery_address = document.getElementById('delivery-address').value.trim();
+        const packageInfo = document.getElementById('package-info').value.trim().toLowerCase();
 
         // Validate delivery address
-        const delivery_coords = await geocodeAddress(delivery_address);
-        if (!delivery_coords) {
-            alert('Delivery address is not a valid/existing place. Please enter a real location.');
+        if (!delivery_address) {
+            alert('Delivery address is required.');
             document.getElementById('delivery-address').focus();
             return;
         }
 
+        // Use the calculated fee from the input
+        const fee = parseFloat(document.getElementById('delivery-fee').value) || 40;
+
         const data = {
             customer_id: user.id,
-            pickup_address: pickup_address,
             delivery_address: delivery_address,
             package_info: document.getElementById('package-info').value,
-            fee: document.getElementById('delivery-fee').value,
+            fee: fee,
             priority: document.getElementById('priority').value,
-            notes: document.getElementById('notes').value,
-            pickup_coords: pickup_coords,
-            delivery_coords: delivery_coords
+            notes: document.getElementById('notes').value
+            // order_type removed
         };
 
         try {
@@ -1036,6 +1220,7 @@
             if (response.ok) {
                 document.getElementById('new-order-form').style.display = 'none';
                 document.getElementById('orderForm').reset();
+                document.getElementById('delivery-fee').value = '';
                 await loadOrders();
             } else {
                 alert('Failed to submit order. Please try again.');
